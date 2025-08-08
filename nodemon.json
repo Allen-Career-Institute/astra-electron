@@ -1,0 +1,11 @@
+{
+  "watch": ["src/main.js", "src/preload.js", "src/recording-process.js", "src/advanced-recording-process.js"],
+  "ext": "js",
+  "ignore": ["node_modules/**/node_modules", "dist/**", "out/**"],
+  "exec": "yarn start",
+  "env": {
+    "NODE_ENV": "development"
+  },
+  "delay": 1000,
+  "verbose": true
+}
