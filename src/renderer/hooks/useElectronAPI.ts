@@ -3,17 +3,14 @@ import { useCallback } from 'react';
 declare global {
   interface Window {
     electronAPI: {
+      // IPC Communication interface
+      sendMessage: (message: any) => Promise<any>;
+
       // Environment and URL management
       getEnvironment: () => Promise<string>;
       getDefaultUrl: () => Promise<string>;
 
-      // Window management
-      openSecondWindow: () => Promise<boolean>;
-      openThirdWindow: () => Promise<boolean>;
-
       // Inter-window communication
-      sendToSecondWindow: (data: any) => Promise<boolean>;
-      sendToThirdWindow: (data: any) => Promise<boolean>;
       sendToMainWindow: (data: any) => Promise<boolean>;
 
       // Event listeners
@@ -47,14 +44,13 @@ declare global {
       stopVideo: () => Promise<any>;
 
       // Window URL management
-      setSecondWindowUrl: (url: string) => Promise<any>;
-      setThirdWindowUrl: (url: string) => Promise<any>;
       getWindowStatus: () => Promise<any>;
 
       // Event listeners for audio/video controls
       onAudioControl: (callback: (event: any, data: any) => void) => void;
       onVideoControl: (callback: (event: any, data: any) => void) => void;
       onLoadUrl: (callback: (event: any, url: string) => void) => void;
+      onLoadAgora: (callback: (event: any, config: any) => void) => void;
 
       // Recording process APIs
       startVideoRecording: (streamData: any, options: any) => Promise<any>;
@@ -82,11 +78,28 @@ declare global {
       onAdvancedRecordingMessage: (
         callback: (event: any, message: any) => void
       ) => void;
+
+      // Stream window specific APIs
+      minimizeStreamWindow: () => Promise<any>;
+      closeStreamWindow: () => Promise<any>;
+      closeStreamWindowFromMain: () => Promise<any>;
+
+      // Stream window event listeners
+      onShowStreamWindow: (callback: (event: any, config: any) => void) => void;
+      onHideStreamWindow: (callback: () => void) => void;
+      onLoadStreamUrl: (callback: (event: any, url: string) => void) => void;
     };
   }
 }
 
 export const useElectronAPI = () => {
+  const sendMessage = useCallback(async (message: any): Promise<any> => {
+    if (window.electronAPI) {
+      return await window.electronAPI.sendMessage(message);
+    }
+    throw new Error('Electron API not available');
+  }, []);
+
   const getEnvironment = useCallback(async (): Promise<string> => {
     if (window.electronAPI) {
       return await window.electronAPI.getEnvironment();
@@ -97,37 +110,6 @@ export const useElectronAPI = () => {
   const getDefaultUrl = useCallback(async (): Promise<string> => {
     if (window.electronAPI) {
       return await window.electronAPI.getDefaultUrl();
-    }
-    throw new Error('Electron API not available');
-  }, []);
-
-  const openSecondWindow = useCallback(async (): Promise<boolean> => {
-    if (window.electronAPI) {
-      return await window.electronAPI.openSecondWindow();
-    }
-    throw new Error('Electron API not available');
-  }, []);
-
-  const openThirdWindow = useCallback(async (): Promise<boolean> => {
-    if (window.electronAPI) {
-      return await window.electronAPI.openThirdWindow();
-    }
-    throw new Error('Electron API not available');
-  }, []);
-
-  const sendToSecondWindow = useCallback(
-    async (data: any): Promise<boolean> => {
-      if (window.electronAPI) {
-        return await window.electronAPI.sendToSecondWindow(data);
-      }
-      throw new Error('Electron API not available');
-    },
-    []
-  );
-
-  const sendToThirdWindow = useCallback(async (data: any): Promise<boolean> => {
-    if (window.electronAPI) {
-      return await window.electronAPI.sendToThirdWindow(data);
     }
     throw new Error('Electron API not available');
   }, []);
@@ -279,20 +261,6 @@ export const useElectronAPI = () => {
     throw new Error('Electron API not available');
   }, []);
 
-  const setSecondWindowUrl = useCallback(async (url: string): Promise<any> => {
-    if (window.electronAPI) {
-      return await window.electronAPI.setSecondWindowUrl(url);
-    }
-    throw new Error('Electron API not available');
-  }, []);
-
-  const setThirdWindowUrl = useCallback(async (url: string): Promise<any> => {
-    if (window.electronAPI) {
-      return await window.electronAPI.setThirdWindowUrl(url);
-    }
-    throw new Error('Electron API not available');
-  }, []);
-
   const getWindowStatus = useCallback(async (): Promise<any> => {
     if (window.electronAPI) {
       return await window.electronAPI.getWindowStatus();
@@ -326,6 +294,39 @@ export const useElectronAPI = () => {
     },
     []
   );
+
+  const onLoadAgora = useCallback(
+    (callback: (event: any, config: any) => void) => {
+      if (window.electronAPI) {
+        window.electronAPI.onLoadAgora(callback);
+      }
+    },
+    []
+  );
+
+  const onLoadStreamUrl = useCallback(
+    (callback: (event: any, url: string) => void) => {
+      if (window.electronAPI) {
+        window.electronAPI.onLoadStreamUrl(callback);
+      }
+    },
+    []
+  );
+
+  const onShowStreamWindow = useCallback(
+    (callback: (event: any, config: any) => void) => {
+      if (window.electronAPI) {
+        window.electronAPI.onShowStreamWindow(callback);
+      }
+    },
+    []
+  );
+
+  const onHideStreamWindow = useCallback((callback: () => void) => {
+    if (window.electronAPI) {
+      window.electronAPI.onHideStreamWindow(callback);
+    }
+  }, []);
 
   const startVideoRecording = useCallback(
     async (streamData: any, options: any): Promise<any> => {
@@ -440,13 +441,31 @@ export const useElectronAPI = () => {
     []
   );
 
+  const minimizeStreamWindow = useCallback(async (): Promise<any> => {
+    if (window.electronAPI) {
+      return await window.electronAPI.minimizeStreamWindow();
+    }
+    throw new Error('Electron API not available');
+  }, []);
+
+  const closeStreamWindow = useCallback(async (): Promise<any> => {
+    if (window.electronAPI) {
+      return await window.electronAPI.closeStreamWindow();
+    }
+    throw new Error('Electron API not available');
+  }, []);
+
+  const closeStreamWindowFromMain = useCallback(async (): Promise<any> => {
+    if (window.electronAPI) {
+      return await window.electronAPI.closeStreamWindowFromMain();
+    }
+    throw new Error('Electron API not available');
+  }, []);
+
   return {
+    sendMessage,
     getEnvironment,
     getDefaultUrl,
-    openSecondWindow,
-    openThirdWindow,
-    sendToSecondWindow,
-    sendToThirdWindow,
     sendToMainWindow,
     onUrlChanged,
     onMessageFromMain,
@@ -466,12 +485,11 @@ export const useElectronAPI = () => {
     muteVideo,
     stopAudio,
     stopVideo,
-    setSecondWindowUrl,
-    setThirdWindowUrl,
     getWindowStatus,
     onAudioControl,
     onVideoControl,
     onLoadUrl,
+    onLoadAgora,
     startVideoRecording,
     stopVideoRecording,
     startAudioRecording,
@@ -485,5 +503,11 @@ export const useElectronAPI = () => {
     toggleMute,
     stopAdvancedRecording,
     onAdvancedRecordingMessage,
+    minimizeStreamWindow,
+    closeStreamWindow,
+    closeStreamWindowFromMain,
+    onShowStreamWindow,
+    onHideStreamWindow,
+    onLoadStreamUrl,
   };
 };

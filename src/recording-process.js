@@ -9,29 +9,40 @@ function initializeRecordingSentry() {
   const environment = process.env.NODE_ENV || 'development';
 
   if (dsn) {
-    Sentry.init({
-      dsn: dsn,
-      environment: environment,
-      debug: environment === 'development',
-      integrations: [
-        new Sentry.Integrations.GlobalHandlers({
-          onerror: true,
-          onunhandledrejection: true,
-        }),
-        new Sentry.Integrations.Process({
-          onerror: true,
-        }),
-      ],
-      tracesSampleRate: environment === 'production' ? 0.1 : 1.0,
-      attachStacktrace: true,
-      includeLocalVariables: true,
-      release: process.env.APP_VERSION || '1.0.0',
-      dist: 'recording-process',
-    });
+    try {
+      // Check if Sentry integrations are available
+      const integrations = [];
 
-    console.log(
-      `Recording process Sentry initialized for environment: ${environment}`
-    );
+      // Only add integrations if they exist
+      if (Sentry.Integrations && Sentry.Integrations.Process) {
+        try {
+          integrations.push(new Sentry.Integrations.Process());
+        } catch (e) {
+          console.warn('Process integration not available:', e.message);
+        }
+      }
+
+      Sentry.init({
+        dsn: dsn,
+        environment: environment,
+        debug: environment === 'development',
+        integrations: integrations,
+        tracesSampleRate: environment === 'production' ? 0.1 : 1.0,
+        attachStacktrace: true,
+        includeLocalVariables: true,
+        release: process.env.APP_VERSION || '1.0.0',
+        dist: 'recording-process',
+      });
+
+      console.log(
+        `Recording process Sentry initialized for environment: ${environment}`
+      );
+    } catch (error) {
+      console.error('Failed to initialize Sentry in recording process:', error);
+      console.log('Continuing without Sentry...');
+    }
+  } else {
+    console.log('Sentry DSN not provided, skipping initialization');
   }
 }
 

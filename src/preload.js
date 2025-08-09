@@ -8,17 +8,25 @@ const { contextBridge, ipcRenderer } = require('electron');
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('electronAPI', {
+  // Detect if running in Electron environment
+  isElectron: true,
+  // IPC Communication interface
+  sendMessage: async message => {
+    try {
+      return await ipcRenderer.invoke('sendMessage', message);
+    } catch (error) {
+      return { type: 'ERROR', error: error.message };
+    }
+  },
+
   // Environment and URL management
   getEnvironment: () => ipcRenderer.invoke('get-environment'),
   getDefaultUrl: () => ipcRenderer.invoke('get-default-url'),
 
   // Window management
-  openSecondWindow: () => ipcRenderer.invoke('open-second-window'),
-  openThirdWindow: () => ipcRenderer.invoke('open-third-window'),
 
   // Inter-window communication
-  sendToSecondWindow: data => ipcRenderer.invoke('send-to-second-window', data),
-  sendToThirdWindow: data => ipcRenderer.invoke('send-to-third-window', data),
+
   sendToMainWindow: data => ipcRenderer.invoke('send-to-main-window', data),
 
   // Event listeners
@@ -40,14 +48,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   deleteVideoFile: filename =>
     ipcRenderer.invoke('delete-video-file', filename),
 
-  // Agora integration
-  initializeAgora: config => ipcRenderer.invoke('initialize-agora', config),
-  joinChannel: (channelName, uid) =>
-    ipcRenderer.invoke('join-channel', channelName, uid),
-  leaveChannel: () => ipcRenderer.invoke('leave-channel'),
-  publishStream: stream => ipcRenderer.invoke('publish-stream', stream),
-  unpublishStream: () => ipcRenderer.invoke('unpublish-stream'),
-
   // Audio/Video controls
   muteAudio: mute => ipcRenderer.invoke('mute-audio', mute),
   muteVideo: mute => ipcRenderer.invoke('mute-video', mute),
@@ -55,14 +55,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   stopVideo: () => ipcRenderer.invoke('stop-video'),
 
   // Window URL management
-  setSecondWindowUrl: url => ipcRenderer.invoke('set-second-window-url', url),
-  setThirdWindowUrl: url => ipcRenderer.invoke('set-third-window-url', url),
+
   getWindowStatus: () => ipcRenderer.invoke('get-window-status'),
 
   // Event listeners for audio/video controls
   onAudioControl: callback => ipcRenderer.on('audio-control', callback),
   onVideoControl: callback => ipcRenderer.on('video-control', callback),
   onLoadUrl: callback => ipcRenderer.on('load-url', callback),
+  onLoadAgora: callback => ipcRenderer.on('load-agora', callback),
 
   // Recording process APIs
   startVideoRecording: (streamData, options) =>
@@ -97,4 +97,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Sentry API
   captureException: (error, context) => Sentry.captureException(error, context),
   captureMessage: (message, level) => Sentry.captureMessage(message, level),
+
+  // Stream window specific APIs
+  closeStreamWindow: () => ipcRenderer.invoke('close-stream-window'),
+  closeStreamWindowFromMain: () =>
+    ipcRenderer.invoke('close-stream-window-from-main'),
 });

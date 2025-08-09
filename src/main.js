@@ -10,7 +10,11 @@ const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const Store = require('electron-store');
 const fs = require('fs');
+const debounce = require('lodash/debounce');
 const { Worker } = require('worker_threads');
+
+// Load environment variables
+require('dotenv').config({ path: '.env.local' });
 
 // Initialize Sentry
 const Sentry = require('@sentry/electron');
@@ -21,28 +25,44 @@ function initializeSentry() {
   const environment = process.env.NODE_ENV || 'development';
 
   if (dsn) {
-    Sentry.init({
-      dsn: dsn,
-      environment: environment,
-      debug: environment === 'development',
-      integrations: [
-        new Sentry.Integrations.GlobalHandlers({
-          onerror: true,
-          onunhandledrejection: true,
-        }),
-        new Sentry.Integrations.Process({
-          onerror: true,
-        }),
-      ],
-      tracesSampleRate: environment === 'production' ? 0.1 : 1.0,
-      attachStacktrace: true,
-      includeLocalVariables: true,
-      // Enable source maps
-      release: process.env.APP_VERSION || '1.0.0',
-      dist: process.env.NODE_ENV || 'development',
-    });
+    try {
+      // Check if Sentry integrations are available
+      const integrations = [];
 
-    console.log(`Sentry initialized for environment: ${environment}`);
+      if (Sentry.Integrations && Sentry.Integrations.GlobalHandlers) {
+        try {
+          integrations.push(new Sentry.Integrations.GlobalHandlers());
+        } catch (e) {
+          console.warn('GlobalHandlers integration not available:', e.message);
+        }
+      }
+
+      if (Sentry.Integrations && Sentry.Integrations.Process) {
+        try {
+          integrations.push(new Sentry.Integrations.Process());
+        } catch (e) {
+          console.warn('Process integration not available:', e.message);
+        }
+      }
+
+      Sentry.init({
+        dsn: dsn,
+        environment: environment,
+        debug: environment === 'development',
+        integrations: integrations,
+        tracesSampleRate: environment === 'production' ? 0.1 : 1.0,
+        attachStacktrace: true,
+        includeLocalVariables: true,
+        // Enable source maps
+        release: process.env.APP_VERSION || '1.0.0',
+        dist: process.env.NODE_ENV || 'development',
+      });
+
+      console.log(`Sentry initialized for environment: ${environment}`);
+    } catch (error) {
+      console.error('Failed to initialize Sentry:', error);
+      console.log('Continuing without Sentry...');
+    }
   } else {
     console.log('Sentry DSN not provided, skipping initialization');
   }
@@ -53,8 +73,15 @@ const store = new Store();
 
 // Global window references
 let mainWindow;
-let secondWindow;
-let thirdWindow;
+
+let streamWindow; // New global reference for the stream window
+
+// Global configuration storage
+let streamWindowConfig = null;
+
+// Track main window load state to prevent premature stream window closure
+let mainWindowHasLoaded = false;
+let streamWindowSettingUp = false; // Track when stream window is being set up
 
 // Recording process management
 let recordingWorker = null;
@@ -64,12 +91,54 @@ let advancedRecordingWorker = null;
 // Environment configuration
 const ENV = process.env.NODE_ENV || 'development';
 const URLS = {
-  development: 'https://console.allen-stage.in/',
+  development: 'http://localhost:3000/',
   stage: 'https://console.allen-stage.in/',
-  production: 'https://astra.allen.in',
+  production: 'https://astra.allen.in/',
 };
 
 const DEFAULT_URL = URLS[ENV] || URLS.development;
+
+// Helper function to safely access stream window
+function getStreamWindow() {
+  if (streamWindow && !streamWindow.isDestroyed() && streamWindow.webContents) {
+    return streamWindow;
+  }
+  return null;
+}
+
+// Function to inject tokens into browser window local storage
+function injectTokensToWindow(window) {
+  if (ENV === 'development') {
+    const tokens = JSON.parse(process.env.AUTH_TOKEN);
+
+    if (tokens) {
+      // Inject tokens as a single object under 'tokens' key
+      window.webContents.executeJavaScript(`
+        (function() {
+          try {
+            const tokens = ${JSON.stringify(tokens)};
+            localStorage.setItem('tokens', JSON.stringify(tokens));
+            console.log('Injected tokens object:', tokens);
+          } catch (error) {
+            console.error('Failed to inject tokens to localStorage:', error);
+          }
+        })();
+      `);
+    }
+  }
+}
+
+function injectTokensToStreamWindow(window) {
+  if (ENV === 'development') {
+    const tokens = JSON.parse(process.env.AUTH_TOKEN);
+
+    if (tokens) {
+      // Send tokens via IPC to the stream window
+      window.webContents.send('inject-tokens', tokens);
+      console.log('Sent tokens to stream window via IPC');
+    }
+  }
+}
 
 function createMainWindow() {
   mainWindow = new BrowserWindow({
@@ -82,6 +151,8 @@ function createMainWindow() {
       webSecurity: true,
       webviewTag: true,
       preload: path.join(__dirname, 'preload.js'),
+      // Allow communication with allen-ui-live
+      allowRunningInsecureContent: true,
     },
     icon: path.join(__dirname, '../assets/icon.png'),
     title: 'Allen UI Console',
@@ -96,74 +167,43 @@ function createMainWindow() {
     mainWindow.webContents.openDevTools();
   }
 
-  mainWindow.on('closed', () => {
-    mainWindow = null;
-  });
-}
-
-function createSecondWindow() {
-  if (secondWindow) {
-    secondWindow.focus();
-    return;
-  }
-
-  secondWindow = new BrowserWindow({
-    width: 1000,
-    height: 700,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      enableRemoteModule: false,
-      webSecurity: true,
-      webviewTag: true,
-      preload: path.join(__dirname, 'preload.js'),
-    },
-    title: 'Allen UI Console - Second Window',
+  // Track when main window finishes loading
+  mainWindow.webContents.on('did-finish-load', () => {
+    console.log('Main window finished loading');
+    mainWindowHasLoaded = true;
   });
 
-  secondWindow.loadFile(
-    path.join(__dirname, '../dist/renderer/second-window.html')
-  );
+  // Handle main window resize to reposition stream window
+  let resizeTimeout;
+  mainWindow.on('resize', () => {
+    // Debounce resize events to prevent too many repositioning calls
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      if (streamWindow && !streamWindow.isDestroyed()) {
+        const mainBounds = mainWindow.getBounds();
+        const streamBounds = streamWindow.getBounds();
 
-  if (ENV === 'development') {
-    secondWindow.webContents.openDevTools();
-  }
+        // Calculate new position
+        const newStreamX =
+          mainBounds.x + mainBounds.width - streamBounds.width - 20;
+        const newStreamY =
+          mainBounds.y + mainBounds.height - streamBounds.height - 20;
 
-  secondWindow.on('closed', () => {
-    secondWindow = null;
-  });
-}
+        // Ensure the stream window stays within screen bounds
+        const screenBounds =
+          require('electron').screen.getPrimaryDisplay().workAreaSize;
+        const finalX = Math.max(
+          0,
+          Math.min(newStreamX, screenBounds.width - streamBounds.width)
+        );
+        const finalY = Math.max(
+          0,
+          Math.min(newStreamY, screenBounds.height - streamBounds.height)
+        );
 
-function createThirdWindow() {
-  if (thirdWindow) {
-    thirdWindow.focus();
-    return;
-  }
-
-  thirdWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      enableRemoteModule: false,
-      webSecurity: true,
-      webviewTag: true,
-      preload: path.join(__dirname, 'preload.js'),
-    },
-    title: 'Allen UI Console - Video Stream',
-  });
-
-  thirdWindow.loadFile(
-    path.join(__dirname, '../dist/renderer/third-window.html')
-  );
-
-  if (ENV === 'development') {
-    thirdWindow.webContents.openDevTools();
-  }
-
-  thirdWindow.on('closed', () => {
-    thirdWindow = null;
+        streamWindow.setPosition(finalX, finalY);
+      }
+    }, 100); // 100ms debounce
   });
 }
 
@@ -203,18 +243,41 @@ function createMenu() {
         },
       ],
     },
+
     {
-      label: 'Window',
+      label: 'View',
       submenu: [
         {
-          label: 'Open Second Window',
-          accelerator: 'CmdOrCtrl+Shift+2',
-          click: () => createSecondWindow(),
+          label: 'Reload',
+          accelerator: 'CmdOrCtrl+R',
+          click: () => {
+            if (mainWindow && !mainWindow.isDestroyed()) {
+              mainWindow.webContents.reload();
+            }
+          },
         },
         {
-          label: 'Open Third Window',
-          accelerator: 'CmdOrCtrl+Shift+3',
-          click: () => createThirdWindow(),
+          label: 'Force Reload',
+          accelerator: 'CmdOrCtrl+Shift+R',
+          click: () => {
+            if (mainWindow && !mainWindow.isDestroyed()) {
+              mainWindow.webContents.reloadIgnoringCache();
+            }
+          },
+        },
+        { type: 'separator' },
+        {
+          label: 'Toggle DevTools',
+          accelerator: 'F12',
+          click: () => {
+            if (mainWindow && !mainWindow.isDestroyed()) {
+              if (mainWindow.webContents.isDevToolsOpened()) {
+                mainWindow.webContents.closeDevTools();
+              } else {
+                mainWindow.webContents.openDevTools();
+              }
+            }
+          },
         },
       ],
     },
@@ -240,37 +303,327 @@ function createMenu() {
   Menu.setApplicationMenu(menu);
 }
 
+// Stream overlay is now handled within the main window renderer process
+// No separate window creation needed
+
+function createStreamWindow(config) {
+  try {
+    console.log('Starting createStreamWindow with config:', config);
+
+    if (streamWindow && !streamWindow.isDestroyed()) {
+      console.log('Stream window already exists, focusing it');
+      streamWindow.focus();
+      return;
+    }
+
+    // Set flag to prevent premature closure during setup
+    streamWindowSettingUp = true;
+
+    // Set a timeout to reset the flag in case setup gets stuck
+    setTimeout(() => {
+      if (streamWindowSettingUp) {
+        console.warn('Stream window setup timeout, resetting flag');
+        streamWindowSettingUp = false;
+      }
+    }, 10000); // 10 second timeout
+
+    try {
+      // Calculate dimensions for 16:9 aspect ratio with 180px height
+      const height = 180;
+      const width = Math.round(height * (16 / 9)); // 320px
+
+      // Get main window bounds to position stream window at bottom right
+      const mainBounds = mainWindow.getBounds();
+      const streamX = mainBounds.x + mainBounds.width - width - 20; // 20px from right edge
+      const streamY = mainBounds.y + mainBounds.height - height - 20; // 20px from bottom
+
+      console.log('Creating BrowserWindow with dimensions:', {
+        width,
+        height,
+        x: streamX,
+        y: streamY,
+      });
+
+      streamWindow = new BrowserWindow({
+        width: width,
+        height: height,
+        x: streamX,
+        y: streamY,
+        frame: false, // Remove default window frame for custom styling
+        resizable: true,
+        movable: true,
+        alwaysOnTop: true, // Keep window on top
+        skipTaskbar: true, // Don't show in taskbar
+        parent: null, // Remove parent to make it truly floating
+        modal: false, // Don't make it modal
+        focusable: true,
+        minimizable: false, // Disable minimize
+        maximizable: false, // Prevent maximization for floating window
+        fullscreenable: false, // Prevent fullscreen
+        closable: false, // Disable close button
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true,
+          enableRemoteModule: false,
+          webSecurity: true,
+          webviewTag: false,
+          preload: path.join(__dirname, 'stream-preload.js'),
+        },
+        title: 'Allen UI Console - Stream Window',
+        show: false, // Don't show until ready
+        minWidth: 240,
+        minHeight: 135,
+        maxWidth: 800,
+        maxHeight: 450,
+        // Enable transparency for better floating effect
+        transparent: false,
+        // Enable rounded corners (macOS)
+        titleBarStyle: 'hidden',
+        // Enable window shadow
+        hasShadow: true,
+      });
+
+      console.log('BrowserWindow created successfully');
+    } catch (error) {
+      console.error('Error creating BrowserWindow:', error);
+      throw error; // Re-throw to be caught by outer handler
+    }
+
+    try {
+      // Extract stream config from the payload
+      const { appId, channel, token, uid, meetingId, deviceIds, url } = config;
+      const streamConfig = {
+        appId,
+        channel,
+        token,
+        uid,
+        meetingId,
+        deviceIds,
+        url,
+      };
+
+      console.log('Creating stream window with config:', streamConfig);
+
+      // Store config globally for the stream window
+      streamWindowConfig = streamConfig;
+
+      // Load the streaming URL from allen-ui-live
+      const streamUrl = url;
+      console.log('Loading stream URL:', streamUrl);
+
+      streamWindow.loadURL(streamUrl);
+      console.log('Stream URL loaded successfully');
+    } catch (error) {
+      console.error('Error loading stream URL:', error);
+      throw error;
+    }
+
+    // Show window immediately after stream window loads
+    streamWindow.webContents.on('did-finish-load', () => {
+      try {
+        console.log('Stream window loaded');
+
+        // Ensure window is still valid before proceeding
+        if (streamWindow && !streamWindow.isDestroyed()) {
+          console.log('Showing stream window');
+          streamWindow.show(); // Show window immediately
+
+          // Inject tokens if in development mode
+          injectTokensToStreamWindow(streamWindow);
+
+          // Send stream config to the web page
+          console.log(
+            'Sending stream config to stream window:',
+            streamWindowConfig
+          );
+          streamWindow.webContents.send('stream-config', streamWindowConfig);
+
+          if (ENV === 'development') {
+            console.log('Opening DevTools in development mode');
+            streamWindow.webContents.openDevTools();
+          }
+
+          console.log('Stream window setup completed successfully');
+          streamWindowSettingUp = false; // Reset setup flag
+        } else {
+          console.warn(
+            'Stream window was destroyed before setup could complete'
+          );
+          streamWindowSettingUp = false; // Reset setup flag
+        }
+      } catch (error) {
+        console.error('Error in stream window load handler:', error);
+        console.error('Error stack:', error.stack);
+        streamWindowSettingUp = false; // Reset setup flag on error
+      }
+    });
+
+    // Add error handler for webContents
+    streamWindow.webContents.on(
+      'did-fail-load',
+      (event, errorCode, errorDescription, validatedURL) => {
+        console.error('Stream window failed to load:', {
+          errorCode,
+          errorDescription,
+          validatedURL,
+        });
+      }
+    );
+
+    // Add crash handler
+    streamWindow.webContents.on('crashed', (event, killed) => {
+      console.error('Stream window webContents crashed:', { killed });
+    });
+
+    // Handle window close
+    streamWindow.on('closed', () => {
+      try {
+        console.log('Stream window closed');
+        streamWindow = null;
+        streamWindowSettingUp = false; // Reset setup flag
+      } catch (error) {
+        console.error('Error in stream window closed handler:', error);
+        streamWindow = null;
+        streamWindowSettingUp = false; // Reset setup flag
+      }
+    });
+
+    // Enable window dragging and set up floating behavior
+    try {
+      streamWindow.setMovable(true);
+      streamWindow.setResizable(true);
+
+      // Set minimum and maximum sizes
+      streamWindow.setMinimumSize(240, 135);
+      streamWindow.setMaximumSize(800, 450);
+
+      // Make window always on top
+      streamWindow.setAlwaysOnTop(true, 'screen-saver');
+
+      // Enable window focus
+      streamWindow.setFocusable(true);
+    } catch (error) {
+      console.error('Error setting stream window properties:', error);
+    }
+
+    // Add floating window event handlers
+    streamWindow.on('focus', () => {
+      console.log('Stream window focused');
+    });
+
+    streamWindow.on('blur', () => {
+      console.log('Stream window lost focus');
+    });
+
+    streamWindow.on('move', () => {
+      console.log('Stream window moved');
+    });
+
+    streamWindow.on('resize', () => {
+      console.log('Stream window resized');
+    });
+
+    // Handle stream window minimize/maximize
+    streamWindow.on('minimize', () => {
+      console.log('Stream window minimized');
+    });
+
+    streamWindow.on('restore', () => {
+      console.log('Stream window restored');
+    });
+
+    // Close stream window when main window is about to close
+    mainWindow.on('close', () => {
+      try {
+        if (streamWindow && !streamWindow.isDestroyed()) {
+          console.log('Main window closing, closing stream window');
+          streamWindow.close();
+          streamWindow = null;
+        }
+      } catch (error) {
+        console.error(
+          'Error closing stream window on main window close:',
+          error
+        );
+        streamWindow = null;
+      }
+    });
+
+    // Clean up when main window is closed
+    mainWindow.on('closed', () => {
+      console.log('Main window closed');
+      mainWindow = null;
+    });
+
+    // Close stream window when main window is minimized
+    mainWindow.on('minimize', () => {
+      try {
+        if (streamWindow && !streamWindow.isDestroyed()) {
+          console.log('Main window minimized, closing stream window');
+          streamWindow.close();
+          streamWindow = null;
+        }
+      } catch (error) {
+        console.error('Error closing stream window on minimize:', error);
+        streamWindow = null;
+      }
+    });
+
+    // Handle main window reload
+    mainWindow.webContents.on('did-start-loading', () => {
+      try {
+        // Close stream window when main window starts reloading
+        if (
+          mainWindowHasLoaded &&
+          streamWindow &&
+          !streamWindow.isDestroyed() &&
+          !streamWindowSettingUp
+        ) {
+          console.log('Main window reloading, closing stream window');
+          streamWindow.close();
+          streamWindow = null;
+        }
+      } catch (error) {
+        console.error('Error closing stream window on reload:', error);
+        streamWindow = null;
+      }
+    });
+
+    console.log('createStreamWindow completed successfully');
+  } catch (error) {
+    console.error('Error in createStreamWindow:', error);
+    console.error('Error stack:', error.stack);
+
+    // Clean up any partially created window
+    if (streamWindow && !streamWindow.isDestroyed()) {
+      try {
+        streamWindow.close();
+      } catch (closeError) {
+        console.error('Error closing stream window after error:', closeError);
+      }
+    }
+    streamWindow = null;
+    streamWindowSettingUp = false; // Reset setup flag
+
+    // Show error dialog in development
+    if (ENV === 'development') {
+      dialog.showErrorBox(
+        'Stream Window Error',
+        `Failed to create stream window: ${error.message}\n\nStack: ${error.stack}`
+      );
+    }
+
+    throw error; // Re-throw to be handled by caller
+  }
+}
+
 // IPC Handlers
 ipcMain.handle('get-environment', () => {
   return ENV;
 });
 
 ipcMain.handle('get-default-url', () => {
-  return store.get('customUrl', DEFAULT_URL);
-});
-
-ipcMain.handle('open-second-window', () => {
-  createSecondWindow();
-  return true;
-});
-
-ipcMain.handle('open-third-window', () => {
-  createThirdWindow();
-  return true;
-});
-
-ipcMain.handle('send-to-second-window', (event, data) => {
-  if (secondWindow) {
-    secondWindow.webContents.send('message-from-main', data);
-  }
-  return true;
-});
-
-ipcMain.handle('send-to-third-window', (event, data) => {
-  if (thirdWindow) {
-    thirdWindow.webContents.send('message-from-main', data);
-  }
-  return true;
+  return DEFAULT_URL;
 });
 
 ipcMain.handle('send-to-main-window', (event, data) => {
@@ -343,140 +696,120 @@ ipcMain.handle('delete-video-file', async (event, filename) => {
   }
 });
 
-// Agora integration handlers
-ipcMain.handle('initialize-agora', async (event, config) => {
-  console.log('initialize-agora', config, event);
-  try {
-    // Agora initialization will be handled in renderer
-    return { success: true, message: 'Agora initialized' };
-  } catch (error) {
-    console.error('Failed to initialize Agora:', error);
-    return { success: false, error: error.message };
-  }
-});
-
-ipcMain.handle('join-channel', async (event, channelName, uid) => {
-  try {
-    console.log('join-channel', channelName, uid, event);
-    // Channel joining will be handled in renderer
-    return { success: true, message: 'Joined channel' };
-  } catch (error) {
-    console.error('Failed to join channel:', error);
-    return { success: false, error: error.message };
-  }
-});
-
-ipcMain.handle('leave-channel', async () => {
-  try {
-    // Channel leaving will be handled in renderer
-    return { success: true, message: 'Left channel' };
-  } catch (error) {
-    console.error('Failed to leave channel:', error);
-    return { success: false, error: error.message };
-  }
-});
-
-ipcMain.handle('publish-stream', async () => {
-  try {
-    // Stream publishing will be handled in renderer
-    return { success: true, message: 'Stream published' };
-  } catch (error) {
-    console.error('Failed to publish stream:', error);
-    return { success: false, error: error.message };
-  }
-});
-
-ipcMain.handle('unpublish-stream', async () => {
-  try {
-    // Stream unpublishing will be handled in renderer
-    return { success: true, message: 'Stream unpublished' };
-  } catch (error) {
-    console.error('Failed to unpublish stream:', error);
-    return { success: false, error: error.message };
-  }
-});
-
-// Audio/Video control handlers
-ipcMain.handle('mute-audio', async (event, mute) => {
-  try {
-    if (thirdWindow) {
-      thirdWindow.webContents.send('audio-control', { mute });
-    }
-    return { success: true, message: `Audio ${mute ? 'muted' : 'unmuted'}` };
-  } catch (error) {
-    console.error('Failed to control audio:', error);
-    return { success: false, error: error.message };
-  }
-});
-
-ipcMain.handle('mute-video', async (event, mute) => {
-  try {
-    if (thirdWindow) {
-      thirdWindow.webContents.send('video-control', { mute });
-    }
-    return { success: true, message: `Video ${mute ? 'muted' : 'unmuted'}` };
-  } catch (error) {
-    console.error('Failed to control video:', error);
-    return { success: false, error: error.message };
-  }
-});
-
-ipcMain.handle('stop-audio', async () => {
-  try {
-    if (thirdWindow) {
-      thirdWindow.webContents.send('audio-control', { stop: true });
-    }
-    return { success: true, message: 'Audio stopped' };
-  } catch (error) {
-    console.error('Failed to stop audio:', error);
-    return { success: false, error: error.message };
-  }
-});
-
-ipcMain.handle('stop-video', async () => {
-  try {
-    if (thirdWindow) {
-      thirdWindow.webContents.send('video-control', { stop: true });
-    }
-    return { success: true, message: 'Video stopped' };
-  } catch (error) {
-    console.error('Failed to stop video:', error);
-    return { success: false, error: error.message };
-  }
-});
-
-// Window URL management handlers
-ipcMain.handle('set-second-window-url', async (event, url) => {
-  try {
-    if (secondWindow) {
-      secondWindow.webContents.send('load-url', url);
-    }
-    return { success: true, message: 'URL set for second window' };
-  } catch (error) {
-    console.error('Failed to set second window URL:', error);
-    return { success: false, error: error.message };
-  }
-});
-
-ipcMain.handle('set-third-window-url', async (event, url) => {
-  try {
-    if (thirdWindow) {
-      thirdWindow.webContents.send('load-url', url);
-    }
-    return { success: true, message: 'URL set for third window' };
-  } catch (error) {
-    console.error('Failed to set third window URL:', error);
-    return { success: false, error: error.message };
-  }
-});
-
 // Get window status
 ipcMain.handle('get-window-status', async () => {
   return {
     mainWindow: !!mainWindow,
-    secondWindow: !!secondWindow,
-    thirdWindow: !!thirdWindow,
   };
+});
+
+// Centralized IPC Communication handler for allen-ui-live web app
+ipcMain.handle('sendMessage', async (event, message) => {
+  console.log('Received message from allen-ui-live:', message);
+
+  try {
+    switch (message.type) {
+      case 'CONFIG_UPDATE':
+        // Create stream window with Agora config
+        if (streamWindow && !streamWindow.isDestroyed()) {
+          streamWindow.close();
+          streamWindow = null;
+        }
+
+        const agoraConfig = {
+          appId: message.payload.appId,
+          channel: message.payload.channel,
+          token: message.payload.token,
+          uid: parseInt(message.payload.uid),
+          meetingId: message.payload.meetingId,
+          deviceIds: message.payload.deviceIds,
+          url: message.payload.url,
+        };
+
+        createStreamWindow(agoraConfig);
+        return { type: 'SUCCESS', payload: 'Stream window created' };
+
+      case 'AUDIO_TOGGLE':
+        // Forward audio toggle to stream window
+        if (streamWindow && !streamWindow.isDestroyed()) {
+          streamWindow.webContents.send(
+            'stream-control',
+            message.payload.enabled ? 'unmute-audio' : 'mute-audio'
+          );
+        }
+        return { type: 'SUCCESS', payload: 'Audio toggle sent' };
+
+      case 'VIDEO_TOGGLE':
+        // Forward video toggle to stream window
+        if (streamWindow && !streamWindow.isDestroyed()) {
+          streamWindow.webContents.send(
+            'stream-control',
+            message.payload.enabled ? 'unmute-video' : 'mute-video'
+          );
+        }
+        return { type: 'SUCCESS', payload: 'Video toggle sent' };
+
+      case 'LEAVE_MEETING':
+        // Close stream window
+        if (streamWindow && !streamWindow.isDestroyed()) {
+          streamWindow.close();
+          streamWindow = null;
+        }
+        return { type: 'SUCCESS', payload: 'Stream window closed' };
+
+      default:
+        return { type: 'ERROR', error: 'Unknown message type' };
+    }
+  } catch (error) {
+    console.error('Error handling message from allen-ui-live:', error);
+    return { type: 'ERROR', error: error.message };
+  }
+});
+
+// Request stream config handler
+ipcMain.handle('request-stream-config', async event => {
+  try {
+    if (streamWindowConfig) {
+      console.log('Returning stream config:', streamWindowConfig);
+      return streamWindowConfig;
+    } else {
+      console.warn('No stream config available');
+      throw new Error('No stream config available');
+    }
+  } catch (error) {
+    console.error('Failed to get stream config:', error);
+    throw error;
+  }
+});
+
+// Stream control handler
+ipcMain.handle('stream-control', async (event, action, enabled) => {
+  try {
+    console.log('Stream control action:', action, 'enabled:', enabled);
+
+    // Forward control action to main window
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('stream-control-action', action, enabled);
+    }
+
+    return { success: true, message: 'Stream control action sent' };
+  } catch (error) {
+    console.error('Failed to handle stream control:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Stream window control handlers
+ipcMain.handle('close-stream-window', async event => {
+  try {
+    if (streamWindow && !streamWindow.isDestroyed()) {
+      streamWindow.close();
+    }
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to close stream window:', error);
+    return { success: false, error: error.message };
+  }
 });
 
 // Recording process management
@@ -530,9 +863,9 @@ function handleRecordingProcessMessage(message) {
       case 'audio-recording-started':
       case 'audio-recording-stopped':
       case 'audio-recording-saved':
-        // Forward to appropriate window
-        if (thirdWindow) {
-          thirdWindow.webContents.send('recording-process-message', message);
+        // Forward to main window
+        if (mainWindow) {
+          mainWindow.webContents.send('recording-process-message', message);
         }
         break;
 
@@ -687,9 +1020,9 @@ function handleAdvancedRecordingProcessMessage(message) {
       case 'audio-mute-toggled':
       case 'recording-stopped':
       case 'combine-progress':
-        // Forward to appropriate window
-        if (thirdWindow) {
-          thirdWindow.webContents.send('advanced-recording-message', message);
+        // Forward to main window
+        if (mainWindow) {
+          mainWindow.webContents.send('advanced-recording-message', message);
         }
         break;
 
@@ -887,13 +1220,10 @@ function cleanup() {
     mainWindow.close();
     mainWindow = null;
   }
-  if (secondWindow) {
-    secondWindow.close();
-    secondWindow = null;
-  }
-  if (thirdWindow) {
-    thirdWindow.close();
-    thirdWindow = null;
+
+  if (streamWindow) {
+    streamWindow.close();
+    streamWindow = null;
   }
 
   // Terminate workers
@@ -909,54 +1239,119 @@ function cleanup() {
   console.log('Cleanup completed');
 }
 
-// App event handlers
-app.whenReady().then(() => {
-  // Initialize Sentry first
-  initializeSentry();
-
-  // Initialize recording processes
-  initializeRecordingProcess();
-  initializeAdvancedRecordingProcess();
-
-  createMainWindow();
-  createMenu();
-  setupAutoUpdater();
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createMainWindow();
-    }
+// Security: Prevent new window creation
+app.on('web-contents-created', (event, contents) => {
+  contents.on('new-window', (event, navigationUrl) => {
+    event.preventDefault();
+    shell.openExternal(navigationUrl);
   });
 });
 
+// Stream window control handlers
+
+// Handle stream window close request from main window
+ipcMain.handle('close-stream-window-from-main', async () => {
+  try {
+    if (streamWindow && !streamWindow.isDestroyed()) {
+      streamWindow.close();
+      streamWindow = null;
+    }
+    return {
+      type: 'SUCCESS',
+      payload: 'Stream window closed from main window',
+    };
+  } catch (error) {
+    return { type: 'ERROR', error: error.message };
+  }
+});
+
+// App event handlers
+app.on('ready', () => {
+  try {
+    console.log('App ready event fired');
+
+    // Initialize Sentry
+    initializeSentry();
+
+    // Create main window
+    createMainWindow();
+
+    // Create menu
+    createMenu();
+
+    // Initialize recording processes
+    initializeRecordingProcess();
+    initializeAdvancedRecordingProcess();
+
+    // Setup auto updater
+    setupAutoUpdater();
+
+    console.log('App initialization completed');
+  } catch (error) {
+    console.error('Error during app initialization:', error);
+    console.error('Error stack:', error.stack);
+
+    if (ENV === 'development') {
+      dialog.showErrorBox(
+        'App Initialization Error',
+        `Failed to initialize app: ${error.message}\n\nStack: ${error.stack}`
+      );
+    }
+  }
+});
+
 app.on('window-all-closed', () => {
-  cleanup();
+  console.log('All windows closed');
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
 
-// Handle app quit
+app.on('activate', () => {
+  console.log('App activated');
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createMainWindow();
+  }
+});
+
 app.on('before-quit', () => {
+  console.log('App quitting, cleaning up...');
+
+  // Ensure stream window is closed
+  if (streamWindow && !streamWindow.isDestroyed()) {
+    console.log('Closing stream window before app quit');
+    try {
+      streamWindow.close();
+      streamWindow = null;
+    } catch (error) {
+      console.error('Error closing stream window before quit:', error);
+      streamWindow = null;
+    }
+  }
+
   cleanup();
 });
 
-// Handle process termination
-process.on('SIGTERM', () => {
-  cleanup();
-  process.exit(0);
+// Handle uncaught exceptions
+process.on('uncaughtException', error => {
+  console.error('Uncaught Exception:', error);
+  console.error('Error stack:', error.stack);
+
+  if (ENV === 'development') {
+    dialog.showErrorBox(
+      'Uncaught Exception',
+      `An uncaught exception occurred: ${error.message}\n\nStack: ${error.stack}`
+    );
+  }
 });
 
-process.on('SIGINT', () => {
-  cleanup();
-  process.exit(0);
-});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 
-// Security: Prevent new window creation
-app.on('web-contents-created', (event, contents) => {
-  console.log('web-contents-created', event, contents);
-  contents.on('new-window', (event, navigationUrl) => {
-    event.preventDefault();
-    shell.openExternal(navigationUrl);
-  });
+  if (ENV === 'development') {
+    dialog.showErrorBox(
+      'Unhandled Rejection',
+      `An unhandled rejection occurred: ${reason}`
+    );
+  }
 });

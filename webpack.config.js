@@ -1,11 +1,10 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   entry: {
-    main: './src/renderer/index.tsx',
-    'second-window': './src/renderer/second-window.tsx',
-    'third-window': './src/renderer/third-window.tsx'
+    main: './src/renderer/index.tsx'
   },
   output: {
     path: path.resolve(__dirname, 'dist/renderer'),
@@ -64,20 +63,6 @@ module.exports = {
       inject: true,
       minify: false,
       chunks: ['main']
-    }),
-    new HtmlWebpackPlugin({
-      template: './src/renderer/second-window.html',
-      filename: 'second-window.html',
-      inject: true,
-      minify: false,
-      chunks: ['second-window']
-    }),
-    new HtmlWebpackPlugin({
-      template: './src/renderer/third-window.html',
-      filename: 'third-window.html',
-      inject: true,
-      minify: false,
-      chunks: ['third-window']
     })
   ],
   devServer: {

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import './WebViewContainer.css';
 
 interface WebViewContainerProps {
@@ -19,6 +19,7 @@ const WebViewContainer: React.FC<WebViewContainerProps> = ({
   onLoadFail,
 }) => {
   const webviewRef = useRef<any>(null);
+  const [canGoBack, setCanGoBack] = useState<boolean>(false);
 
   useEffect(() => {
     if (webviewRef.current) {
@@ -35,17 +36,44 @@ const WebViewContainer: React.FC<WebViewContainerProps> = ({
       webview.addEventListener('did-finish-load', onLoadFinish);
       webview.addEventListener('did-fail-load', onLoadFail);
 
+      // Add navigation event listeners
+      webview.addEventListener('did-navigate', () => {
+        updateNavigationState();
+      });
+
+      webview.addEventListener('did-navigate-in-page', () => {
+        updateNavigationState();
+      });
+
       return () => {
         webview.removeEventListener('ipc-message', onMessage);
+        webview.removeEventListener('did-navigate', updateNavigationState);
+        webview.removeEventListener(
+          'did-navigate-in-page',
+          updateNavigationState
+        );
       };
     }
   }, [onMessage]);
 
+  const updateNavigationState = () => {
+    if (webviewRef.current) {
+      const canGoBackState = webviewRef.current.canGoBack();
+      setCanGoBack(canGoBackState);
+    }
+  };
+
+  const handleGoBack = () => {
+    if (webviewRef.current && canGoBack) {
+      webviewRef.current.goBack();
+    }
+  };
+
   useEffect(() => {
     if (webviewRef.current && url) {
       console.log('WebViewContainer: Setting src to', url);
+      // Just set the src attribute, don't call loadURL
       webviewRef.current.src = url;
-      webviewRef.current.loadURL(url);
     }
   }, [url]);
 
@@ -58,11 +86,21 @@ const WebViewContainer: React.FC<WebViewContainerProps> = ({
   return (
     <div className='webview-container'>
       {isLoading && <div className='loading'>Loading application...</div>}
+      {canGoBack && (
+        <button
+          className='go-back-btn'
+          onClick={handleGoBack}
+          disabled={isLoading}
+        >
+          ← Back
+        </button>
+      )}
       <webview
         ref={webviewRef}
         id='webview'
         src={url}
         nodeintegration={true}
+        webpreferences='contextIsolation=false, nodeIntegration=true, enableRemoteModule=true'
         className={isLoading ? 'hidden' : ''}
         {...({
           onDidStartLoading: onLoadStart,

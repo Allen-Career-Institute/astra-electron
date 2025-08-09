@@ -1,0 +1,210 @@
+.stream-overlay {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 320px;
+  height: 180px;
+  background: #1a1a1a;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #333;
+  cursor: grab;
+  user-select: none;
+  resize: both;
+  min-width: 200px;
+  min-height: 120px;
+  max-width: 600px;
+  max-height: 400px;
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.stream-overlay:active {
+  cursor: grabbing;
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+  border-color: #555;
+}
+
+.stream-overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: grab;
+  user-select: none;
+  position: relative;
+}
+
+.stream-overlay-header:active {
+  cursor: grabbing;
+}
+
+.stream-overlay-title {
+  font-weight: 600;
+  flex: 1;
+}
+
+.stream-overlay-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.stream-overlay-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.stream-overlay-content {
+  flex: 1;
+  position: relative;
+  background: #2a2a2a;
+  overflow: hidden;
+}
+
+.stream-overlay-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #ccc;
+  font-size: 0.9rem;
+  z-index: 1;
+}
+
+.stream-webview {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #2a2a2a;
+}
+
+.stream-webview.hidden {
+  display: none;
+}
+
+/* Resize handle */
+.stream-overlay::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(
+    -45deg,
+    transparent 30%,
+    #666 30%,
+    #666 40%,
+    transparent 40%,
+    transparent 60%,
+    #666 60%,
+    #666 70%,
+    transparent 70%
+  );
+  cursor: nw-resize;
+  z-index: 5;
+  border-radius: 2px;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.stream-overlay:hover::after {
+  opacity: 1;
+}
+
+/* Border highlight on hover */
+.stream-overlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  pointer-events: none;
+  z-index: 1;
+  transition: border-color 0.2s ease;
+}
+
+.stream-overlay:hover::before {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Drag indicator */
+.stream-overlay-header::after {
+  content: '⋮⋮';
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.7rem;
+  margin-left: 8px;
+  letter-spacing: -2px;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.stream-overlay:hover .stream-overlay-header::after {
+  opacity: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .stream-overlay {
+    width: 280px;
+    height: 157px;
+    bottom: 10px;
+    right: 10px;
+  }
+}
+
+/* Animation for smooth appearance */
+.stream-overlay {
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Focus and active states */
+.stream-overlay:focus-within {
+  border-color: #777;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Prevent text selection during drag */
+.stream-overlay * {
+  user-select: none;
+}
+
+.stream-overlay input,
+.stream-overlay textarea {
+  user-select: text;
+}
