@@ -1,43 +1,47 @@
-// Environment configuration
-const ENV = process.env.NODE_ENV || 'development';
+import { RecordingConfig } from '../types/electron';
 
-const URLS = {
+// Environment configuration
+const ENV: string = process.env.NODE_ENV || 'development';
+
+const URLS: Record<string, string> = {
   development: 'http://localhost:3000/',
   stage: 'https://console.allen-stage.in/',
   production: 'https://astra.allen.in/',
 };
 
-const DEFAULT_URL = URLS[ENV] || URLS.development;
+const DEFAULT_URL: string = URLS[ENV] || URLS.development;
 
 // Recording configuration
-const RECORDING_CONFIG = {
+const RECORDING_CONFIG: RecordingConfig = {
   // Default recording settings
   enabled: process.env.RECORDING_ENABLED !== 'false',
-  chunkDuration: parseInt(process.env.RECORDING_CHUNK_DURATION) || 30000, // 30 seconds
-  maxChunks: parseInt(process.env.RECORDING_MAX_CHUNKS) || 50,
+  chunkDuration: parseInt(process.env.RECORDING_CHUNK_DURATION || '30000'), // 30 seconds
+  maxChunks: parseInt(process.env.RECORDING_MAX_CHUNKS || '50'),
   videoCodec: process.env.RECORDING_VIDEO_CODEC || 'libx264',
   audioCodec: process.env.RECORDING_AUDIO_CODEC || 'aac',
   videoBitrate: process.env.RECORDING_VIDEO_BITRATE || '1500k',
   audioBitrate: process.env.RECORDING_AUDIO_BITRATE || '96k',
-  fps: parseInt(process.env.RECORDING_FPS) || 25,
+  fps: parseInt(process.env.RECORDING_FPS || '25'),
   resolution: process.env.RECORDING_RESOLUTION || '1280x720',
   preset: process.env.RECORDING_PRESET || 'ultrafast',
   tune: process.env.RECORDING_TUNE || 'zerolatency',
-  memoryLimit: parseInt(process.env.RECORDING_MEMORY_LIMIT) || 500, // MB
+  memoryLimit: parseInt(process.env.RECORDING_MEMORY_LIMIT || '500'), // MB
   autoRestart: process.env.RECORDING_AUTO_RESTART !== 'false',
-  maxRestartAttempts: parseInt(process.env.RECORDING_MAX_RESTART_ATTEMPTS) || 3,
-  restartDelay: parseInt(process.env.RECORDING_RESTART_DELAY) || 2000,
+  maxRestartAttempts: parseInt(
+    process.env.RECORDING_MAX_RESTART_ATTEMPTS || '3'
+  ),
+  restartDelay: parseInt(process.env.RECORDING_RESTART_DELAY || '2000'),
 
   // Storage settings
   storagePath: process.env.RECORDING_STORAGE_PATH || 'recordings',
-  retentionHours: parseInt(process.env.RECORDING_RETENTION_HOURS) || 24,
+  retentionHours: parseInt(process.env.RECORDING_RETENTION_HOURS || '24'),
 
   // Quality settings
   quality: process.env.RECORDING_QUALITY || 'balanced', // low, balanced, high
 };
 
 // Quality presets
-const QUALITY_PRESETS = {
+const QUALITY_PRESETS: Record<string, Partial<RecordingConfig>> = {
   low: {
     videoBitrate: '800k',
     audioBitrate: '64k',
@@ -64,10 +68,4 @@ if (RECORDING_CONFIG.quality && QUALITY_PRESETS[RECORDING_CONFIG.quality]) {
   Object.assign(RECORDING_CONFIG, preset);
 }
 
-module.exports = {
-  ENV,
-  URLS,
-  DEFAULT_URL,
-  RECORDING_CONFIG,
-  QUALITY_PRESETS,
-};
+export { ENV, URLS, DEFAULT_URL, RECORDING_CONFIG, QUALITY_PRESETS };

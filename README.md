@@ -182,28 +182,78 @@ module.exports = {
 ### **Available Scripts**
 
 ```bash
-# Development
-yarn dev             # Start development server
-yarn start           # Start Electron app
+# 🚀 Development Commands
+yarn dev             # Build TypeScript and start Electron app (one-time)
+yarn dev:watch       # Continuous development with auto-restart on file changes
+yarn dev:full        # Full-stack development (renderer + main process)
 
-# Building
-yarn build           # Build for production
-yarn make            # Create distributables
-yarn package         # Package the application
+# 🏗️ Building Commands
+yarn build:ts        # Compile TypeScript to JavaScript
+yarn build           # Build TypeScript and create distributables
+yarn make            # Create distributables using Electron Forge
+yarn package         # Package the application for distribution
 
-# Code Quality
-yarn lint            # Run ESLint
-yarn lint:fix        # Fix linting issues
+# 🧹 Cleanup Commands
+yarn clean           # Remove all build artifacts and dependencies
+yarn clean:dist      # Remove only compiled JavaScript files
+yarn rebuild         # Clean and rebuild TypeScript
+
+# 🎨 Renderer Development
+yarn renderer:dev    # Watch and rebuild renderer process (React)
+yarn renderer:build  # Build renderer for production
+yarn renderer:start  # Start webpack dev server for renderer
+
+# 🔍 Code Quality
+yarn lint            # Run Oxlint for code linting
+yarn lint:fix        # Fix linting issues automatically
 yarn format          # Format code with Prettier
-yarn typecheck      # Run TypeScript type checking
+yarn format:check    # Check code formatting without changes
+yarn typecheck       # Run TypeScript type checking (no compilation)
 
-# Testing
-yarn test            # Run tests
-yarn test:watch      # Run tests in watch mode
-
-# Publishing
+# 📦 Publishing
 yarn publish         # Publish to GitHub Releases
 ```
+
+### **When to Use Each Command**
+
+#### **🚀 Development Workflow**
+
+- **`yarn dev`** - Use when you want to test your changes once. It compiles TypeScript and starts
+  the app.
+- **`yarn dev:watch`** - **Recommended for active development**. Automatically restarts the app when
+  you save TypeScript files.
+- **`yarn dev:full`** - Use when developing both the main process (Electron) and renderer process
+  (React) simultaneously.
+
+#### **🏗️ Building for Production**
+
+- **`yarn build:ts`** - Use to compile TypeScript without starting the app (useful for CI/CD or
+  checking compilation).
+- **`yarn build`** - Use to create distributable packages for testing or distribution.
+- **`yarn make`** - Use to create platform-specific installers (DMG, EXE, etc.).
+- **`yarn package`** - Use to package the app for distribution without creating installers.
+
+#### **🧹 Maintenance and Troubleshooting**
+
+- **`yarn clean:dist`** - Use when TypeScript compilation seems stuck or you want a fresh build.
+- **`yarn rebuild`** - Use when you encounter build issues or want to ensure a completely clean
+  build.
+- **`yarn clean`** - Use when you want to remove everything and start fresh (dependencies + build
+  artifacts).
+
+#### **🎨 Frontend Development**
+
+- **`yarn renderer:dev`** - Use when working on React components and want hot reloading.
+- **`yarn renderer:build`** - Use to build the React app for production.
+- **`yarn renderer:start`** - Use to test the React app in a browser without Electron.
+
+#### **🔍 Code Quality Checks**
+
+- **`yarn typecheck`** - Use before committing to ensure TypeScript types are correct.
+- **`yarn lint`** - Use to check for code quality issues.
+- **`yarn lint:fix`** - Use to automatically fix linting issues.
+- **`yarn format:check`** - Use in CI/CD to ensure code formatting is consistent.
+- **`yarn format`** - Use to automatically format your code.
 
 ### **Project Structure**
 

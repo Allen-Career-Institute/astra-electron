@@ -1,13 +1,13 @@
-const { BrowserWindow } = require('electron');
-const path = require('path');
-const { ENV, DEFAULT_URL } = require('./config');
+import { BrowserWindow } from 'electron';
+import path from 'path';
+import { ENV, DEFAULT_URL } from './config';
 
-let mainWindow;
-let mainWindowHasLoaded = false;
+let mainWindow: BrowserWindow | null = null;
+let mainWindowHasLoaded: boolean = false;
 
-function injectTokensToWindow(window) {
+function injectTokensToWindow(window: BrowserWindow): void {
   if (ENV === 'development') {
-    const tokens = JSON.parse(process.env.AUTH_TOKEN);
+    const tokens = JSON.parse(process.env.AUTH_TOKEN || '{}');
 
     if (tokens) {
       window.webContents.executeJavaScript(`
@@ -25,7 +25,7 @@ function injectTokensToWindow(window) {
   }
 }
 
-function createMainWindow() {
+function createMainWindow(): BrowserWindow {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -34,7 +34,6 @@ function createMainWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      enableRemoteModule: false,
       webSecurity: true,
       webviewTag: true,
       preload: path.join(__dirname, '../preload.js'),
@@ -53,7 +52,9 @@ function createMainWindow() {
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindowHasLoaded = true;
     try {
-      injectTokensToWindow(mainWindow);
+      if (mainWindow) {
+        injectTokensToWindow(mainWindow);
+      }
     } catch (error) {
       console.error('Failed to inject tokens to main window:', error);
     }
@@ -69,19 +70,19 @@ function createMainWindow() {
   return mainWindow;
 }
 
-function getMainWindow() {
+function getMainWindow(): BrowserWindow | null {
   return mainWindow;
 }
 
-function isMainWindowLoaded() {
+function isMainWindowLoaded(): boolean {
   return mainWindowHasLoaded;
 }
 
-function setMainWindowLoaded(loaded) {
+function setMainWindowLoaded(loaded: boolean): void {
   mainWindowHasLoaded = loaded;
 }
 
-module.exports = {
+export {
   createMainWindow,
   getMainWindow,
   isMainWindowLoaded,

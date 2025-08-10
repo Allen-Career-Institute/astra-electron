@@ -1,12 +1,12 @@
-const { getMainWindow } = require('./windowManager');
-const { getStreamWindow } = require('./streamWindow');
-const { dialog } = require('electron');
-const path = require('path');
-const { safeCloseStreamWindow } = require('./streamWindow');
+import { BrowserWindow, dialog } from 'electron';
+import path from 'path';
+import { getMainWindow } from './windowManager';
+import { getStreamWindow, safeCloseStreamWindow } from './streamWindow';
 
-const reloadMainWindow = (force = false) => {
-  const mainWindow = getMainWindow();
-  const streamWindow = getStreamWindow();
+const reloadMainWindow = (force: boolean = false): void => {
+  const mainWindow: BrowserWindow | null = getMainWindow();
+  const streamWindow: BrowserWindow | null = getStreamWindow();
+
   if (mainWindow && !mainWindow.isDestroyed()) {
     if (streamWindow && !streamWindow.isDestroyed()) {
       // Show confirmation dialog
@@ -33,7 +33,7 @@ const reloadMainWindow = (force = false) => {
             }
           }
         })
-        .catch(error => {
+        .catch((error: Error) => {
           console.error('Error showing reload confirmation dialog:', error);
         });
     } else {
@@ -48,6 +48,4 @@ const reloadMainWindow = (force = false) => {
   }
 };
 
-module.exports = {
-  reloadMainWindow,
-};
+export { reloadMainWindow };

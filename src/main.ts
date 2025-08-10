@@ -1,0 +1,72 @@
+import { app, BrowserWindow, ipcMain, shell, WebContents } from 'electron';
+import path from 'path';
+import Store from 'electron-store';
+
+// Load environment variables
+require('dotenv').config({ path: '.env.local' });
+
+// Import modules
+import { initializeSentry } from './modules/sentry';
+import { createMenu } from './modules/menu';
+import { setupIpcHandlers } from './modules/ipcHandlers';
+import { setupAutoUpdater } from './modules/autoUpdater';
+import { cleanup, setupCleanupHandlers } from './modules/cleanup';
+import { createMainWindow } from './modules/windowManager';
+import { getStreamWindow } from './modules/streamWindow';
+
+// Enable hardware acceleration and WebRTC optimizations for better video quality
+app.commandLine.appendSwitch(
+  '--enable-features',
+  'VaapiVideoDecoder,VaapiVideoEncoder,WebCodecs'
+);
+app.commandLine.appendSwitch('--ignore-gpu-blacklist');
+app.commandLine.appendSwitch('--enable-gpu-rasterization');
+app.commandLine.appendSwitch('--enable-zero-copy');
+app.commandLine.appendSwitch('--enable-accelerated-video-decode');
+app.commandLine.appendSwitch('--enable-accelerated-video-encode');
+app.commandLine.appendSwitch('--enable-webcodecs');
+app.commandLine.appendSwitch('--enable-webrtc');
+
+setupIpcHandlers(ipcMain);
+
+// Security: Prevent new window creation
+app.on('web-contents-created', (event, contents: WebContents) => {
+  // contents.on('new-window-for-tab', (event: any, navigationUrl: string) => {
+  //   event.preventDefault();
+  //   shell.openExternal(navigationUrl);
+  // });
+});
+
+// App event handlers
+app.on('ready', () => {
+  try {
+    initializeSentry();
+    createMainWindow();
+    createMenu();
+    setupAutoUpdater();
+
+    // Stream window is now positioned to not cover main window - no need for background positioning
+  } catch (error) {
+    console.error('Error during app initialization:', error);
+  }
+});
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
+
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createMainWindow();
+  }
+});
+
+app.on('before-quit', () => {
+  const streamWindow = getStreamWindow();
+  if (streamWindow && !streamWindow.isDestroyed()) {
+    streamWindow.close();
+  }
+  cleanup();
+});
