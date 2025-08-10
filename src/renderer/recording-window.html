@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Allen Live Stream - Recording Process</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .recording-header {
+            background: #2d2d2d;
+            padding: 12px 16px;
+            border-bottom: 1px solid #404040;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .recording-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e5e5e5;
+        }
+
+        .recording-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #6b7280;
+        }
+
+        .status-indicator.recording {
+            background: #ef4444;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.stopped {
+            background: #6b7280;
+        }
+
+        .status-indicator.processing {
+            background: #f59e0b;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-text {
+            font-size: 12px;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+
+        .recording-info {
+            background: #2d2d2d;
+            margin: 16px;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #404040;
+        }
+
+        .info-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e5e5e5;
+            margin-bottom: 12px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .info-label {
+            font-size: 11px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            font-size: 13px;
+            color: #e5e5e5;
+            font-weight: 500;
+        }
+
+        .recording-controls {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-label {
+            font-size: 12px;
+            color: #9ca3af;
+            font-weight: 500;
+        }
+
+        .control-button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .control-button:hover {
+            background: #2563eb;
+        }
+
+        .control-button:disabled {
+            background: #6b7280;
+            cursor: not-allowed;
+        }
+
+        .control-button.danger {
+            background: #ef4444;
+        }
+
+        .control-button.danger:hover {
+            background: #dc2626;
+        }
+
+        .manual-disable-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #2d2d2d;
+            border-top: 1px solid #404040;
+        }
+
+        .disable-toggle {
+            position: relative;
+            width: 40px;
+            height: 20px;
+        }
+
+        .disable-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #6b7280;
+            transition: .4s;
+            border-radius: 20px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #ef4444;
+        }
+
+        input:focus + .toggle-slider {
+            box-shadow: 0 0 1px #3b82f6;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        .toggle-label {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .manual-disable-indicator {
+            margin-left: auto;
+        }
+
+        .disable-badge {
+            background: #ef4444;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .log-container {
+            background: #1a1a1a;
+            margin: 16px;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #404040;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .log-title {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .log-entry {
+            font-size: 11px;
+            color: #d1d5db;
+            margin-bottom: 4px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+
+        .log-entry.error {
+            color: #f87171;
+        }
+
+        .log-entry.success {
+            color: #34d399;
+        }
+
+        .log-entry.warning {
+            color: #fbbf24;
+        }
+    </style>
+</head>
+<body>
+    <div class="recording-header">
+        <div class="recording-title">Recording Process</div>
+        <div class="recording-status">
+            <div class="status-indicator stopped" id="statusIndicator"></div>
+            <span class="status-text" id="statusText">Stopped</span>
+        </div>
+    </div>
+
+    <div class="recording-info" id="recordingInfo" style="display: none;">
+        <div class="info-title">Recording Details</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Meeting ID</span>
+                <span class="info-value" id="meetingId">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Start Time</span>
+                <span class="info-value" id="startTime">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Duration</span>
+                <span class="info-value" id="recordingDuration">00:00</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Chunks</span>
+                <span class="info-value" id="chunkCount">0</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Quality</span>
+                <span class="info-value" id="quality">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">FPS</span>
+                <span class="info-value" id="fps">-</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="recording-controls">
+        <div class="control-group">
+            <span class="control-label">Recording Control</span>
+            <button class="control-button" id="startRecordingBtn">Start Recording</button>
+            <button class="control-button danger" id="stopRecordingBtn" disabled>Stop Recording</button>
+        </div>
+        
+        <div class="control-group">
+            <span class="control-label">Process Control</span>
+            <button class="control-button danger" id="forceStopBtn">Force Stop All</button>
+        </div>
+    </div>
+
+    <div class="manual-disable-control">
+        <label class="disable-toggle">
+            <input type="checkbox" id="manualDisableToggle" />
+            <span class="toggle-slider"></span>
+            <span class="toggle-label">Manual Disable</span>
+        </label>
+        <div class="manual-disable-indicator" id="manualDisableIndicator" style="display: none;">
+            <span class="disable-badge">🔒 DISABLED</span>
+        </div>
+    </div>
+
+    <div class="log-container">
+        <div class="log-title">Process Log</div>
+        <div id="logEntries"></div>
+    </div>
+
+    <script>
+        // Global variables
+        let isRecording = false;
+        let recordingStartTime = null;
+        let recordingInterval = null;
+        let currentMeetingId = null;
+        let recordingConfig = null;
+
+        // DOM elements
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
+        const recordingInfo = document.getElementById('recordingInfo');
+        const meetingId = document.getElementById('meetingId');
+        const startTime = document.getElementById('startTime');
+        const recordingDuration = document.getElementById('recordingDuration');
+        const chunkCount = document.getElementById('chunkCount');
+        const quality = document.getElementById('quality');
+        const fps = document.getElementById('fps');
+        const startRecordingBtn = document.getElementById('startRecordingBtn');
+        const stopRecordingBtn = document.getElementById('stopRecordingBtn');
+        const forceStopBtn = document.getElementById('forceStopBtn');
+        const manualDisableToggle = document.getElementById('manualDisableToggle');
+        const manualDisableIndicator = document.getElementById('manualDisableIndicator');
+        const logEntries = document.getElementById('logEntries');
+
+        // Initialize the application
+        async function initialize() {
+            try {
+                console.log('Recording window initializing...');
+                
+                // Get recording configuration
+                recordingConfig = await window.electronAPI.getRecordingConfig();
+                
+                // Get manual disable status and set toggle
+                const disableStatus = await window.electronAPI.getManualDisableStatus();
+                manualDisableToggle.checked = disableStatus.disabled;
+                
+                // Set up event listeners
+                setupEventListeners();
+                
+                // Update UI
+                updateRecordingUI();
+                updateManualDisableIndicator();
+                
+                console.log('Recording window initialized successfully');
+                addLogEntry('Recording window initialized', 'success');
+            } catch (error) {
+                console.error('Error initializing recording window:', error);
+                addLogEntry('Failed to initialize: ' + error.message, 'error');
+            }
+        }
+
+        // Set up event listeners
+        function setupEventListeners() {
+            // Recording button clicks
+            startRecordingBtn.addEventListener('click', startRecording);
+            stopRecordingBtn.addEventListener('click', stopRecording);
+            forceStopBtn.addEventListener('click', forceStopAllProcesses);
+            
+            // Manual disable toggle change
+            manualDisableToggle.addEventListener('change', (event) => {
+                window.electronAPI.setManualDisable(event.target.checked);
+                updateManualDisableIndicator();
+                addLogEntry(`Manual disable ${event.target.checked ? 'enabled' : 'disabled'}`, 'warning');
+            });
+
+            // Listen for recording status updates
+            window.electronAPI.onRecordingStatusUpdate((event, data) => {
+                handleRecordingStatusUpdate(data);
+            });
+
+            // Listen for disable status updates from main process
+            window.electronAPI.onDisableStatusUpdate((event, data) => {
+                manualDisableToggle.checked = data.disabled;
+                updateManualDisableIndicator();
+                addLogEntry(`Manual disable status updated: ${data.disabled}`, 'warning');
+            });
+        }
+
+        // Start recording
+        async function startRecording() {
+            try {
+                if (!currentMeetingId) {
+                    throw new Error('No meeting ID available');
+                }
+
+                const success = await window.electronAPI.startRecording(currentMeetingId, recordingConfig);
+                if (success) {
+                    isRecording = true;
+                    recordingStartTime = Date.now();
+                    updateRecordingUI();
+                    startRecordingTimer();
+                    showRecordingDetails();
+                    addLogEntry('Recording started successfully', 'success');
+                } else {
+                    throw new Error('Failed to start recording');
+                }
+            } catch (error) {
+                console.error('Error starting recording:', error);
+                addLogEntry('Failed to start recording: ' + error.message, 'error');
+            }
+        }
+
+        // Stop recording
+        async function stopRecording() {
+            try {
+                if (!currentMeetingId) {
+                    throw new Error('No meeting ID available');
+                }
+
+                const success = await window.electronAPI.stopRecording(currentMeetingId);
+                if (success) {
+                    isRecording = false;
+                    stopRecordingTimer();
+                    updateRecordingUI();
+                    hideRecordingDetails();
+                    addLogEntry('Recording stopped successfully', 'success');
+                } else {
+                    throw new Error('Failed to stop recording');
+                }
+            } catch (error) {
+                console.error('Error stopping recording:', error);
+                addLogEntry('Failed to stop recording: ' + error.message, 'error');
+            }
+        }
+
+        // Force stop all processes
+        async function forceStopAllProcesses() {
+            try {
+                const success = await window.electronAPI.forceStopAllProcesses();
+                if (success) {
+                    isRecording = false;
+                    stopRecordingTimer();
+                    updateRecordingUI();
+                    hideRecordingDetails();
+                    addLogEntry('All recording processes force stopped', 'warning');
+                } else {
+                    throw new Error('Failed to force stop processes');
+                }
+            } catch (error) {
+                console.error('Error force stopping processes:', error);
+                addLogEntry('Failed to force stop processes: ' + error.message, 'error');
+            }
+        }
+
+        // Update recording UI
+        function updateRecordingUI() {
+            if (isRecording) {
+                statusIndicator.className = 'status-indicator recording';
+                statusText.textContent = 'Recording';
+                startRecordingBtn.disabled = true;
+                stopRecordingBtn.disabled = false;
+                recordingInfo.style.display = 'block';
+            } else {
+                statusIndicator.className = 'status-indicator stopped';
+                statusText.textContent = 'Stopped';
+                startRecordingBtn.disabled = false;
+                stopRecordingBtn.disabled = true;
+                recordingInfo.style.display = 'none';
+            }
+            
+            updateManualDisableIndicator();
+        }
+
+        // Update manual disable indicator
+        function updateManualDisableIndicator() {
+            if (manualDisableToggle.checked) {
+                manualDisableIndicator.style.display = 'block';
+                startRecordingBtn.disabled = true;
+                startRecordingBtn.style.opacity = '0.5';
+                startRecordingBtn.style.cursor = 'not-allowed';
+            } else {
+                manualDisableIndicator.style.display = 'none';
+                startRecordingBtn.disabled = isRecording;
+                startRecordingBtn.style.opacity = '1';
+                startRecordingBtn.style.cursor = 'pointer';
+            }
+        }
+
+        // Start recording timer
+        function startRecordingTimer() {
+            recordingInterval = setInterval(() => {
+                if (isRecording && recordingStartTime) {
+                    const duration = Date.now() - recordingStartTime;
+                    const minutes = Math.floor(duration / 60000);
+                    const seconds = Math.floor((duration % 60000) / 1000);
+                    recordingDuration.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+
+        // Stop recording timer
+        function stopRecordingTimer() {
+            if (recordingInterval) {
+                clearInterval(recordingInterval);
+                recordingInterval = null;
+            }
+            recordingDuration.textContent = '00:00';
+        }
+
+        // Show recording details
+        function showRecordingDetails() {
+            if (recordingConfig) {
+                meetingId.textContent = currentMeetingId || '-';
+                startTime.textContent = new Date().toLocaleTimeString();
+                quality.textContent = recordingConfig.quality || 'balanced';
+                fps.textContent = recordingConfig.fps || '25';
+            }
+        }
+
+        // Hide recording details
+        function hideRecordingDetails() {
+            // Keep info visible but reset values
+            meetingId.textContent = '-';
+            startTime.textContent = '-';
+            quality.textContent = '-';
+            fps.textContent = '-';
+        }
+
+        // Handle recording status updates
+        function handleRecordingStatusUpdate(data) {
+            try {
+                if (data.meetingId) {
+                    currentMeetingId = data.meetingId;
+                }
+
+                if (data.isRecording !== undefined) {
+                    isRecording = data.isRecording;
+                    if (isRecording) {
+                        recordingStartTime = data.startTime ? new Date(data.startTime).getTime() : Date.now();
+                        startRecordingTimer();
+                        showRecordingDetails();
+                    } else {
+                        stopRecordingTimer();
+                        hideRecordingDetails();
+                    }
+                    updateRecordingUI();
+                }
+
+                if (data.chunks !== undefined) {
+                    chunkCount.textContent = data.chunks.length || 0;
+                }
+
+                // Add log entry for status update
+                if (data.status) {
+                    addLogEntry(data.status, 'success');
+                }
+            } catch (error) {
+                console.error('Error handling recording status update:', error);
+                addLogEntry('Error handling status update: ' + error.message, 'error');
+            }
+        }
+
+        // Add log entry
+        function addLogEntry(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logEntries.appendChild(entry);
+            
+            // Keep only last 50 entries
+            while (logEntries.children.length > 50) {
+                logEntries.removeChild(logEntries.firstChild);
+            }
+            
+            // Auto-scroll to bottom
+            logEntries.scrollTop = logEntries.scrollHeight;
+        }
+
+        // Set meeting ID (called from main process)
+        function setMeetingId(meetingId) {
+            currentMeetingId = meetingId;
+            addLogEntry(`Meeting ID set: ${meetingId}`, 'success');
+        }
+
+        // Expose functions to main process
+        window.setMeetingId = setMeetingId;
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initialize);
+    </script>
+</body>
+</html>
