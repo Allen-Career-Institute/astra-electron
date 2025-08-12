@@ -218,12 +218,21 @@ import { DEFAULT_URL } from '@/modules/config';
 ### **Check TypeScript Compilation**
 
 ```bash
-# Build TypeScript
+# Build TypeScript (includes path alias resolution)
 yarn build:ts
 
-# Type check
+# Type check only (no build)
 yarn typecheck
 ```
+
+### **Build Process**
+
+The `yarn build:ts` command now includes two steps:
+
+1. **TypeScript Compilation**: `tsc` - compiles TypeScript to JavaScript
+2. **Path Alias Resolution**: `tsc-alias` - resolves `@/` aliases to actual paths
+
+This ensures that path aliases work correctly across all platforms, especially Windows.
 
 ### **Find Incorrect Imports**
 

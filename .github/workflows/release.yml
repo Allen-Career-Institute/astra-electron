@@ -90,6 +90,14 @@ jobs:
             echo "CSC_LINK=certificates/windows_certificate.pfx" >> $GITHUB_ENV
           fi
 
+      - name: Build TypeScript
+        run: yarn build:ts
+        timeout-minutes: 5
+
+      - name: Build renderer
+        run: yarn renderer:build
+        timeout-minutes: 5
+
       - name: Build Electron app
         run: yarn make
         timeout-minutes: 25
