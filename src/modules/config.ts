@@ -1,4 +1,4 @@
-import { RecordingConfig } from '../types/electron';
+import { RecordingConfig } from '@/types/electron';
 
 // Environment configuration
 const ENV: string = process.env.NODE_ENV || 'development';
