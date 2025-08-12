@@ -51,20 +51,6 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
 
-      - name: Authenticate with private NPM package for yarn
-        run: |
-          cat > ~/.yarnrc.yml << 'EOF'
-          npmRegistryServer: "https://registry.npmjs.org"
-          enableGlobalCache: true
-          npmRegistries:
-            "//registry.npmjs.org/":
-              npmAuthToken: "${{ secrets.NPM_READ_TOKEN }}"
-              npmAlwaysAuth: true
-          EOF
-
-      - name: Authenticate with private NPM package
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_READ_TOKEN }}" > ~/.npmrc
-
       - name: Use NodeJS 18
         uses: actions/setup-node@v4
         with:
@@ -133,20 +119,6 @@ jobs:
 
       - name: Enable Corepack
         run: corepack enable
-
-      - name: Authenticate with private NPM package for yarn
-        run: |
-          cat > ~/.yarnrc.yml << 'EOF'
-          npmRegistryServer: "https://registry.npmjs.org"
-          enableGlobalCache: true
-          npmRegistries:
-            "//registry.npmjs.org/":
-              npmAuthToken: "${{ secrets.NPM_READ_TOKEN }}"
-              npmAlwaysAuth: true
-          EOF
-
-      - name: Authenticate with private NPM package
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_READ_TOKEN }}" > ~/.npmrc
 
       - name: Use NodeJS 18
         uses: actions/setup-node@v4
