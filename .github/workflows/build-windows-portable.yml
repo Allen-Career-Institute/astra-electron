@@ -39,10 +39,18 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18'
+
+    - name: Enable Corepack
+      run: corepack enable
+    
+    - name: Setup Node.js 18
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
         cache: 'yarn'
         
     - name: Install dependencies
-      run: yarn install --frozen-lockfile
+      run: yarn install --immutable
       
     - name: Build TypeScript
       run: yarn build:ts
