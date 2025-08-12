@@ -23,9 +23,15 @@ env:
   NODE_VERSION: "18"
   YARN_VERSION: "4.9.2"
 
+# Cancel in-progress jobs when new commits are pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
 
     strategy:
       matrix:
@@ -47,12 +53,14 @@ jobs:
 
       - name: Authenticate with private NPM package for yarn
         run: |
-          echo "npmRegistryServer: \"https://registry.npmjs.org\"
+          cat > ~/.yarnrc.yml << 'EOF'
+          npmRegistryServer: "https://registry.npmjs.org"
           enableGlobalCache: true
           npmRegistries:
-            \"//registry.npmjs.org\":
-              npmAuthToken: \"${{ secrets.NPM_READ_TOKEN }}\"
-              npmAlwaysAuth: true" > ~/.yarnrc.yml
+            "//registry.npmjs.org/":
+              npmAuthToken: "${{ secrets.NPM_READ_TOKEN }}"
+              npmAlwaysAuth: true
+          EOF
 
       - name: Authenticate with private NPM package
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_READ_TOKEN }}" > ~/.npmrc
@@ -65,12 +73,15 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --immutable
+        timeout-minutes: 10
 
       - name: Build TypeScript
         run: yarn build:ts
+        timeout-minutes: 5
 
       - name: Build renderer
         run: yarn renderer:build
+        timeout-minutes: 5
 
       - name: Setup certificates
         run: |
@@ -90,17 +101,19 @@ jobs:
 
       - name: Build Electron app
         run: yarn make
+        timeout-minutes: 25
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_ENV: production
-          STAGE_URL: ${{ secrets.STAGE_URL }}
-          PROD_URL: ${{ secrets.PROD_URL }}
-          CUSTOM_URL: ${{ secrets.CUSTOM_URL }}
+          STAGE_URL: ${{ secrets.STAGE_CONSOLE_URL }}
+          PROD_URL: ${{ secrets.PROD_CONSOLE_URL }}
+          CUSTOM_URL: ${{ secrets.CUSTOM_CONSOLE_URL }}
           CSC_LINK: ${{ env.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
+        timeout-minutes: 5
         with:
           name: allen-ui-console-${{ matrix.platform }}-${{ matrix.arch }}
           path: |
@@ -111,6 +124,7 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     if: github.ref == 'refs/heads/main'
 
     steps:
@@ -122,12 +136,14 @@ jobs:
 
       - name: Authenticate with private NPM package for yarn
         run: |
-          echo "npmRegistryServer: \"https://registry.npmjs.org\"
+          cat > ~/.yarnrc.yml << 'EOF'
+          npmRegistryServer: "https://registry.npmjs.org"
           enableGlobalCache: true
           npmRegistries:
-            \"//registry.npmjs.org\":
-              npmAuthToken: \"${{ secrets.NPM_READ_TOKEN }}\"
-              npmAlwaysAuth: true" > ~/.yarnrc.yml
+            "//registry.npmjs.org/":
+              npmAuthToken: "${{ secrets.NPM_READ_TOKEN }}"
+              npmAlwaysAuth: true
+          EOF
 
       - name: Authenticate with private NPM package
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_READ_TOKEN }}" > ~/.npmrc
@@ -140,6 +156,7 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --immutable
+        timeout-minutes: 10
 
       - name: Get version
         id: get_version
