@@ -2,25 +2,47 @@ module.exports = {
   packagerConfig: {
     icon: './assets/icon',
     asar: true,
-    extraResource: ['./assets/'],
+    // Only include essential assets
+    extraResource: ['./assets/icon.ico', './assets/icon.png'],
+    // Better ignore patterns to reduce size
     ignore: [
-      /^\/(?!src|assets|package\.json)/,
-      /node_modules\/(?!agora-rtc-sdk-ng)/,
+      /^\/(?!src|assets\/icon\.(ico|png)|package\.json)/,
+      // Exclude heavy node_modules
+      /node_modules\/(?!agora-rtc-sdk-ng|@electron|electron-store|electron-updater)/,
+      // Exclude development files
       /\.git/,
       /\.github/,
       /\.vscode/,
       /\.idea/,
       /\.DS_Store/,
       /\.env/,
-      /\.log/
-    ]
+      /\.log/,
+      /\.md$/,
+      /\.ts$/,
+      /\.map$/,
+      /test/,
+      /tests/,
+      /__tests__/,
+      /coverage/,
+      /\.nyc_output/,
+      /\.nyc_output/,
+      /docs/,
+      /examples/,
+      /scripts\/(?!setup|generate-dev-cert)/
+    ],
+    // Enable compression
+    compression: 'maximum',
+    // Prune dependencies
+    prune: true,
+    // Overwrite existing files
+    overwrite: true
   },
   rebuildConfig: {},
   makers: [
     {
       name: '@electron-forge/maker-squirrel',
       config: {
-        name: process.env.NODE_ENV === 'production' ? 'allen_ui_console' : 'allen_ui_console_stage',
+        name: process.env.NODE_ENV === 'production' ? 'Allen Console' : 'Allen Console (Stage)',
         authors: 'Allen Digital',
         description: process.env.NODE_ENV === 'production' ? 'Allen UI Console Electron App' : 'Allen UI Console Electron App (Stage)',
         iconUrl: 'https://raw.githubusercontent.com/your-username/allen-ui-console-electron/main/assets/icon.ico',

@@ -3440,6 +3440,7 @@ __metadata:
     react-dom: "npm:^18.2.0"
     rimraf: "npm:^5.0.5"
     style-loader: "npm:^3.3.3"
+    terser-webpack-plugin: "npm:^5.3.14"
     ts-ebml: "npm:^3.0.1"
     ts-node: "npm:^10.9.2"
     tsc-alias: "npm:^1.8.16"
@@ -10626,7 +10627,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"terser-webpack-plugin@npm:^5.3.11":
+"terser-webpack-plugin@npm:^5.3.11, terser-webpack-plugin@npm:^5.3.14":
   version: 5.3.14
   resolution: "terser-webpack-plugin@npm:5.3.14"
   dependencies:

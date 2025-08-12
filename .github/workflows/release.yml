@@ -40,9 +40,6 @@ jobs:
           - os: windows-latest
             platform: win32
             arch: x64
-          - os: windows-latest
-            platform: win32
-            arch: ia32
 
     steps:
       - name: Checkout code
@@ -221,7 +218,6 @@ jobs:
 
             ### Downloads
             - **Windows (64-bit):** allen-ui-console-win32-x64.zip
-            - **Windows (32-bit):** allen-ui-console-win32-ia32.zip
 
             ### Changes
             See the [commit history](https://github.com/${{ github.repository }}/compare/v${{ steps.get_version.outputs.version }}...main) for details.

@@ -26,9 +26,6 @@ jobs:
           - os: windows-latest
             platform: win32
             arch: x64
-          - os: windows-latest
-            platform: win32
-            arch: ia32
 
     steps:
       - name: Checkout code
@@ -84,7 +81,7 @@ jobs:
         if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
         run: |
           echo "## Build Summary for PR #${{ github.event.number }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Platforms:** Windows (x64, ia32)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platforms:** Windows (x64 only)" >> $GITHUB_STEP_SUMMARY
           echo "- **Build Status:** ✅ Success" >> $GITHUB_STEP_SUMMARY
           echo "- **Artifacts:** Available for download above" >> $GITHUB_STEP_SUMMARY
           echo "- **Retention:** 30 days" >> $GITHUB_STEP_SUMMARY

@@ -2,10 +2,14 @@ module.exports = {
   packagerConfig: {
     icon: './assets/icon',
     asar: true,
-    extraResource: ['./assets/'],
+    // Only include essential assets
+    extraResource: ['./assets/icon.ico', './assets/icon.png'],
+    // Better ignore patterns to reduce size
     ignore: [
-      /^\/(?!src|assets|package\.json)/,
-      /node_modules\/(?!agora-rtc-sdk-ng)/,
+      /^\/(?!src|assets\/icon\.(ico|png)|package\.json)/,
+      // Exclude heavy node_modules
+      /node_modules\/(?!agora-rtc-sdk-ng|@electron|electron-store|electron-updater)/,
+      // Exclude development files
       /\.git/,
       /\.github/,
       /\.vscode/,
@@ -13,7 +17,24 @@ module.exports = {
       /\.DS_Store/,
       /\.env/,
       /\.log/,
+      /\.md$/,
+      /\.ts$/,
+      /\.map$/,
+      /test/,
+      /tests/,
+      /__tests__/,
+      /coverage/,
+      /\.nyc_output/,
+      /docs/,
+      /examples/,
+      /scripts\/(?!setup|generate-dev-cert)/,
     ],
+    // Enable compression
+    compression: 'maximum',
+    // Prune dependencies
+    prune: true,
+    // Overwrite existing files
+    overwrite: true,
   },
   rebuildConfig: {},
   makers: [
