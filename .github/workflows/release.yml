@@ -81,7 +81,7 @@ jobs:
           fi
 
       - name: Build Electron app
-        run: yarn dist
+        run: yarn dist:win-installer
         timeout-minutes: 25
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -206,7 +206,7 @@ jobs:
             ## Allen UI Console Electron ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', needs.version-manager.outputs.version) }}
 
             ### Downloads
-            - **Windows (64-bit):** Portable (.exe) and Installer (.exe)
+            - **Windows (64-bit):** Installer (.exe)
 
             ### Build Info
             - **Build Tool:** Electron Builder

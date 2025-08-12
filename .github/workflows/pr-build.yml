@@ -49,8 +49,8 @@ jobs:
         run: yarn renderer:build
         timeout-minutes: 5
 
-      - name: Build Electron app (Portable)
-        run: yarn dist:win-portable
+      - name: Build Electron app (Installer)
+        run: yarn dist:win-installer
         timeout-minutes: 25
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
