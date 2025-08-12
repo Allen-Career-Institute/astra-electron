@@ -5,17 +5,6 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
-  workflow_dispatch:
-    inputs:
-      build_system:
-        description: 'Build system to use'
-        required: true
-        default: 'both'
-        type: choice
-        options:
-        - both
-        - forge
-        - builder
 
 jobs:
   build-portable:
@@ -59,12 +48,10 @@ jobs:
       run: yarn renderer:build
       
     - name: Build Electron-Forge Portable
-      if: github.event.inputs.build_system == 'both' || github.event.inputs.build_system == 'forge'
       run: yarn build:win-forge
       continue-on-error: true
         
     - name: Build Electron-Builder Portable
-      if: github.event.inputs.build_system == 'both' || github.event.inputs.build_system == 'builder'
       run: yarn build:win-builder
       continue-on-error: true
         
@@ -112,7 +99,6 @@ jobs:
         }
         
     - name: Upload Electron-Forge Portable
-      if: github.event.inputs.build_system == 'both' || github.event.inputs.build_system == 'forge'
       uses: actions/upload-artifact@v4
       with:
         name: electron-forge-portable
@@ -120,7 +106,6 @@ jobs:
         retention-days: 30
         
     - name: Upload Electron-Builder Portable
-      if: github.event.inputs.build_system == 'both' || github.event.inputs.build_system == 'builder'
       uses: actions/upload-artifact@v4
       with:
         name: electron-builder-portable
