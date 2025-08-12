@@ -227,10 +227,12 @@ yarn typecheck
 
 ### **Build Process**
 
-The `yarn build:ts` command now includes two steps:
+The `yarn build:ts` command now works correctly because:
 
-1. **TypeScript Compilation**: `tsc` - compiles TypeScript to JavaScript
-2. **Path Alias Resolution**: `tsc-alias` - resolves `@/` aliases to actual paths
+1. **Type Definitions**: Type definitions are now in `.ts` files (not `.d.ts`) so they can be
+   imported normally
+2. **Path Aliases**: The `@/` path aliases work correctly with the `tsconfig.json` configuration
+3. **DOM Types**: Added `DOM` to TypeScript lib configuration for browser APIs like `MediaStream`
 
 This ensures that path aliases work correctly across all platforms, especially Windows.
 
