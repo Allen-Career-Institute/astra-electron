@@ -75,9 +75,21 @@ capabilities with Agora integration.
    yarn install
    ```
 
-3. **Start development**:
+3. **Set up development environment**:
+
+   ```bash
+   ./scripts/setup-dev.sh
+   ```
+
+4. **Start development**:
+
    ```bash
    yarn dev
+   ```
+
+5. **Build for development** (no code signing):
+   ```bash
+   yarn dev:build
    ```
 
 ## 🔧 **Configuration**
@@ -127,35 +139,74 @@ This project includes automated build and release workflows using GitHub Actions
 
 ### **Quick Setup**
 
-1. **Run the setup script**:
+1. **Set up development environment**:
+
+   ```bash
+   ./scripts/setup-dev.sh
+   ```
+
+2. **Generate local certificates** (optional):
+
+   ```bash
+   ./scripts/generate-dev-cert.sh
+   ```
+
+3. **Set up production certificates**:
 
    ```bash
    ./scripts/setup-secrets.sh
    ```
 
-2. **Add secrets to GitHub**:
+4. **Add secrets to GitHub**:
    - Go to your repository → Settings → Secrets and variables → Actions
    - Add the secrets provided by the setup script
 
-3. **Push to trigger builds**:
-   - PR builds: Create a pull request
-   - Releases: Push to main branch
+5. **Push to trigger builds**:
+   - PR builds: Create a pull request (uses stage environment)
+   - Releases: Push to main branch (uses production environment)
 
 ### **Supported Platforms**
 
-- **macOS**: Intel (x64) and Apple Silicon (arm64)
 - **Windows**: 64-bit (x64) and 32-bit (ia32)
-- **Linux**: 64-bit (x64)
 
 ### **Code Signing**
 
 The release workflow supports code signing for secure distribution:
 
-- **macOS**: Apple Developer certificate required
 - **Windows**: Code signing certificate (optional)
-- **Linux**: No code signing required
 
-For detailed setup instructions, see [GITHUB_ACTIONS_SETUP.md](GITHUB_ACTIONS_SETUP.md).
+### **Environment Configuration**
+
+- **PR Builds**: Use stage environment (`NODE_ENV=stage`)
+- **Release Builds**: Use production environment (`NODE_ENV=production`)
+- **Local Development**: Use development environment (`NODE_ENV=development`)
+
+### **Certificate Management**
+
+- **Production**: Base64-encoded Windows certificates stored in GitHub Secrets
+- **Development**: Self-signed Windows certificates generated locally
+- **Stage**: No code signing (for testing)
+
+### **Version Management**
+
+The project uses automatic version incrementing with Semantic Versioning:
+
+- **Automatic**: Push to main triggers patch version increment
+- **Manual**: Workflow dispatch allows custom version or increment type
+- **Local Tools**: Version manager script for development
+
+```bash
+# Show current version
+yarn version:current
+
+# Bump version
+yarn version:bump patch    # 1.0.0 → 1.0.1
+yarn version:bump minor    # 1.0.0 → 1.1.0
+yarn version:bump major    # 1.0.0 → 2.0.0
+```
+
+For detailed setup instructions, see [GITHUB_ACTIONS_SETUP.md](GITHUB_ACTIONS_SETUP.md). For version
+management details, see [VERSION_MANAGEMENT.md](VERSION_MANAGEMENT.md).
 
 ### **App Configuration**
 

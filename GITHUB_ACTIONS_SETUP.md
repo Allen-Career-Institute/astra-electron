@@ -21,19 +21,17 @@ The project includes two GitHub Actions workflows:
 
 ## Required GitHub Secrets
 
+### Environment Configuration
+
+- `STAGE_URL`: URL for staging environment
+- `PROD_URL`: URL for production environment
+- `CUSTOM_URL`: URL for custom environment
+
 ### For Code Signing (Release Workflow Only)
 
-#### macOS Code Signing
+#### Windows Code Signing
 
-- `APPLE_ID`: Your Apple Developer account email
-- `APPLE_ID_PASS`: App-specific password for your Apple ID
-- `APPLE_TEAM_ID`: Your Apple Developer Team ID
-- `CSC_LINK`: Base64-encoded certificate file (Developer ID Application)
-- `CSC_KEY_PASSWORD`: Password for the certificate
-
-#### Windows Code Signing (Optional)
-
-- `CSC_LINK`: Base64-encoded certificate file (.pfx)
+- `WINDOWS_CERTIFICATE_BASE64`: Base64-encoded certificate file (.pfx)
 - `CSC_KEY_PASSWORD`: Password for the certificate
 
 ### How to Set Up Secrets
@@ -42,40 +40,7 @@ The project includes two GitHub Actions workflows:
 2. Navigate to **Settings** → **Secrets and variables** → **Actions**
 3. Click **New repository secret** for each secret
 
-### Setting Up macOS Code Signing
-
-#### 1. Get Apple Developer Account
-
-- Sign up for Apple Developer Program ($99/year)
-- Or use a free account (limited capabilities)
-
-#### 2. Create App-Specific Password
-
-1. Go to [Apple ID](https://appleid.apple.com)
-2. Sign in with your Apple ID
-3. Go to **Security** → **App-Specific Passwords**
-4. Click **Generate Password**
-5. Use this password for `APPLE_ID_PASS`
-
-#### 3. Get Team ID
-
-1. Go to [Apple Developer](https://developer.apple.com)
-2. Sign in and go to **Membership**
-3. Copy your **Team ID**
-
-#### 4. Create Certificate
-
-1. Go to [Certificates](https://developer.apple.com/account/resources/certificates/list)
-2. Click **+** to add a new certificate
-3. Select **Developer ID Application**
-4. Follow the instructions to create and download the certificate
-5. Convert to base64:
-   ```bash
-   base64 -i "path/to/certificate.p12" | pbcopy
-   ```
-6. Use this for `CSC_LINK`
-
-### Setting Up Windows Code Signing (Optional)
+### Setting Up Windows Code Signing
 
 #### 1. Get Code Signing Certificate
 
@@ -88,6 +53,33 @@ The project includes two GitHub Actions workflows:
 base64 -i "path/to/certificate.pfx" | pbcopy
 ```
 
+#### 3. Add to GitHub Secrets
+
+Use the base64 output for `WINDOWS_CERTIFICATE_BASE64`
+
+## Environment-Specific Builds
+
+### PR Builds (Stage Environment)
+
+- **Environment**: `NODE_ENV=stage`
+- **URLs**: Uses `STAGE_URL` from GitHub secrets
+- **Code Signing**: Disabled
+- **Purpose**: Testing and validation
+
+### Release Builds (Production Environment)
+
+- **Environment**: `NODE_ENV=production`
+- **URLs**: Uses `PROD_URL` from GitHub secrets
+- **Code Signing**: Enabled with proper certificates
+- **Purpose**: Public distribution
+
+### Local Development
+
+- **Environment**: `NODE_ENV=development`
+- **URLs**: Uses local configuration
+- **Code Signing**: Optional (self-signed certificates)
+- **Purpose**: Local testing and development
+
 ## Environment Variables
 
 The workflows use these environment variables:
@@ -95,6 +87,10 @@ The workflows use these environment variables:
 - `NODE_VERSION`: Node.js version (default: '18')
 - `YARN_VERSION`: Yarn version (default: '4.9.2')
 - `GITHUB_TOKEN`: Automatically provided by GitHub Actions
+- `NODE_ENV`: Environment (stage/production/development)
+- `STAGE_URL`: Staging environment URL
+- `PROD_URL`: Production environment URL
+- `CUSTOM_URL`: Custom environment URL
 
 ## Workflow Triggers
 
@@ -113,9 +109,7 @@ The workflows use these environment variables:
 
 Both workflows build for:
 
-- **macOS**: Intel (x64) and Apple Silicon (arm64)
 - **Windows**: 64-bit (x64) and 32-bit (ia32)
-- **Linux**: 64-bit (x64)
 
 ## Artifacts and Releases
 
@@ -124,26 +118,26 @@ Both workflows build for:
 - Stored as GitHub Actions artifacts
 - Available for download from the Actions tab
 - Retained for 30 days
-- Named: `allen-ui-console-{platform}-{arch}-pr-{pr-number}`
+- Named: `allen-ui-console-win32-{arch}-pr-{pr-number}`
 
 ### Release Assets
 
 - Published to GitHub Releases
 - Available for public download
 - Retained indefinitely
-- Named: `allen-ui-console-{platform}-{arch}`
+- Named: `allen-ui-console-win32-{arch}`
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Build Fails on macOS**
-   - Check if `APPLE_ID` and `APPLE_ID_PASS` are correct
-   - Verify `APPLE_TEAM_ID` is correct
-   - Ensure certificate is valid and not expired
+1. **Build Fails on Windows**
+   - Check if all dependencies are installed
+   - Verify Windows build tools are available
+   - Ensure Node.js and Yarn are properly configured
 
 2. **Code Signing Fails**
-   - Verify `CSC_LINK` is properly base64-encoded
+   - Verify `WINDOWS_CERTIFICATE_BASE64` is properly base64-encoded
    - Check `CSC_KEY_PASSWORD` is correct
    - Ensure certificate is not expired
 
@@ -169,15 +163,15 @@ Both workflows build for:
 
 ## Customization
 
-### Adding New Platforms
+### Adding New Architectures
 
 Edit the `matrix.include` section in both workflow files:
 
 ```yaml
 include:
-  - os: ubuntu-latest
-    platform: linux
-    arch: arm64 # Add new architecture
+  - os: windows-latest
+    platform: win32
+    arch: arm64 # Add new Windows architecture
 ```
 
 ### Modifying Build Steps
@@ -199,5 +193,5 @@ For issues with:
 
 - **GitHub Actions**: Check GitHub documentation
 - **Code Signing**: Contact your certificate provider
-- **Apple Developer**: Contact Apple Developer Support
+- **Windows Build Tools**: Check Microsoft documentation
 - **Project-specific**: Create an issue in this repository

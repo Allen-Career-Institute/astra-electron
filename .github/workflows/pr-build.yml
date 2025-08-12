@@ -15,23 +15,14 @@ jobs:
     
     strategy:
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
+        os: [windows-latest]
         include:
-          - os: macos-latest
-            platform: darwin
-            arch: x64
-          - os: macos-latest
-            platform: darwin
-            arch: arm64
           - os: windows-latest
             platform: win32
             arch: x64
           - os: windows-latest
             platform: win32
             arch: ia32
-          - os: ubuntu-latest
-            platform: linux
-            arch: x64
 
     steps:
       - name: Checkout code
@@ -61,6 +52,10 @@ jobs:
         run: yarn make
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_ENV: stage
+          STAGE_URL: ${{ secrets.STAGE_URL }}
+          PROD_URL: ${{ secrets.PROD_URL }}
+          CUSTOM_URL: ${{ secrets.CUSTOM_URL }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -72,10 +67,10 @@ jobs:
           retention-days: 30
 
       - name: Create build summary
-        if: matrix.os == 'ubuntu-latest' && matrix.arch == 'x64'
+        if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
         run: |
           echo "## Build Summary for PR #${{ github.event.number }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Platforms:** macOS (x64, arm64), Windows (x64, ia32), Linux (x64)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platforms:** Windows (x64, ia32)" >> $GITHUB_STEP_SUMMARY
           echo "- **Build Status:** ✅ Success" >> $GITHUB_STEP_SUMMARY
           echo "- **Artifacts:** Available for download above" >> $GITHUB_STEP_SUMMARY
           echo "- **Retention:** 30 days" >> $GITHUB_STEP_SUMMARY

@@ -20,33 +20,14 @@ module.exports = {
     {
       name: '@electron-forge/maker-squirrel',
       config: {
-        name: 'allen_ui_console',
+        name: process.env.NODE_ENV === 'production' ? 'allen_ui_console' : 'allen_ui_console_stage',
         authors: 'Allen Digital',
-        description: 'Allen UI Console Electron App',
+        description: process.env.NODE_ENV === 'production' ? 'Allen UI Console Electron App' : 'Allen UI Console Electron App (Stage)',
         iconUrl: 'https://raw.githubusercontent.com/your-username/allen-ui-console-electron/main/assets/icon.ico',
-        setupIcon: './assets/icon.ico'
-      }
-    },
-    {
-      name: '@electron-forge/maker-zip',
-      platforms: ['darwin']
-    },
-    {
-      name: '@electron-forge/maker-deb',
-      config: {
-        options: {
-          maintainer: 'Allen Digital',
-          homepage: 'https://github.com/your-username/allen-ui-console-electron'
-        }
-      }
-    },
-    {
-      name: '@electron-forge/maker-rpm',
-      config: {
-        options: {
-          maintainer: 'Allen Digital',
-          homepage: 'https://github.com/your-username/allen-ui-console-electron'
-        }
+        setupIcon: './assets/icon.ico',
+        // Windows code signing configuration
+        certificateFile: process.env.NODE_ENV === 'production' ? process.env.CSC_LINK : null,
+        certificatePassword: process.env.NODE_ENV === 'production' ? process.env.CSC_KEY_PASSWORD : null
       }
     }
   ],
