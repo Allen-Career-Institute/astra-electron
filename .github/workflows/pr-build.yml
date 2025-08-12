@@ -28,19 +28,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Authenticate with private NPM package for yarn
+        run: |
+          echo "npmRegistryServer: \"https://registry.npmjs.org\"
+          enableGlobalCache: true
+          npmRegistries:
+            \"//registry.npmjs.org\":
+              npmAuthToken: \"${{ secrets.NPM_READ_TOKEN }}\"
+              npmAlwaysAuth: true" > ~/.yarnrc.yml
+
+      - name: Authenticate with private NPM package
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_READ_TOKEN }}" > ~/.npmrc
+
+      - name: Use NodeJS 18
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'yarn'
-
-      - name: Setup Yarn
-        run: |
-          corepack enable
-          corepack prepare yarn@${{ env.YARN_VERSION }} --activate
+          node-version: "18"
+          cache: "yarn"
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
 
       - name: Build TypeScript
         run: yarn build:ts
