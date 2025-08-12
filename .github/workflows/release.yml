@@ -1,0 +1,147 @@
+name: Release
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0)'
+        required: true
+        type: string
+
+env:
+  NODE_VERSION: '18'
+  YARN_VERSION: '4.9.2'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+        include:
+          - os: macos-latest
+            platform: darwin
+            arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: arm64
+          - os: windows-latest
+            platform: win32
+            arch: x64
+          - os: windows-latest
+            platform: win32
+            arch: ia32
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Setup Yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@${{ env.YARN_VERSION }} --activate
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build TypeScript
+        run: yarn build:ts
+
+      - name: Build renderer
+        run: yarn renderer:build
+
+      - name: Build Electron app
+        run: yarn make
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASS: ${{ secrets.APPLE_ID_PASS }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: allen-ui-console-${{ matrix.platform }}-${{ matrix.arch }}
+          path: |
+            out/
+            !out/**/*.blockmap
+          retention-days: 90
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'yarn'
+
+      - name: Setup Yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@${{ env.YARN_VERSION }} --activate
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Get version
+        id: get_version
+        run: |
+          if [ "${{ github.event.inputs.version }}" != "" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.get_version.outputs.version }}
+          name: Release v${{ steps.get_version.outputs.version }}
+          body: |
+            ## Allen UI Console Electron v${{ steps.get_version.outputs.version }}
+            
+            ### Downloads
+            - **macOS (Intel):** allen-ui-console-darwin-x64.zip
+            - **macOS (Apple Silicon):** allen-ui-console-darwin-arm64.zip
+            - **Windows (64-bit):** allen-ui-console-win32-x64.zip
+            - **Windows (32-bit):** allen-ui-console-win32-ia32.zip
+            - **Linux (64-bit):** allen-ui-console-linux-x64.zip
+            
+            ### Changes
+            See the [commit history](https://github.com/${{ github.repository }}/compare/v${{ steps.get_version.outputs.version }}...main) for details.
+          files: |
+            artifacts/allen-ui-console-darwin-x64/out/*
+            artifacts/allen-ui-console-darwin-arm64/out/*
+            artifacts/allen-ui-console-win32-x64/out/*
+            artifacts/allen-ui-console-win32-ia32/out/*
+            artifacts/allen-ui-console-linux-x64/out/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

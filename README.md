@@ -107,6 +107,56 @@ SENTRY_ORG=your-sentry-org
 SENTRY_PROJECT=your-sentry-project
 ```
 
+## 🚀 **GitHub Actions & CI/CD**
+
+This project includes automated build and release workflows using GitHub Actions.
+
+### **Workflows**
+
+1. **PR Build** (`.github/workflows/pr-build.yml`)
+   - Triggers on pull requests to `main` and `develop`
+   - Builds for all platforms (macOS, Windows, Linux)
+   - Creates artifacts for testing (no GitHub release)
+   - Artifacts retained for 30 days
+
+2. **Release** (`.github/workflows/release.yml`)
+   - Triggers on pushes to `main` branch
+   - Builds for all platforms with code signing
+   - Creates GitHub release with downloadable assets
+   - Can be manually triggered with custom version
+
+### **Quick Setup**
+
+1. **Run the setup script**:
+
+   ```bash
+   ./scripts/setup-secrets.sh
+   ```
+
+2. **Add secrets to GitHub**:
+   - Go to your repository → Settings → Secrets and variables → Actions
+   - Add the secrets provided by the setup script
+
+3. **Push to trigger builds**:
+   - PR builds: Create a pull request
+   - Releases: Push to main branch
+
+### **Supported Platforms**
+
+- **macOS**: Intel (x64) and Apple Silicon (arm64)
+- **Windows**: 64-bit (x64) and 32-bit (ia32)
+- **Linux**: 64-bit (x64)
+
+### **Code Signing**
+
+The release workflow supports code signing for secure distribution:
+
+- **macOS**: Apple Developer certificate required
+- **Windows**: Code signing certificate (optional)
+- **Linux**: No code signing required
+
+For detailed setup instructions, see [GITHUB_ACTIONS_SETUP.md](GITHUB_ACTIONS_SETUP.md).
+
 ### **App Configuration**
 
 Edit `src/config.js` to customize app behavior:
