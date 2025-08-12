@@ -1,6 +1,6 @@
 {
   "appId": "com.allendigital.allen-ui-console",
-  "productName": "Allen UI Console",
+  "productName": "Allen Console",
   "directories": {
     "output": "dist-electron-builder",
     "buildResources": "assets"
@@ -37,24 +37,20 @@
   "win": {
     "target": [
       {
-        "target": "portable",
-        "arch": ["x64"]
-      },
-      {
         "target": "nsis",
         "arch": ["x64"]
       }
     ],
     "requestedExecutionLevel": "asInvoker",
     "icon": null,
-    "artifactName": "${productName}-${version}-win.${ext}"
+    "artifactName": "${productName}-${version}-installer.${ext}"
   },
   "nsis": {
     "oneClick": false,
     "allowToChangeInstallationDirectory": true,
     "createDesktopShortcut": true,
     "createStartMenuShortcut": true,
-    "shortcutName": "Allen UI Console"
+    "shortcutName": "Allen Console"
   },
   "mac": {
     "target": [
@@ -86,9 +82,7 @@
     "artifactName": "${productName}-${version}-linux.${ext}",
     "category": "Utility"
   },
-  "portable": {
-    "artifactName": "${productName}-${version}-portable.${ext}"
-  },
+
   "publish": {
     "provider": "github",
     "owner": "dinesh-kumar-allen",
