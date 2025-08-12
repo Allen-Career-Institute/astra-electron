@@ -27,17 +27,64 @@
     "!**/.idea/**",
     "!**/coverage/**",
     "!**/docs/**",
-    "!**/examples/**"
+    "!**/examples/**",
+    "!**/scripts/**",
+    "!**/build/**",
+    "!**/out/**",
+    "!**/node_modules/**",
+    "!**/src/**"
   ],
   "win": {
     "target": [
       {
         "target": "portable",
         "arch": ["x64"]
+      },
+      {
+        "target": "nsis",
+        "arch": ["x64"]
       }
     ],
     "requestedExecutionLevel": "asInvoker",
-    "icon": null
+    "icon": null,
+    "artifactName": "${productName}-${version}-win.${ext}"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Allen UI Console"
+  },
+  "mac": {
+    "target": [
+      {
+        "target": "dmg",
+        "arch": ["x64", "arm64"]
+      },
+      {
+        "target": "zip",
+        "arch": ["x64", "arm64"]
+      }
+    ],
+    "icon": null,
+    "artifactName": "${productName}-${version}-mac.${ext}",
+    "category": "public.app-category.productivity"
+  },
+  "linux": {
+    "target": [
+      {
+        "target": "AppImage",
+        "arch": ["x64"]
+      },
+      {
+        "target": "deb",
+        "arch": ["x64"]
+      }
+    ],
+    "icon": null,
+    "artifactName": "${productName}-${version}-linux.${ext}",
+    "category": "Utility"
   },
   "portable": {
     "artifactName": "${productName}-${version}-portable.${ext}"
@@ -50,5 +97,8 @@
     "releaseType": "release"
   },
   "forceCodeSigning": false,
-  "asar": false
+  "asar": false,
+  "compression": "maximum",
+  "removePackageScripts": true,
+  "removePackageKeywords": true
 }

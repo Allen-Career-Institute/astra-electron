@@ -2,17 +2,18 @@ name: Release
 
 on:
   push:
-    branches: [main]
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
       version:
-        description: "Version to release (e.g., 1.0.0) - leave empty for auto-increment"
+        description: 'Version to release (e.g., 1.0.0) - leave empty for auto-increment'
         required: false
         type: string
       version_type:
-        description: "Version increment type (patch, minor, major)"
+        description: 'Version increment type (patch, minor, major)'
         required: false
-        default: "patch"
+        default: 'patch'
         type: choice
         options:
           - patch
@@ -20,8 +21,8 @@ on:
           - major
 
 env:
-  NODE_VERSION: "18"
-  YARN_VERSION: "4.9.2"
+  NODE_VERSION: '18'
+  YARN_VERSION: '4.9.2'
 
 # Cancel in-progress jobs when new commits are pushed
 concurrency:
@@ -30,34 +31,26 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
     timeout-minutes: 45
-
-    strategy:
-      matrix:
-        os: [windows-latest]
-        include:
-          - os: windows-latest
-            platform: win32
-            arch: x64
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Use NodeJS 18
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
-
+          node-version: '18'
+      
       - name: Enable Corepack
         run: corepack enable
 
-      - name: Use NodeJS 18
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
-          cache: "yarn"
+          node-version: '18'
+          cache: 'yarn'
 
       - name: Install dependencies
         run: yarn install --immutable
@@ -71,7 +64,7 @@ jobs:
         run: yarn renderer:build
         timeout-minutes: 5
 
-      - name: Setup certificates
+      - name: Setup certificates (Windows)
         run: |
           # Create certificates directory
           mkdir -p certificates
@@ -87,16 +80,8 @@ jobs:
             echo "CSC_LINK=certificates/windows_certificate.pfx" >> $GITHUB_ENV
           fi
 
-      - name: Build TypeScript
-        run: yarn build:ts
-        timeout-minutes: 5
-
-      - name: Build renderer
-        run: yarn renderer:build
-        timeout-minutes: 5
-
       - name: Build Electron app
-        run: yarn make
+        run: yarn dist
         timeout-minutes: 25
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -111,35 +96,29 @@ jobs:
         uses: actions/upload-artifact@v4
         timeout-minutes: 5
         with:
-          name: allen-ui-console-${{ matrix.platform }}-${{ matrix.arch }}
+          name: allen-ui-console-win32-x64
           path: |
-            out/
-            !out/**/*.blockmap
+            dist-electron-builder/
+            !dist-electron-builder/**/*.blockmap
           retention-days: 90
 
-  release:
-    needs: build
+  version-manager:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Use NodeJS 18
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: '18'
+          cache: 'yarn'
 
       - name: Enable Corepack
         run: corepack enable
-
-      - name: Use NodeJS 18
-        uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-          cache: "yarn"
 
       - name: Install dependencies
         run: yarn install --immutable
@@ -203,6 +182,16 @@ jobs:
           git commit -m "Bump version to ${{ steps.get_version.outputs.version }} [skip ci]"
           git push
 
+  release:
+    needs: [build, version-manager]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -211,19 +200,24 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.get_version.outputs.version }}
-          name: Release v${{ steps.get_version.outputs.version }}
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', needs.version-manager.outputs.version) }}
+          name: Release ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', needs.version-manager.outputs.version) }}
           body: |
-            ## Allen UI Console Electron v${{ steps.get_version.outputs.version }}
+            ## Allen UI Console Electron ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', needs.version-manager.outputs.version) }}
 
             ### Downloads
-            - **Windows (64-bit):** allen-ui-console-win32-x64.zip
+            - **Windows (64-bit):** Portable (.exe) and Installer (.exe)
+
+            ### Build Info
+            - **Build Tool:** Electron Builder
+            - **Node.js:** 18
+            - **Platforms:** Windows 64-bit only
+            - **Commit:** ${{ github.sha }}
 
             ### Changes
-            See the [commit history](https://github.com/${{ github.repository }}/compare/v${{ steps.get_version.outputs.version }}...main) for details.
+            See the [commit history](https://github.com/${{ github.repository }}/compare/${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', needs.version-manager.outputs.version) }}...main) for details.
           files: |
-            artifacts/allen-ui-console-win32-x64/out/*
-            artifacts/allen-ui-console-win32-ia32/out/*
+            artifacts/allen-ui-console-win32-x64/dist-electron-builder/*
           draft: false
           prerelease: false
         env:

@@ -1,9 +1,9 @@
-name: PR Build
+name: Development Build
 
 on:
-  pull_request:
-    branches: [main, develop]
-    types: [opened, synchronize, reopened]
+  push:
+    branches: [develop]
+  workflow_dispatch:
 
 env:
   NODE_VERSION: '18'
@@ -49,12 +49,12 @@ jobs:
         run: yarn renderer:build
         timeout-minutes: 5
 
-      - name: Build Electron app (Portable)
+      - name: Build Electron app
         run: yarn dist:win-portable
         timeout-minutes: 25
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_ENV: stage
+          NODE_ENV: development
           STAGE_URL: ${{ secrets.STAGE_CONSOLE_URL }}
           PROD_URL: ${{ secrets.PROD_CONSOLE_URL }}
           CUSTOM_URL: ${{ secrets.CUSTOM_CONSOLE_URL }}
@@ -63,7 +63,7 @@ jobs:
         uses: actions/upload-artifact@v4
         timeout-minutes: 5
         with:
-          name: allen-ui-console-win32-x64-pr-${{ github.event.number }}
+          name: allen-ui-console-dev-win32-x64
           path: |
             dist-electron-builder/
             !dist-electron-builder/**/*.blockmap
@@ -71,9 +71,52 @@ jobs:
 
       - name: Create build summary
         run: |
-          echo "## Build Summary for PR #${{ github.event.number }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Platforms:** Windows (x64 only)" >> $GITHUB_STEP_SUMMARY
+          echo "## Development Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platform:** Windows (x64)" >> $GITHUB_STEP_SUMMARY
           echo "- **Build Status:** ✅ Success" >> $GITHUB_STEP_SUMMARY
           echo "- **Build Tool:** Electron Builder" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment:** Development" >> $GITHUB_STEP_SUMMARY
           echo "- **Artifacts:** Available for download above" >> $GITHUB_STEP_SUMMARY
           echo "- **Retention:** 30 days" >> $GITHUB_STEP_SUMMARY
+
+  create-dev-release:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.ref == 'refs/heads/develop'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Development Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: dev-${{ github.run_number }}
+          name: Development Build ${{ github.run_number }}
+          body: |
+            ## Development Build ${{ github.run_number }}
+
+            ### Downloads
+            - **Windows (64-bit):** Portable (.exe)
+
+            ### Build Info
+            - **Build Tool:** Electron Builder
+            - **Node.js:** 18
+            - **Environment:** Development
+            - **Commit:** ${{ github.sha }}
+            - **Branch:** ${{ github.ref_name }}
+
+            ### Note
+            This is a development build for Windows 64-bit only. For production releases, see the main releases.
+          files: |
+            artifacts/allen-ui-console-dev-win32-x64/dist-electron-builder/*
+          draft: true
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -6,29 +6,31 @@
   "packageManager": "yarn@4.9.2",
   "scripts": {
     "start": "electron dist/main.js",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
-    "publish": "electron-forge publish",
     "lint": "npx oxlint .",
     "lint:fix": "npx oxlint --fix .",
     "format": "prettier --write \"**/*.{js,ts,jsx,tsx,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{js,ts,jsx,tsx,json,css,md}\"",
     "typecheck": "tsc --noEmit",
     "build:ts": "tsc",
-    "build": "yarn build:ts && electron-forge make",
+    "build": "yarn build:ts && yarn renderer:build && yarn dist",
     "dev": "yarn build:ts && yarn start",
     "dev:watch": "nodemon --watch src --ext ts,js --ignore src/**/*.d.ts --exec \"yarn build:ts && yarn start\"",
     "dev:full": "concurrently \"yarn renderer:dev\" \"yarn dev:watch\"",
-    "clean": "yarn dlx rimraf node_modules out dist",
-    "clean:dist": "yarn dlx rimraf dist",
+    "clean": "yarn dlx rimraf node_modules out dist dist-electron-builder",
+    "clean:dist": "yarn dlx rimraf dist dist-electron-builder",
     "rebuild": "yarn clean:dist && yarn build:ts",
     "renderer:dev": "webpack --mode development --watch",
     "renderer:build": "webpack --config webpack.config.prod.js",
     "renderer:start": "webpack serve --mode development",
-    "dev:build": "yarn build:ts && yarn renderer:build && electron-forge make --config forge.config.dev.js",
-    "dev:package": "electron-forge package --config forge.config.dev.js",
-    "dev:make": "electron-forge make --config forge.config.dev.js",
-    "dev:publish": "electron-forge publish --config forge.config.dev.js",
+    "dist": "electron-builder --config electron-builder.json",
+    "dist:win": "electron-builder --config electron-builder.json --win --x64",
+    "dist:win-portable": "electron-builder --config electron-builder.json --win --x64",
+    "dist:win-installer": "electron-builder --config electron-builder.json --win --x64",
+    "dist:mac": "electron-builder --config electron-builder.json --mac --x64",
+    "dist:linux": "electron-builder --config electron-builder.json --linux --x64",
+    "dist:publish": "electron-builder --config electron-builder.json --publish always",
+    "dist:publish-draft": "electron-builder --config electron-builder.json --publish draft",
+    "dev:build": "yarn build:ts && yarn renderer:build && yarn dist:win-portable",
     "version:current": "./scripts/version-manager.sh current",
     "version:bump": "./scripts/version-manager.sh bump",
     "version:set": "./scripts/version-manager.sh set",
@@ -36,8 +38,6 @@
     "version:history": "./scripts/version-manager.sh history",
     "version:tag": "./scripts/version-manager.sh tag",
     "analyze:size": "./scripts/analyze-size.sh",
-    "build:win-forge": "yarn build:ts && yarn renderer:build && yarn dev:make",
-    "build:win-builder": "yarn build:ts && yarn renderer:build && electron-builder --config electron-builder.json --win --x64 --publish never",
     "test:builds": "./scripts/test-builds.sh",
     "prepare": "husky install",
     "postinstall": "yarn dlx husky install"
@@ -59,12 +59,6 @@
     "@babel/preset-typescript": "^7.23.3",
     "@commitlint/cli": "^18.4.3",
     "@commitlint/config-conventional": "^18.4.3",
-    "@electron-forge/cli": "^7.2.0",
-    "@electron-forge/maker-deb": "^7.2.0",
-    "@electron-forge/maker-rpm": "^7.2.0",
-    "@electron-forge/maker-squirrel": "^7.2.0",
-    "@electron-forge/maker-zip": "^7.2.0",
-    "@electron-forge/plugin-webpack": "^7.2.0",
     "@types/electron": "^1.6.12",
     "@types/node": "^24.2.1",
     "@types/react": "^18.2.45",
@@ -100,7 +94,6 @@
     "@sentry/node": "^7.0.0",
     "@sentry/tracing": "^7.0.0",
     "date-fns": "^4.1.0",
-    "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^8.1.0",
     "electron-updater": "^6.1.7",
     "uuid": "^9.0.1"
@@ -113,45 +106,5 @@
     "*.{json,css,md}": [
       "npx prettier --write"
     ]
-  },
-  "config": {
-    "forge": {
-      "packagerConfig": {},
-      "makers": [
-        {
-          "name": "@electron-forge/maker-squirrel",
-          "config": {
-            "name": "allen_ui_console"
-          }
-        },
-        {
-          "name": "@electron-forge/maker-zip",
-          "platforms": [
-            "darwin"
-          ]
-        },
-        {
-          "name": "@electron-forge/maker-deb",
-          "config": {}
-        },
-        {
-          "name": "@electron-forge/maker-rpm",
-          "config": {}
-        }
-      ],
-      "plugins": [],
-      "publishers": [
-        {
-          "name": "@electron-forge/publisher-github",
-          "config": {
-            "repository": {
-              "owner": "your-github-username",
-              "name": "allen-ui-console-electron"
-            },
-            "prerelease": false
-          }
-        }
-      ]
-    }
   }
 }
