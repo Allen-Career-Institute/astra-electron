@@ -51,6 +51,13 @@ module.exports = {
         certificateFile: process.env.NODE_ENV === 'production' ? process.env.CSC_LINK : null,
         certificatePassword: process.env.NODE_ENV === 'production' ? process.env.CSC_KEY_PASSWORD : null
       }
+    },
+    {
+      name: '@electron-forge/maker-zip',
+      platforms: ['win32'],
+      config: {
+        name: process.env.NODE_ENV === 'production' ? 'Allen Console Portable' : 'Allen Console Portable (Stage)'
+      }
     }
   ],
   plugins: [

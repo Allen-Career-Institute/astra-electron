@@ -49,6 +49,13 @@ module.exports = {
         certificatePassword: process.env.LOCAL_CERTIFICATE_PASSWORD || null,
       },
     },
+    {
+      name: '@electron-forge/maker-zip',
+      platforms: ['win32'],
+      config: {
+        name: 'allen_ui_console_dev_portable',
+      },
+    },
   ],
   plugins: [
     {

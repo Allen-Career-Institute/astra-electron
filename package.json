@@ -36,6 +36,9 @@
     "version:history": "./scripts/version-manager.sh history",
     "version:tag": "./scripts/version-manager.sh tag",
     "analyze:size": "./scripts/analyze-size.sh",
+    "build:win-forge": "yarn build:ts && yarn renderer:build && yarn dev:make",
+    "build:win-builder": "yarn build:ts && yarn renderer:build && electron-builder --config electron-builder.json --win --x64 --portable",
+    "test:builds": "./scripts/test-builds.sh",
     "prepare": "husky install",
     "postinstall": "yarn dlx husky install"
   },

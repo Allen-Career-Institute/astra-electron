@@ -1,0 +1,35 @@
+{
+  "appId": "com.allendigital.allen-ui-console",
+  "productName": "Allen UI Console",
+  "directories": {
+    "output": "dist-electron-builder",
+    "buildResources": "assets"
+  },
+  "files": [
+    "dist/**/*",
+    "assets/**/*",
+    "node_modules/**/*",
+    "!node_modules/**/*.d.ts",
+    "!node_modules/**/*.map"
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "portable",
+        "arch": ["x64"]
+      }
+    ],
+    "icon": "assets/icon.png",
+    "requestedExecutionLevel": "asInvoker"
+  },
+  "portable": {
+    "artifactName": "${productName}-${version}-portable.${ext}"
+  },
+  "publish": {
+    "provider": "github",
+    "owner": "dinesh-kumar-allen",
+    "repo": "allen-ui-console-electron",
+    "private": false,
+    "releaseType": "release"
+  }
+}
