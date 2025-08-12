@@ -36,7 +36,8 @@
         "arch": ["x64"]
       }
     ],
-    "requestedExecutionLevel": "asInvoker"
+    "requestedExecutionLevel": "asInvoker",
+    "icon": null
   },
   "portable": {
     "artifactName": "${productName}-${version}-portable.${ext}"
