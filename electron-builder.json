@@ -8,9 +8,26 @@
   "files": [
     "dist/**/*",
     "assets/**/*",
-    "node_modules/**/*",
-    "!node_modules/**/*.d.ts",
-    "!node_modules/**/*.map"
+    "node_modules/electron-store/**/*",
+    "node_modules/dotenv/**/*",
+    "node_modules/@sentry/**/*",
+    "!**/*.d.ts",
+    "!**/*.map",
+    "!**/*.ts",
+    "!**/*.md",
+    "!**/*.log",
+    "!**/*.test.*",
+    "!**/*.spec.*",
+    "!**/test/**",
+    "!**/tests/**",
+    "!**/__tests__/**",
+    "!**/.git/**",
+    "!**/.github/**",
+    "!**/.vscode/**",
+    "!**/.idea/**",
+    "!**/coverage/**",
+    "!**/docs/**",
+    "!**/examples/**"
   ],
   "win": {
     "target": [
@@ -19,7 +36,6 @@
         "arch": ["x64"]
       }
     ],
-    "icon": "assets/icon.png",
     "requestedExecutionLevel": "asInvoker"
   },
   "portable": {
@@ -31,5 +47,7 @@
     "repo": "allen-ui-console-electron",
     "private": false,
     "releaseType": "release"
-  }
+  },
+  "forceCodeSigning": false,
+  "asar": false
 }

@@ -186,7 +186,6 @@ function createWhiteboardWindow(config: WhiteboardWindowConfig): BrowserWindow {
         enableBlinkFeatures:
           'WebCodecs,WebRTC,GetDisplayMedia,ScreenCaptureKit,DesktopCaptureKit,WebRTCPipeWireCapturer',
       },
-      icon: path.join(__dirname, '../../assets/icon.png'),
       resizable: true,
       minimizable: true,
       maximizable: true,

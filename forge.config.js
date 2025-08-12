@@ -1,12 +1,11 @@
 module.exports = {
   packagerConfig: {
-    icon: './assets/icon',
-    asar: true,
+    asar: false,
     // Only include essential assets
-    extraResource: ['./assets/icon.ico', './assets/icon.png'],
+    extraResource: [],
     // Better ignore patterns to reduce size
     ignore: [
-      /^\/(?!src|assets\/icon\.(ico|png)|package\.json)/,
+      /^\/(?!src|package\.json)/,
       // Exclude heavy node_modules
       /node_modules\/(?!agora-rtc-sdk-ng|@electron|electron-store|electron-updater)/,
       // Exclude development files
@@ -45,8 +44,8 @@ module.exports = {
         name: process.env.NODE_ENV === 'production' ? 'Allen Console' : 'Allen Console (Stage)',
         authors: 'Allen Digital',
         description: process.env.NODE_ENV === 'production' ? 'Allen UI Console Electron App' : 'Allen UI Console Electron App (Stage)',
-        iconUrl: 'https://raw.githubusercontent.com/your-username/allen-ui-console-electron/main/assets/icon.ico',
-        setupIcon: './assets/icon.ico',
+        iconUrl: '',
+        setupIcon: '',
         // Windows code signing configuration
         certificateFile: process.env.NODE_ENV === 'production' ? process.env.CSC_LINK : null,
         certificatePassword: process.env.NODE_ENV === 'production' ? process.env.CSC_KEY_PASSWORD : null

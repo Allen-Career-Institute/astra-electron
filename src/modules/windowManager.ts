@@ -42,7 +42,6 @@ function createMainWindow(): BrowserWindow {
       preload: path.join(__dirname, '../preload.js'),
       allowRunningInsecureContent: true,
     },
-    icon: path.join(__dirname, '../../assets/icon.png'),
     title: 'Allen UI Console',
   });
 

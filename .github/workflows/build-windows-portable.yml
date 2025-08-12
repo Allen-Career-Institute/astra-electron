@@ -50,8 +50,23 @@ jobs:
     - name: Build Electron-Forge Portable
       run: yarn build:win-forge
       continue-on-error: true
+      
+    - name: Note about publishing behavior
+      run: |
+        echo "ℹ️  Publishing behavior:"
+        echo "   - Pull Requests: Publishing is disabled for security"
+        echo "   - Push to main: Publishing will be enabled"
+        echo "   - This is the expected behavior for security reasons"
         
-    - name: Build Electron-Builder Portable
+    - name: Build Electron-Builder Portable (PR)
+      if: github.event_name == 'pull_request'
+      env:
+        PUBLISH_FOR_PULL_REQUEST: false
+      run: yarn build:win-builder
+      continue-on-error: true
+        
+    - name: Build Electron-Builder Portable (Push)
+      if: github.event_name == 'push'
       run: yarn build:win-builder
       continue-on-error: true
         

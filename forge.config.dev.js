@@ -1,12 +1,11 @@
 module.exports = {
   packagerConfig: {
-    icon: './assets/icon',
-    asar: true,
+    asar: false,
     // Only include essential assets
-    extraResource: ['./assets/icon.ico', './assets/icon.png'],
+    extraResource: [],
     // Better ignore patterns to reduce size
     ignore: [
-      /^\/(?!src|assets\/icon\.(ico|png)|package\.json)/,
+      /^\/(?!src|package\.json)/,
       // Exclude heavy node_modules
       /node_modules\/(?!agora-rtc-sdk-ng|@electron|electron-store|electron-updater)/,
       // Exclude development files
