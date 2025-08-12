@@ -55,7 +55,7 @@ module.exports = {
       name: '@electron-forge/plugin-auto-updater',
       config: {
         repository: {
-          owner: 'your-github-username',
+          owner: 'dinesh-kumar-allen',
           name: 'allen-ui-console-electron'
         }
       }
@@ -66,7 +66,7 @@ module.exports = {
       name: '@electron-forge/publisher-github',
       config: {
         repository: {
-          owner: 'your-github-username',
+          owner: 'dinesh-kumar-allen',
           name: 'allen-ui-console-electron'
         },
         prerelease: false,

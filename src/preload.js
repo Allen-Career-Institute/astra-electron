@@ -16,6 +16,24 @@ contextBridge.exposeInMainWorld('electronAPI', {
       return { type: 'ERROR', error: error.message };
     }
   },
-  // Window URL management
-  getWindowStatus: () => ipcRenderer.invoke('get-window-status'),
+  // Request stream configuration
+  requestStreamConfig: async () => {
+    try {
+      return await ipcRenderer.invoke('request-stream-config');
+    } catch (error) {
+      return { type: 'ERROR', error: error.message };
+    }
+  },
+  // Stream control event listener
+  onStreamControl: callback => {
+    ipcRenderer.on('stream-control', callback);
+  },
+  // Cleanup resources event listener
+  onCleanupResources: callback => {
+    ipcRenderer.on('cleanup-resources', callback);
+  },
+  // Remove all listeners
+  removeAllListeners: channel => {
+    ipcRenderer.removeAllListeners(channel);
+  },
 });

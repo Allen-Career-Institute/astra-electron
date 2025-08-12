@@ -17,7 +17,7 @@ import { getStreamWindow } from './modules/streamWindow';
 // Enable hardware acceleration and WebRTC optimizations for better video quality
 app.commandLine.appendSwitch(
   '--enable-features',
-  'VaapiVideoDecoder,VaapiVideoEncoder,WebCodecs'
+  'VaapiVideoDecoder,VaapiVideoEncoder,WebCodecs,WebRTCPipeWireCapturer'
 );
 app.commandLine.appendSwitch('--ignore-gpu-blacklist');
 app.commandLine.appendSwitch('--enable-gpu-rasterization');
@@ -26,6 +26,35 @@ app.commandLine.appendSwitch('--enable-accelerated-video-decode');
 app.commandLine.appendSwitch('--enable-accelerated-video-encode');
 app.commandLine.appendSwitch('--enable-webcodecs');
 app.commandLine.appendSwitch('--enable-webrtc');
+
+// Enable screen sharing permissions
+app.commandLine.appendSwitch('--enable-usermedia-screen-capturing');
+app.commandLine.appendSwitch('--allow-running-insecure-content');
+app.commandLine.appendSwitch('--disable-web-security');
+app.commandLine.appendSwitch('--disable-features', 'VizDisplayCompositor');
+app.commandLine.appendSwitch('--enable-experimental-web-platform-features');
+app.commandLine.appendSwitch('--enable-features', 'GetDisplayMedia');
+app.commandLine.appendSwitch('--enable-features', 'WebRTC');
+app.commandLine.appendSwitch('--enable-features', 'WebCodecs');
+app.commandLine.appendSwitch('--enable-features', 'WebRTCPipeWireCapturer');
+app.commandLine.appendSwitch('--enable-features', 'ScreenCaptureKit');
+app.commandLine.appendSwitch('--enable-features', 'DesktopCaptureKit');
+
+// Additional WebRTC flags to resolve SDP codec collision issues
+app.commandLine.appendSwitch(
+  '--force-fieldtrials',
+  'WebRTC-Audio-MinimizeResamplingOnMobile/Enabled/'
+);
+app.commandLine.appendSwitch(
+  '--force-fieldtrials',
+  'WebRTC-Video-QualityScaling/Enabled/'
+);
+app.commandLine.appendSwitch(
+  '--force-fieldtrials',
+  'WebRTC-Audio-OpusMaxAverageBitrate/Enabled/'
+);
+app.commandLine.appendSwitch('--webrtc-max-cpu-consumption-percentage', '100');
+app.commandLine.appendSwitch('--webrtc-cpu-overuse-detection', 'false');
 
 setupIpcHandlers(ipcMain);
 
@@ -45,7 +74,10 @@ app.on('ready', () => {
     createMenu();
     setupAutoUpdater();
 
-    // Stream window is now positioned to not cover main window - no need for background positioning
+    // Start cleanup worker from main window
+    // startCleanupWorker();
+
+    // Stream window will only open on CONFIG_UPDATE action, not automatically on startup
   } catch (error) {
     console.error('Error during app initialization:', error);
   }

@@ -1,17 +1,23 @@
 const { getMainWindow } = require('./windowManager');
-const { getStreamWindow, safeCloseStreamWindow } = require('./streamWindow');
+const { getStreamWindow } = require('./streamWindow');
+const { getWhiteboardWindow } = require('./whiteboardWindow');
 const { ENV } = require('./config');
 
 function cleanup() {
   const mainWindow = getMainWindow();
   const streamWindow = getStreamWindow();
+  const whiteboardWindow = getWhiteboardWindow();
+
+  if (streamWindow && !streamWindow.isDestroyed()) {
+    streamWindow.close();
+  }
 
   if (mainWindow) {
     mainWindow.close();
   }
 
-  if (streamWindow) {
-    streamWindow.close();
+  if (whiteboardWindow && !whiteboardWindow.isDestroyed()) {
+    whiteboardWindow.close();
   }
 }
 

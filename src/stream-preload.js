@@ -136,30 +136,10 @@ try {
   contextBridge.exposeInMainWorld('electronAPI', {
     // Request stream config from main process
     requestStreamConfig: () => ipcRenderer.invoke('request-stream-config'),
-
     // Event listeners
     onStreamControl: callback => ipcRenderer.on('stream-control', callback),
     onCleanupResources: callback =>
       ipcRenderer.on('cleanup-resources', callback),
-
-    // Recording control functions
-    startRecording: (meetingId, config) =>
-      ipcRenderer.invoke('start-recording', meetingId, config),
-    stopRecording: meetingId => ipcRenderer.invoke('stop-recording', meetingId),
-    getRecordingStatus: meetingId =>
-      ipcRenderer.invoke('get-recording-status', meetingId),
-
-    // Stream window control functions
-    showStreamWindow: () => ipcRenderer.invoke('show-stream-window'),
-    minimizeStreamWindow: () => ipcRenderer.invoke('minimize-stream-window'),
-
-    // Blocked functions that return error messages
-    reloadStreamWindow: () => ipcRenderer.invoke('reload-stream-window'),
-    forceReloadStreamWindow: () =>
-      ipcRenderer.invoke('force-reload-stream-window'),
-    navigateStreamWindow: url =>
-      ipcRenderer.invoke('navigate-stream-window', url),
-
     // Remove listeners
     removeAllListeners: channel => ipcRenderer.removeAllListeners(channel),
   });
@@ -168,10 +148,6 @@ try {
 } catch (error) {
   console.error('Failed to expose electronAPI:', error);
 }
-
-console.log(
-  'Stream window preload script loaded with comprehensive reload protection'
-);
 
 // Add error handler for uncaught errors
 process.on('uncaughtException', error => {

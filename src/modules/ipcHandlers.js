@@ -3,6 +3,10 @@ const {
   getStreamWindowConfig,
   createStreamWindow,
 } = require('./streamWindow');
+const {
+  createWhiteboardWindow,
+  safeClosewhiteboardWindow,
+} = require('./whiteboard-window');
 const { getMainWindow } = require('./windowManager');
 const { ENV, DEFAULT_URL } = require('./config');
 
@@ -25,6 +29,7 @@ function setupIpcHandlers(ipcMain) {
   // Centralized IPC Communication handler for allen-ui-live web app
   ipcMain.handle('sendMessage', async (event, message) => {
     try {
+      console.log('sendMessage received', message);
       switch (message.type) {
         case 'CONFIG_UPDATE':
           const streamWindow = getStreamWindow();
@@ -44,7 +49,7 @@ function setupIpcHandlers(ipcMain) {
             configuration: message.payload.configuration,
           };
 
-          createStreamWindow(agoraConfig);
+          // createStreamWindow(agoraConfig);
           return { type: 'SUCCESS', payload: 'Stream window created' };
 
         case 'AUDIO_TOGGLE':
@@ -53,7 +58,11 @@ function setupIpcHandlers(ipcMain) {
             const action = message.payload.enabled
               ? 'unmute-audio'
               : 'mute-audio';
-            streamWindowForAudio.webContents.send('stream-control', action);
+            streamWindowForAudio.webContents.send(
+              'stream-control',
+              action,
+              message.payload.enabled
+            );
           }
           return { type: 'SUCCESS', payload: 'Audio toggle sent' };
 
@@ -72,7 +81,38 @@ function setupIpcHandlers(ipcMain) {
           if (streamWindowForLeave && !streamWindowForLeave.isDestroyed()) {
             streamWindowForLeave.close();
           }
+          const whiteboardWindow = getWhiteboardWindow();
+          if (whiteboardWindow && !whiteboardWindow.isDestroyed()) {
+            whiteboardWindow.close();
+          }
           return { type: 'SUCCESS', payload: 'Stream window closed' };
+
+        case 'SCREEN_SHARING_TOGGLE':
+          const streamWindowForScreenSharingToggle = getStreamWindow();
+          if (
+            streamWindowForScreenSharingToggle &&
+            !streamWindowForScreenSharingToggle.isDestroyed()
+          ) {
+            // Focus the stream window when screen sharing is toggled
+            streamWindowForScreenSharingToggle.focus();
+            streamWindowForScreenSharingToggle.show();
+
+            const action = message.payload.enabled
+              ? 'unmute-screen-sharing'
+              : 'mute-screen-sharing';
+            streamWindowForScreenSharingToggle.webContents.send(
+              'stream-control',
+              action,
+              message.payload.enabled
+            );
+          }
+          return { type: 'SUCCESS', payload: 'Screen sharing toggle sent' };
+        case 'OPEN_WHITEBOARD':
+          createWhiteboardWindow(message.payload);
+          return { type: 'SUCCESS', payload: 'Whiteboard window created' };
+        case 'CLOSE_WHITEBOARD':
+          safeClosewhiteboardWindow();
+          return { type: 'SUCCESS', payload: 'Whiteboard window closed' };
         default:
           return { type: 'ERROR', error: 'Unknown message type' };
       }
@@ -101,6 +141,13 @@ function setupIpcHandlers(ipcMain) {
     try {
       const streamWindow = getStreamWindow();
       if (streamWindow && !streamWindow.isDestroyed()) {
+        if (
+          action === 'unmute-screen-sharing' ||
+          action === 'mute-screen-sharing'
+        ) {
+          streamWindow.focus();
+          streamWindow.show();
+        }
         streamWindow.webContents.send('stream-control', action, enabled);
       }
       return {
