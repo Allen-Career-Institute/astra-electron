@@ -65,13 +65,7 @@
     ],
     "icon": null,
     "artifactName": "${productName}-${version}-mac.${ext}",
-    "category": "public.app-category.productivity",
-    "info": {
-      "NSCameraUsageDescription": "We need camera access for video calls",
-      "NSMicrophoneUsageDescription": "We need microphone access for audio calls",
-      "NSSystemAudioUsageDescription": "We need system audio access for screen sharing",
-      "NSAppleEventsUsageDescription": "We need to control other apps for screen sharing"
-    }
+    "category": "public.app-category.productivity"
   },
   "linux": {
     "target": [
