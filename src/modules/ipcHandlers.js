@@ -49,7 +49,7 @@ function setupIpcHandlers(ipcMain) {
             configuration: message.payload.configuration,
           };
 
-          // createStreamWindow(agoraConfig);
+          createStreamWindow(agoraConfig);
           return { type: 'SUCCESS', payload: 'Stream window created' };
 
         case 'AUDIO_TOGGLE':
