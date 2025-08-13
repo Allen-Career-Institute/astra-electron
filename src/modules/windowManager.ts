@@ -1,4 +1,4 @@
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, session } from 'electron';
 import path from 'path';
 import { ENV, DEFAULT_URL } from './config';
 
@@ -37,10 +37,14 @@ function createMainWindow(): BrowserWindow {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      webSecurity: true,
-      webviewTag: true,
       preload: path.join(__dirname, '../preload.js'),
-      allowRunningInsecureContent: true,
+      webSecurity: false, // only if you trust the content
+      sandbox: false,
+      allowRunningInsecureContent: true, // only if HTTP content
+      // Most important for WebRTC:
+      webviewTag: false,
+      experimentalFeatures: true,
+      enableBlinkFeatures: 'MediaCapture,ScreenCapture',
     },
     title: 'Allen UI Console',
   });
@@ -48,6 +52,16 @@ function createMainWindow(): BrowserWindow {
   mainWindow.loadURL(DEFAULT_URL);
   mainWindow.setFullScreen(true);
   mainWindow.maximize();
+
+  session
+    .fromPartition('default') // or your window's partition
+    .setPermissionRequestHandler((webContents, permission, callback) => {
+      if (permission === 'media' || permission === 'display-capture') {
+        callback(true); // Allow screen capture
+      } else {
+        callback(false);
+      }
+    });
 
   if (ENV === 'development') {
     mainWindow.webContents.openDevTools();
