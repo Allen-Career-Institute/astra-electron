@@ -149,6 +149,9 @@ try {
     stopScreenSharing: () => ipcRenderer.invoke('stop-screen-sharing'),
     getScreenSharingState: () => ipcRenderer.invoke('get-screen-sharing-state'),
     showDesktopCapturer: () => ipcRenderer.invoke('show-desktop-capturer'),
+    getScreenSharingStream: sourceId =>
+      ipcRenderer.invoke('get-screen-sharing-stream', sourceId),
+    testScreenSharing: () => ipcRenderer.invoke('test-screen-sharing'),
 
     // Remove listeners
     removeAllListeners: channel => ipcRenderer.removeAllListeners(channel),

@@ -9,8 +9,9 @@ const {
 } = require('./whiteboard-window');
 const { getMainWindow } = require('./windowManager');
 const { ENV, DEFAULT_URL } = require('./config');
-const screenSharingModule = require('./screenSharing');
-const screenSharingManager = screenSharingModule.screenSharingManager;
+const agoraScreenSharingModule = require('./agoraScreenSharing');
+const agoraScreenSharingManager =
+  agoraScreenSharingModule.agoraScreenSharingManager;
 
 // IPC Handlers
 function setupIpcHandlers(ipcMain) {
@@ -101,35 +102,36 @@ function setupIpcHandlers(ipcMain) {
             if (message.payload.enabled) {
               // Start screen sharing - show desktop capturer dialog
               try {
-                console.log('About to show desktop capturer dialog');
+                console.log('About to show Agora desktop capturer dialog');
 
                 if (
-                  !screenSharingManager ||
-                  typeof screenSharingManager.showDesktopCapturer !== 'function'
+                  !agoraScreenSharingManager ||
+                  typeof agoraScreenSharingManager.showDesktopCapturer !==
+                    'function'
                 ) {
                   console.error(
-                    'screenSharingManager is not properly initialized'
+                    'agoraScreenSharingManager is not properly initialized'
                   );
                   return {
                     type: 'ERROR',
-                    error: 'Screen sharing manager not initialized',
+                    error: 'Agora screen sharing manager not initialized',
                   };
                 }
 
-                // Show the desktop capturer dialog
-                await screenSharingManager.showDesktopCapturer();
-                console.log('Desktop capturer dialog shown');
+                // Show the desktop capturer dialog using Agora
+                await agoraScreenSharingManager.showDesktopCapturer();
+                console.log('Agora desktop capturer dialog shown');
               } catch (error) {
-                console.error('Error showing desktop capturer:', error);
+                console.error('Error showing Agora desktop capturer:', error);
                 return {
                   type: 'ERROR',
-                  error: 'Failed to show desktop capturer',
+                  error: 'Failed to show Agora desktop capturer',
                 };
               }
             } else {
               // Stop screen sharing
               try {
-                await screenSharingManager.stopScreenSharing();
+                await agoraScreenSharingManager.stopScreenSharing();
                 const action = 'mute-screen-sharing';
                 streamWindowForScreenSharingToggle.webContents.send(
                   'stream-control',
@@ -137,10 +139,10 @@ function setupIpcHandlers(ipcMain) {
                   message.payload.enabled
                 );
               } catch (error) {
-                console.error('Error stopping screen sharing:', error);
+                console.error('Error stopping Agora screen sharing:', error);
                 return {
                   type: 'ERROR',
-                  error: 'Failed to stop screen sharing',
+                  error: 'Failed to stop Agora screen sharing',
                 };
               }
             }

@@ -18,7 +18,7 @@
     "dev:full": "concurrently \"yarn renderer:dev\" \"yarn dev:watch\"",
     "clean": "yarn dlx rimraf node_modules out dist dist-electron-builder",
     "clean:dist": "yarn dlx rimraf dist dist-electron-builder",
-    "rebuild": "yarn clean:dist && yarn build:ts",
+    "rebuild": "electron-rebuild -f -o ref-napi",
     "renderer:dev": "webpack --mode development --watch",
     "renderer:build": "webpack --config webpack.config.prod.js",
     "renderer:start": "webpack serve --mode development",
@@ -70,10 +70,12 @@
     "electron": "^28.0.0",
     "electron-builder": "^24.9.1",
     "electron-icon-builder": "^2.0.1",
+    "electron-rebuild": "^3.2.9",
     "html-webpack-plugin": "^5.5.3",
     "husky": "^8.0.3",
     "lint-staged": "^15.2.0",
     "nodemon": "^3.0.2",
+    "prebuild-install": "^7.1.3",
     "prettier": "^3.6.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -94,9 +96,12 @@
     "@sentry/electron": "^4.0.0",
     "@sentry/node": "^7.0.0",
     "@sentry/tracing": "^7.0.0",
+    "agora-electron-sdk": "^4.5.2",
     "date-fns": "^4.1.0",
     "electron-store": "^8.1.0",
     "electron-updater": "^6.1.7",
+    "koffi": "^2.8.11",
+    "ref-napi": "^3.0.3",
     "uuid": "^9.0.1"
   },
   "lint-staged": {
@@ -107,5 +112,9 @@
     "*.{json,css,md}": [
       "npx prettier --write"
     ]
+  },
+  "agora_electron": {
+    "prebuilt": true,
+    "arch": "x64"
   }
 }

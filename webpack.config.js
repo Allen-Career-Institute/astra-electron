@@ -17,6 +17,12 @@ module.exports = {
       '@': path.resolve(__dirname, 'src/renderer')
     }
   },
+  // Exclude native modules from webpack bundling
+  externals: {
+    'agora-electron-sdk': 'commonjs2 agora-electron-sdk',
+    'koffi': 'commonjs2 koffi',
+    'ref-napi': 'commonjs2 ref-napi'
+  },
   module: {
     rules: [
       {
