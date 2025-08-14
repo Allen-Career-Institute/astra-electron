@@ -1,9 +1,9 @@
 // Conditional Sentry Loading - Only loads in production to reduce bundle size
-let Sentry = null;
+let Sentry: any = null;
 let isInitialized = false;
 
 // Initialize Sentry only in production
-export async function initializeSentry() {
+export async function initializeSentry(): Promise<void> {
   if (process.env.NODE_ENV !== 'production') {
     console.log('Sentry disabled in non-production environment');
     return;
@@ -24,12 +24,18 @@ export async function initializeSentry() {
     isInitialized = true;
     console.log('Sentry initialized successfully');
   } catch (error) {
-    console.warn('Failed to initialize Sentry:', error.message);
+    console.warn(
+      'Failed to initialize Sentry:',
+      error instanceof Error ? error.message : 'Unknown error'
+    );
   }
 }
 
 // Conditional error reporting
-export function captureException(error, context = {}) {
+export function captureException(
+  error: Error,
+  context: Record<string, any> = {}
+): void {
   if (!isInitialized || process.env.NODE_ENV !== 'production') {
     console.error('Error (Sentry disabled):', error, context);
     return;
@@ -43,7 +49,11 @@ export function captureException(error, context = {}) {
 }
 
 // Conditional message reporting
-export function captureMessage(message, level = 'info', context = {}) {
+export function captureMessage(
+  message: string,
+  level: string = 'info',
+  context: Record<string, any> = {}
+): void {
   if (!isInitialized || process.env.NODE_ENV !== 'production') {
     console.log(`Message (Sentry disabled): ${message}`, context);
     return;
@@ -57,11 +67,11 @@ export function captureMessage(message, level = 'info', context = {}) {
 }
 
 // Get Sentry instance (for advanced usage)
-export function getSentry() {
+export function getSentry(): any {
   return isInitialized ? Sentry : null;
 }
 
 // Check if Sentry is available
-export function isSentryAvailable() {
+export function isSentryAvailable(): boolean {
   return isInitialized && process.env.NODE_ENV === 'production';
 }
