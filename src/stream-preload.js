@@ -140,6 +140,16 @@ try {
     onStreamControl: callback => ipcRenderer.on('stream-control', callback),
     onCleanupResources: callback =>
       ipcRenderer.on('cleanup-resources', callback),
+    // Screen sharing methods
+    getScreenSources: () => ipcRenderer.invoke('get-screen-sources'),
+    requestScreenPermission: () =>
+      ipcRenderer.invoke('request-screen-permission'),
+    startScreenSharing: sourceId =>
+      ipcRenderer.invoke('start-screen-sharing', sourceId),
+    stopScreenSharing: () => ipcRenderer.invoke('stop-screen-sharing'),
+    getScreenSharingState: () => ipcRenderer.invoke('get-screen-sharing-state'),
+    showDesktopCapturer: () => ipcRenderer.invoke('show-desktop-capturer'),
+
     // Remove listeners
     removeAllListeners: channel => ipcRenderer.removeAllListeners(channel),
   });

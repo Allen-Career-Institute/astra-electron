@@ -42,7 +42,7 @@
       }
     ],
     "requestedExecutionLevel": "asInvoker",
-    "icon": null,
+    "icon": "assets/icons/win/icon.ico",
     "artifactName": "${productName}-${version}-installer.${ext}"
   },
   "nsis": {
@@ -63,9 +63,15 @@
         "arch": ["x64", "arm64"]
       }
     ],
-    "icon": null,
+    "icon": "assets/icons/mac/icon.icns",
     "artifactName": "${productName}-${version}-mac.${ext}",
-    "category": "public.app-category.productivity"
+    "category": "public.app-category.productivity",
+    "entitlements": "assets/entitlements.mac.plist",
+    "entitlementsInherit": "assets/entitlements.mac.plist",
+    "infoPlist": "assets/Info.plist",
+    "hardenedRuntime": true,
+    "gatekeeperAssess": false,
+    "notarize": false
   },
   "linux": {
     "target": [
@@ -78,11 +84,10 @@
         "arch": ["x64"]
       }
     ],
-    "icon": null,
+    "icon": "assets/icons/png/512x512.png",
     "artifactName": "${productName}-${version}-linux.${ext}",
     "category": "Utility"
   },
-
   "publish": {
     "provider": "github",
     "owner": "dinesh-kumar-allen",

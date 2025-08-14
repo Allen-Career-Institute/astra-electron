@@ -156,6 +156,7 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
+        sandbox: false,
         preload: path.join(__dirname, '../stream-preload.js'),
         webSecurity: false, // Disable for screen sharing to work
         allowRunningInsecureContent: true,
@@ -163,7 +164,7 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
         experimentalFeatures: true,
         // Enable WebRTC features
         enableBlinkFeatures:
-          'WebCodecs,WebRTC,GetDisplayMedia,ScreenCaptureKit,DesktopCaptureKit,WebRTCPipeWireCapturer',
+          'WebCodecs,WebRTC,GetDisplayMedia,ScreenCaptureKit,DesktopCaptureKit,WebRTCPipeWireCapturer,MediaCapture,ScreenCapture',
       },
       resizable: true,
       minimizable: true,
@@ -191,8 +192,9 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
     // Handle window events
     streamWindow.once('ready-to-show', () => {
       if (streamWindow && !streamWindow.isDestroyed()) {
-        streamWindow.show();
+        // streamWindow.show();
         getMainWindow()?.show();
+        getMainWindow()?.focus();
         streamWindowSettingUp = false;
         console.log('Stream window ready and shown');
       }

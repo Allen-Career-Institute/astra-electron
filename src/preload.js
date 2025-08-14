@@ -32,6 +32,49 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onCleanupResources: callback => {
     ipcRenderer.on('cleanup-resources', callback);
   },
+  // Screen sharing methods
+  getScreenSources: async () => {
+    try {
+      return await ipcRenderer.invoke('get-screen-sources');
+    } catch (error) {
+      return { type: 'ERROR', error: error.message };
+    }
+  },
+  requestScreenPermission: async () => {
+    try {
+      return await ipcRenderer.invoke('request-screen-permission');
+    } catch (error) {
+      return { type: 'ERROR', error: error.message };
+    }
+  },
+  startScreenSharing: async sourceId => {
+    try {
+      return await ipcRenderer.invoke('start-screen-sharing', sourceId);
+    } catch (error) {
+      return { type: 'ERROR', error: error.message };
+    }
+  },
+  stopScreenSharing: async () => {
+    try {
+      return await ipcRenderer.invoke('stop-screen-sharing');
+    } catch (error) {
+      return { type: 'ERROR', error: error.message };
+    }
+  },
+  getScreenSharingState: async () => {
+    try {
+      return await ipcRenderer.invoke('get-screen-sharing-state');
+    } catch (error) {
+      return { type: 'ERROR', error: error.message };
+    }
+  },
+  showDesktopCapturer: async () => {
+    try {
+      return await ipcRenderer.invoke('show-desktop-capturer');
+    } catch (error) {
+      return { type: 'ERROR', error: error.message };
+    }
+  },
   // Remove all listeners
   removeAllListeners: channel => {
     ipcRenderer.removeAllListeners(channel);

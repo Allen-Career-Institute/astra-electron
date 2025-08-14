@@ -34,6 +34,20 @@ export interface StreamWindowConfig {
   recordingConfig?: RecordingConfig;
 }
 
+export interface ScreenSource {
+  id: string;
+  name: string;
+  thumbnail: Electron.NativeImage;
+  display_id: string;
+  appIcon?: Electron.NativeImage;
+}
+
+export interface ScreenSharingState {
+  isSharing: boolean;
+  sourceId: string | null;
+  sourceName: string | null;
+}
+
 export interface RecordingConfig {
   enabled: boolean;
   chunkDuration: number; // Duration in milliseconds (default: 10000 for 10s)

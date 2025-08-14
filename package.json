@@ -38,6 +38,7 @@
     "version:tag": "./scripts/version-manager.sh tag",
     "analyze:size": "./scripts/analyze-size.sh",
     "test:builds": "./scripts/test-builds.sh",
+    "icons:generate": "electron-icon-builder --input=assets/icons/png/1024x1024.png --output=assets/icons --flatten",
     "prepare": "husky install",
     "postinstall": "yarn dlx husky install"
   },
@@ -68,6 +69,7 @@
     "css-loader": "^6.8.1",
     "electron": "^28.0.0",
     "electron-builder": "^24.9.1",
+    "electron-icon-builder": "^2.0.1",
     "html-webpack-plugin": "^5.5.3",
     "husky": "^8.0.3",
     "lint-staged": "^15.2.0",

@@ -9,6 +9,8 @@ const {
 } = require('./whiteboard-window');
 const { getMainWindow } = require('./windowManager');
 const { ENV, DEFAULT_URL } = require('./config');
+const screenSharingModule = require('./screenSharing');
+const screenSharingManager = screenSharingModule.screenSharingManager;
 
 // IPC Handlers
 function setupIpcHandlers(ipcMain) {
@@ -29,7 +31,6 @@ function setupIpcHandlers(ipcMain) {
   // Centralized IPC Communication handler for allen-ui-live web app
   ipcMain.handle('sendMessage', async (event, message) => {
     try {
-      console.log('sendMessage received', message);
       switch (message.type) {
         case 'CONFIG_UPDATE':
           const streamWindow = getStreamWindow();
@@ -97,14 +98,52 @@ function setupIpcHandlers(ipcMain) {
             streamWindowForScreenSharingToggle.focus();
             streamWindowForScreenSharingToggle.show();
 
-            const action = message.payload.enabled
-              ? 'unmute-screen-sharing'
-              : 'mute-screen-sharing';
-            streamWindowForScreenSharingToggle.webContents.send(
-              'stream-control',
-              action,
-              message.payload.enabled
-            );
+            if (message.payload.enabled) {
+              // Start screen sharing - show desktop capturer dialog
+              try {
+                console.log('About to show desktop capturer dialog');
+
+                if (
+                  !screenSharingManager ||
+                  typeof screenSharingManager.showDesktopCapturer !== 'function'
+                ) {
+                  console.error(
+                    'screenSharingManager is not properly initialized'
+                  );
+                  return {
+                    type: 'ERROR',
+                    error: 'Screen sharing manager not initialized',
+                  };
+                }
+
+                // Show the desktop capturer dialog
+                await screenSharingManager.showDesktopCapturer();
+                console.log('Desktop capturer dialog shown');
+              } catch (error) {
+                console.error('Error showing desktop capturer:', error);
+                return {
+                  type: 'ERROR',
+                  error: 'Failed to show desktop capturer',
+                };
+              }
+            } else {
+              // Stop screen sharing
+              try {
+                await screenSharingManager.stopScreenSharing();
+                const action = 'mute-screen-sharing';
+                streamWindowForScreenSharingToggle.webContents.send(
+                  'stream-control',
+                  action,
+                  message.payload.enabled
+                );
+              } catch (error) {
+                console.error('Error stopping screen sharing:', error);
+                return {
+                  type: 'ERROR',
+                  error: 'Failed to stop screen sharing',
+                };
+              }
+            }
           }
           return { type: 'SUCCESS', payload: 'Screen sharing toggle sent' };
         case 'OPEN_WHITEBOARD':
