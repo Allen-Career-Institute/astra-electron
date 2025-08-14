@@ -14,7 +14,7 @@ export interface StreamWindowConfig {
   appId: string;
   channel: string;
   token: string;
-  uid: string;
+  uid: number;
   url: string;
   hosts: any;
   configuration: any;
@@ -29,9 +29,6 @@ export interface StreamWindowConfig {
   height?: number;
   x?: number;
   y?: number;
-  forceClose?: boolean;
-  recordingEnabled?: boolean;
-  recordingConfig?: RecordingConfig;
 }
 
 export interface ScreenSource {
@@ -234,7 +231,6 @@ export interface StreamWindowManager {
   createStreamWindow(config: StreamWindowConfig): BrowserWindow;
   closeStreamWindow(): void;
   safeCloseStreamWindow(reason?: string): void;
-  forceCloseStreamWindow(): boolean;
   showStreamWindow(): void;
   minimizeStreamWindow(): void;
   isStreamWindowSettingUp(): boolean;
