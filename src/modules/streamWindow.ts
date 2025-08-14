@@ -192,9 +192,9 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
     // Handle window events
     streamWindow.once('ready-to-show', () => {
       if (streamWindow && !streamWindow.isDestroyed()) {
-        // streamWindow.show();
+        streamWindow.show();
         getMainWindow()?.show();
-        getMainWindow()?.focus();
+        // getMainWindow()?.focus();
         streamWindowSettingUp = false;
         console.log('Stream window ready and shown');
       }
