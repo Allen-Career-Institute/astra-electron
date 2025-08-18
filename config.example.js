@@ -34,7 +34,8 @@ module.exports = {
 
   // URLs for different environments
   URLS: {
-    development: process.env.DEVELOPMENT_URL || 'http://localhost:3000',
+    development:
+      process.env.DEVELOPMENT_URL || 'https://stage.allen-digital.com',
     stage: process.env.STAGE_URL || 'https://stage.allen-digital.com',
     production: process.env.PRODUCTION_URL || 'https://app.allen-digital.com',
   },

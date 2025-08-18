@@ -1,6 +1,6 @@
 const { getMainWindow } = require('./windowManager');
 const { getStreamWindow } = require('./streamWindow');
-const { getWhiteboardWindow } = require('./whiteboardWindow');
+const { getWhiteboardWindow } = require('./whiteboard-window');
 const { ENV } = require('./config');
 
 function cleanup() {
