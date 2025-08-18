@@ -25,6 +25,7 @@
     "dist": "electron-builder --config electron-builder.json",
     "dist:win": "electron-builder --config electron-builder.json --win --x64",
     "dist:win-installer": "electron-builder --config electron-builder.json --win --x64",
+    "dist:win-msix": "electron-builder --config electron-builder.json --win --x64 --target msix",
     "dist:mac": "electron-builder --config electron-builder.json --mac --x64",
     "dist:linux": "electron-builder --config electron-builder.json --linux --x64",
     "dist:publish": "electron-builder --config electron-builder.json --publish always",
@@ -95,6 +96,7 @@
     "@sentry/node": "^7.0.0",
     "@sentry/tracing": "^7.0.0",
     "date-fns": "^4.1.0",
+    "dotenv": "^17.2.1",
     "electron-store": "^8.1.0",
     "electron-updater": "^6.1.7",
     "uuid": "^9.0.1"

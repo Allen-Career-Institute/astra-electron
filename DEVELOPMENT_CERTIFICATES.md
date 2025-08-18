@@ -51,9 +51,9 @@ APPLE_ID_PASS=
 APPLE_TEAM_ID=
 
 # URLs
-STAGE_URL=https://stage.allen.com
-PROD_URL=https://app.allen.com
-CUSTOM_URL=https://custom.allen.com
+STAGE_URL=https://console.allen-stage.in
+PROD_URL=https://astra.allen.in
+CUSTOM_URL=http://localhost:3000
 
 # Sentry Configuration (optional for dev)
 SENTRY_DSN=
@@ -140,7 +140,8 @@ module.exports = {
       config: {
         options: {
           maintainer: 'Allen Digital',
-          homepage: 'https://github.com/your-username/allen-ui-console-electron',
+          homepage:
+            'https://github.com/your-username/allen-ui-console-electron',
         },
       },
     },
@@ -149,7 +150,8 @@ module.exports = {
       config: {
         options: {
           maintainer: 'Allen Digital',
-          homepage: 'https://github.com/your-username/allen-ui-console-electron',
+          homepage:
+            'https://github.com/your-username/allen-ui-console-electron',
         },
       },
     },
