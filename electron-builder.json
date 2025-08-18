@@ -39,11 +39,23 @@
       {
         "target": "nsis",
         "arch": ["x64"]
+      },
+      {
+        "target": "appx",
+        "arch": ["x64"]
       }
     ],
     "requestedExecutionLevel": "asInvoker",
     "icon": "assets/icons/win/icon.ico",
     "artifactName": "${productName}-${version}-installer.${ext}"
+  },
+  "appx": {
+    "identityName": "AllenDigital.AllenConsole",
+    "publisher": "CN=AllenDigital",
+    "displayName": "Allen Console",
+    "publisherDisplayName": "Allen Digital",
+    "backgroundColor": "#ffffff",
+    "languages": ["en-US"]
   },
   "nsis": {
     "oneClick": false,

@@ -9,13 +9,12 @@ function injectTokensToWindow(window: BrowserWindow): void {
   if (ENV === 'development') {
     const tokens = JSON.parse(process.env.AUTH_TOKEN || '{}');
 
-    if (tokens) {
+    if (tokens && Object.keys(tokens).length > 0) {
       window.webContents.executeJavaScript(`
         (function() {
           try {
             const tokens = ${JSON.stringify(tokens)};
             localStorage.setItem('tokens', JSON.stringify(tokens));
-            console.log('Injected tokens object:', tokens);
           } catch (error) {
             console.error('Failed to inject tokens to localStorage:', error);
           }

@@ -24,6 +24,7 @@
     "renderer:start": "webpack serve --mode development",
     "dist": "electron-builder --config electron-builder.json",
     "dist:win": "electron-builder --config electron-builder.json --win --x64",
+    "dist:win-appx": "electron-builder --config electron-builder.json --win appx --x64",
     "dist:win-installer": "electron-builder --config electron-builder.json --win --x64",
     "dist:win-msix": "electron-builder --config electron-builder.json --win --x64 --target msix",
     "dist:mac": "electron-builder --config electron-builder.json --mac --x64",
