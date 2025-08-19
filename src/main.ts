@@ -7,22 +7,6 @@ try {
   console.log('No .env.local file found, trying .env');
 }
 
-try {
-  require('dotenv').config({ path: '.env' });
-} catch (error) {
-  console.log('No .env file found, using default environment variables');
-}
-
-// Log environment variables for debugging (always log in development, sometimes in production for debugging)
-// if (process.env.NODE_ENV === 'development') {
-console.log('Environment variables loaded:');
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('STAGE_URL:', process.env.STAGE_URL);
-console.log('PROD_URL:', process.env.PROD_URL);
-console.log('CUSTOM_URL:', process.env.CUSTOM_URL);
-console.log('DEV_URL:', process.env.DEV_URL);
-//}
-
 // Import modules
 import { initializeSentry } from './modules/sentry';
 import { createMenu } from './modules/menu';
@@ -31,6 +15,7 @@ import { setupAutoUpdater } from './modules/autoUpdater';
 import { cleanup, setupCleanupHandlers } from './modules/cleanup';
 import { createMainWindow } from './modules/windowManager';
 import { getStreamWindow } from './modules/streamWindow';
+import { ENV } from './modules/config';
 
 // Enable hardware acceleration and WebRTC optimizations for better video quality
 app.commandLine.appendSwitch(
@@ -75,6 +60,15 @@ app.commandLine.appendSwitch('--webrtc-max-cpu-consumption-percentage', '100');
 app.commandLine.appendSwitch('--webrtc-cpu-overuse-detection', 'false');
 
 setupIpcHandlers(ipcMain);
+
+// Log environment variables for debugging (always log in development, sometimes in production for debugging)
+if (ENV === 'development') {
+  console.log('Environment variables loaded:');
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  console.log('STAGE_URL:', process.env.STAGE_URL);
+  console.log('PROD_URL:', process.env.PROD_URL);
+  console.log('CUSTOM_URL:', process.env.CUSTOM_URL);
+}
 
 // Security: Prevent new window creation
 app.on('web-contents-created', (event, contents: WebContents) => {

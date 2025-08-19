@@ -51,6 +51,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Create .env.local file
+        run: |
+          echo "NODE_ENV=${{ env.NODE_ENV }}" > .env.local
+          echo "STAGE_URL=${{ env.STAGE_URL }}" >> .env.local
+          echo "PROD_URL=${{ env.PROD_URL }}" >> .env.local
+          echo "CUSTOM_URL=${{ env.CUSTOM_URL }}" >> .env.local
+          echo "Created .env.local file with environment variables:"
+          cat .env.local
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
