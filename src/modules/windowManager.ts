@@ -5,6 +5,13 @@ import { ENV, DEFAULT_URL } from './config';
 let mainWindow: BrowserWindow | null = null;
 let mainWindowHasLoaded: boolean = false;
 
+// Create a shared session for all windows to ensure localStorage/cookies persistence
+const sharedSession = session.fromPartition('persist:shared');
+
+// Debug: Log session information
+console.log('Shared session created with partition: persist:shared');
+console.log('Shared session storage path:', sharedSession.getStoragePath());
+
 function injectTokensToWindow(window: BrowserWindow): void {
   if (ENV === 'development') {
     const tokens = JSON.parse(process.env.AUTH_TOKEN || '{}');
@@ -44,6 +51,8 @@ function createMainWindow(): BrowserWindow {
       webviewTag: false,
       experimentalFeatures: true,
       enableBlinkFeatures: 'MediaCapture,ScreenCapture',
+      // Use shared session for localStorage/cookies persistence
+      session: sharedSession,
     },
     title: 'Allen UI Console',
   });
@@ -52,15 +61,15 @@ function createMainWindow(): BrowserWindow {
   mainWindow.setFullScreen(true);
   mainWindow.maximize();
 
-  session
-    .fromPartition('default') // or your window's partition
-    .setPermissionRequestHandler((webContents, permission, callback) => {
+  sharedSession.setPermissionRequestHandler(
+    (webContents, permission, callback) => {
       if (permission === 'media' || permission === 'display-capture') {
         callback(true); // Allow screen capture
       } else {
         callback(false);
       }
-    });
+    }
+  );
 
   if (ENV === 'development') {
     mainWindow.webContents.openDevTools();
@@ -102,10 +111,28 @@ function setMainWindowLoaded(loaded: boolean): void {
   mainWindowHasLoaded = loaded;
 }
 
+// Export the shared session so other windows can use it
 export {
   createMainWindow,
   getMainWindow,
   isMainWindowLoaded,
   setMainWindowLoaded,
   injectTokensToWindow,
+  sharedSession,
 };
+
+// Utility function to get the shared session with proper configuration
+export function getSharedSession() {
+  // Ensure the session is properly configured
+  sharedSession.setPermissionRequestHandler(
+    (webContents, permission, callback) => {
+      if (permission === 'media' || permission === 'display-capture') {
+        callback(true); // Allow screen capture
+      } else {
+        callback(false);
+      }
+    }
+  );
+
+  return sharedSession;
+}
