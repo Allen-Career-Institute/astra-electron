@@ -1,4 +1,7 @@
 !macro customInstall
+  ; Check if application is running and prompt user
+  Call CheckAppRunning
+  
   ; Kill any running instances of Allen Console
   nsExec::ExecToStack 'taskkill /f /im "Allen Console.exe"'
   nsExec::ExecToStack 'taskkill /f /im "allen-ui-console-electron.exe"'
@@ -30,9 +33,4 @@ Function CheckAppRunning
   abortInstall:
     Abort "Installation cancelled by user."
   done:
-FunctionEnd
-
-; Call the function before installation
-Function .onInit
-  Call CheckAppRunning
 FunctionEnd
