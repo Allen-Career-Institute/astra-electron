@@ -1,30 +1,18 @@
 !macro customInstall
-  ; Try to close Allen Console gracefully
-  nsExec::ExecToStack 'powershell.exe -ExecutionPolicy Bypass -File "$TEMP\close-app.ps1"'
-  Pop $0
-  
-  ; Wait for processes to close
-  Sleep 3000
-  
-  ; Final fallback: Kill any remaining processes
+  ; Kill any running instances of Allen Console
   nsExec::ExecToStack 'taskkill /f /im "Allen Console.exe"'
   nsExec::ExecToStack 'taskkill /f /im "allen-ui-console-electron.exe"'
   
+  ; Wait for processes to close
   Sleep 2000
 !macroend
 
 !macro customUnInstall
-  ; Try to close Allen Console gracefully
-  nsExec::ExecToStack 'powershell.exe -ExecutionPolicy Bypass -File "$TEMP\close-app.ps1"'
-  Pop $0
-  
-  ; Wait for processes to close
-  Sleep 3000
-  
-  ; Final fallback: Kill any remaining processes
+  ; Kill any running instances of Allen Console
   nsExec::ExecToStack 'taskkill /f /im "Allen Console.exe"'
   nsExec::ExecToStack 'taskkill /f /im "allen-ui-console-electron.exe"'
   
+  ; Wait for processes to close
   Sleep 2000
 !macroend
 
@@ -44,15 +32,7 @@ Function CheckAppRunning
   done:
 FunctionEnd
 
-; Copy scripts to temp directory
-Function CopyScripts
-  SetOutPath "$TEMP"
-  File "assets\installer\close-app.ps1"
-  File "assets\installer\close-app.bat"
-FunctionEnd
-
 ; Call the function before installation
 Function .onInit
-  Call CopyScripts
   Call CheckAppRunning
 FunctionEnd
