@@ -80,22 +80,16 @@
     "installerHeaderIcon": "assets/icons/win/icon.ico",
     "artifactName": "${productName}-${version}-setup.${ext}",
     "uninstallDisplayName": "Allen Console",
-    "createStartMenuShortcut": true,
-    "createDesktopShortcut": true,
     "runAfterFinish": true,
     "menuCategory": "Allen Console",
     "allowElevation": true,
     "installerSidebar": "assets/icons/win/icon.ico",
     "uninstallerSidebar": "assets/icons/win/icon.ico",
     "installerHeader": "assets/icons/win/icon.ico",
-    "uninstallerHeader": "assets/icons/win/icon.ico",
     "installerLanguages": ["en"],
-    "installerLanguage": "1033",
     "warningsAsErrors": false,
     "multiLanguageInstaller": false,
-    "displayLanguageSelector": false,
-    "installerIconSize": 256,
-    "uninstallerIconSize": 256
+    "displayLanguageSelector": false
   },
   "mac": {
     "target": [
