@@ -166,7 +166,7 @@ function createWhiteboardWindow(config: WhiteboardWindowConfig): BrowserWindow {
       height: windowHeight,
       x,
       y,
-      title: 'Allen Whiteboard',
+      title: 'Whiteboard',
       show: false,
       webPreferences: {
         nodeIntegration: true,
@@ -185,7 +185,7 @@ function createWhiteboardWindow(config: WhiteboardWindowConfig): BrowserWindow {
       resizable: true,
       minimizable: true,
       maximizable: true,
-      closable: true,
+      closable: false,
       alwaysOnTop: false,
       skipTaskbar: false,
       autoHideMenuBar: true,

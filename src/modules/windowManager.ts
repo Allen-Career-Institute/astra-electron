@@ -72,7 +72,7 @@ function createMainWindow(): BrowserWindow {
       // Use shared session for localStorage/cookies persistence
       session: getSharedSession(),
     },
-    title: 'Allen UI Console',
+    title: 'Astra',
   });
 
   mainWindow.loadURL(DEFAULT_URL);

@@ -113,7 +113,7 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
       height: windowHeight,
       x,
       y,
-      title: config.title || 'Allen Live Stream',
+      title: config.title || 'Agora Live Stream',
       show: false,
       webPreferences: {
         nodeIntegration: true,
