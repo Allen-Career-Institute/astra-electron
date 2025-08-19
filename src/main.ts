@@ -2,7 +2,8 @@ import { app, BrowserWindow, ipcMain, WebContents } from 'electron';
 
 // Load environment variables
 try {
-  require('dotenv').config({ path: '.env.local' });
+  const dotenv = require('dotenv');
+  dotenv.config({ path: '.env.local' });
 } catch (error) {
   console.log('No .env.local file found, trying .env');
 }
