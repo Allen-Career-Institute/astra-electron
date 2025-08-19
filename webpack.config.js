@@ -1,7 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const webpack = require('webpack');
 
 module.exports = {
   entry: {
@@ -16,30 +15,30 @@ module.exports = {
     extensions: ['.tsx', '.ts', '.js', '.jsx'],
     alias: {
       '@': path.resolve(__dirname, 'src/renderer')
-    },
-    fallback: {
-      "fs": false,
-      "path": require.resolve("path-browserify"),
-      "crypto": require.resolve("crypto-browserify"),
-      "stream": require.resolve("stream-browserify"),
-      "buffer": require.resolve("buffer"),
-      "util": require.resolve("util"),
-      "os": require.resolve("os-browserify/browser"),
-      "url": require.resolve("url"),
-      "querystring": require.resolve("querystring-es3"),
-      "http": false,
-      "https": false,
-      "net": false,
-      "tls": false,
-      "child_process": false
     }
   },
+  // Exclude native modules from webpack bundling
   externals: {
-    'electron': 'commonjs electron',
-    'electron-store': 'commonjs electron-store'
+    'agora-electron-sdk': 'commonjs2 agora-electron-sdk',
+    'koffi': 'commonjs2 koffi',
+    'ref-napi': 'commonjs2 ref-napi',
+    'electron': 'commonjs2 electron',
+    'electron-store': 'commonjs2 electron-store',
+    'electron-updater': 'commonjs2 electron-updater',
+    '@electron/remote': 'commonjs2 @electron/remote',
+    '@sentry/electron': 'commonjs2 @sentry/electron',
+    '@sentry/node': 'commonjs2 @sentry/node',
+    '@sentry/tracing': 'commonjs2 @sentry/tracing'
   },
   module: {
     rules: [
+      {
+        test: /\.node$/,
+        use: {
+          loader: 'node-loader',
+          options: { name: '[name].[ext]' }
+        }
+      },
       {
         test: /\.(ts|tsx)$/,
         exclude: /node_modules/,
@@ -95,10 +94,6 @@ module.exports = {
         minifyURLs: true
       } : false,
       chunks: ['main']
-    }),
-    new webpack.ProvidePlugin({
-      Buffer: ['buffer', 'Buffer'],
-      process: 'process/browser'
     })
   ],
   devServer: {
