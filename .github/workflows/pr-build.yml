@@ -59,6 +59,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'yarn'
 
       - name: Install dependencies
         run: yarn install --immutable
@@ -90,7 +91,7 @@ jobs:
           path: |
             dist-electron-builder/
             !dist-electron-builder/**/*.blockmap
-          retention-days: 30
+          retention-days: 2
 
       - name: Create build summary
         run: |
