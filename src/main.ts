@@ -4,7 +4,22 @@ import { app, BrowserWindow, ipcMain, WebContents } from 'electron';
 try {
   require('dotenv').config({ path: '.env.local' });
 } catch (error) {
-  console.log('No .env.local file found, using default environment variables');
+  console.log('No .env.local file found, trying .env');
+}
+
+try {
+  require('dotenv').config({ path: '.env' });
+} catch (error) {
+  console.log('No .env file found, using default environment variables');
+}
+
+// Log environment variables for debugging (only in development)
+if (process.env.NODE_ENV === 'development') {
+  console.log('Environment variables loaded:');
+  console.log('NODE_ENV:', process.env.NODE_ENV);
+  console.log('STAGE_URL:', process.env.STAGE_URL);
+  console.log('PROD_URL:', process.env.PROD_URL);
+  console.log('CUSTOM_URL:', process.env.CUSTOM_URL);
 }
 
 // Import modules

@@ -11,7 +11,7 @@ env:
   NODE_ENV: stage
   STAGE_URL: ${{ secrets.STAGE_CONSOLE_URL }}
   PROD_URL: ${{ secrets.PROD_CONSOLE_URL }}
-  CUSTOM_URL: "https://allen-ic-stage-ui-live-web-pr-709-allen-frontend-team.vercel.app"
+  CUSTOM_URL: ${{ secrets.CUSTOM_CONSOLE_URL }}
 
 # Cancel in-progress jobs when new commits are pushed
 concurrency:
@@ -72,6 +72,10 @@ jobs:
       - name: Build TypeScript
         run: yarn build:ts
         timeout-minutes: 5
+
+      - name: Test environment variables
+        run: yarn test:env
+        timeout-minutes: 2
 
       - name: Build renderer
         run: yarn renderer:build

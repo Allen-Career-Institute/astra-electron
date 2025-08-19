@@ -8,6 +8,7 @@
   "files": [
     "dist/**/*",
     "assets/**/*",
+    "assets/installer/**/*",
     "node_modules/electron-store/**/*",
     "node_modules/dotenv/**/*",
     "node_modules/@sentry/**/*",
@@ -50,7 +51,12 @@
     ],
     "requestedExecutionLevel": "asInvoker",
     "icon": "assets/icons/win/icon.ico",
-    "artifactName": "${productName}-${version}-installer.${ext}"
+    "artifactName": "${productName}-${version}-installer.${ext}",
+    "publisherName": "Allen Digital",
+    "verifyUpdateCodeSignature": false,
+    "signingHashAlgorithms": ["sha256"],
+    "certificateFile": "certificates/windows_certificate.pfx",
+    "certificatePassword": "${env.CSC_KEY_PASSWORD}"
   },
   "appx": {
     "identityName": "AllenDigital.AllenConsole",
@@ -65,7 +71,31 @@
     "allowToChangeInstallationDirectory": true,
     "createDesktopShortcut": true,
     "createStartMenuShortcut": true,
-    "shortcutName": "Allen Console"
+    "shortcutName": "Allen Console",
+    "perMachine": false,
+    "deleteAppDataOnUninstall": true,
+    "include": "assets/installer/installer.nsh",
+    "installerIcon": "assets/icons/win/icon.ico",
+    "uninstallerIcon": "assets/icons/win/icon.ico",
+    "installerHeaderIcon": "assets/icons/win/icon.ico",
+    "artifactName": "${productName}-${version}-setup.${ext}",
+    "uninstallDisplayName": "Allen Console",
+    "createStartMenuShortcut": true,
+    "createDesktopShortcut": true,
+    "runAfterFinish": true,
+    "menuCategory": "Allen Console",
+    "allowElevation": true,
+    "installerSidebar": "assets/icons/win/icon.ico",
+    "uninstallerSidebar": "assets/icons/win/icon.ico",
+    "installerHeader": "assets/icons/win/icon.ico",
+    "uninstallerHeader": "assets/icons/win/icon.ico",
+    "installerLanguages": ["en"],
+    "installerLanguage": "1033",
+    "warningsAsErrors": false,
+    "multiLanguageInstaller": false,
+    "displayLanguageSelector": false,
+    "installerIconSize": 256,
+    "uninstallerIconSize": 256
   },
   "mac": {
     "target": [

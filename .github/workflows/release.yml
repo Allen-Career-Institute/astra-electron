@@ -85,6 +85,10 @@ jobs:
         run: yarn build:ts
         timeout-minutes: 5
 
+      - name: Test environment variables
+        run: yarn test:env
+        timeout-minutes: 2
+
       - name: Build renderer
         run: yarn renderer:build
         timeout-minutes: 5
