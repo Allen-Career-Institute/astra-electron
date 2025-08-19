@@ -4,13 +4,31 @@ import { ENV, DEFAULT_URL } from './config';
 
 let mainWindow: BrowserWindow | null = null;
 let mainWindowHasLoaded: boolean = false;
+let sharedSession: Electron.Session | null = null;
 
-// Create a shared session for all windows to ensure localStorage/cookies persistence
-const sharedSession = session.fromPartition('persist:shared');
+// Lazy initialization of shared session
+function getSharedSession(): Electron.Session {
+  if (!sharedSession) {
+    // Create a shared session for all windows to ensure localStorage/cookies persistence
+    sharedSession = session.fromPartition('persist:shared');
 
-// Debug: Log session information
-console.log('Shared session created with partition: persist:shared');
-console.log('Shared session storage path:', sharedSession.getStoragePath());
+    // Debug: Log session information
+    console.log('Shared session created with partition: persist:shared');
+    console.log('Shared session storage path:', sharedSession.getStoragePath());
+
+    // Configure permission handler
+    sharedSession.setPermissionRequestHandler(
+      (webContents, permission, callback) => {
+        if (permission === 'media' || permission === 'display-capture') {
+          callback(true); // Allow screen capture
+        } else {
+          callback(false);
+        }
+      }
+    );
+  }
+  return sharedSession;
+}
 
 function injectTokensToWindow(window: BrowserWindow): void {
   if (ENV === 'development') {
@@ -52,7 +70,7 @@ function createMainWindow(): BrowserWindow {
       experimentalFeatures: true,
       enableBlinkFeatures: 'MediaCapture,ScreenCapture',
       // Use shared session for localStorage/cookies persistence
-      session: sharedSession,
+      session: getSharedSession(),
     },
     title: 'Allen UI Console',
   });
@@ -60,16 +78,6 @@ function createMainWindow(): BrowserWindow {
   mainWindow.loadURL(DEFAULT_URL);
   mainWindow.setFullScreen(true);
   mainWindow.maximize();
-
-  sharedSession.setPermissionRequestHandler(
-    (webContents, permission, callback) => {
-      if (permission === 'media' || permission === 'display-capture') {
-        callback(true); // Allow screen capture
-      } else {
-        callback(false);
-      }
-    }
-  );
 
   if (ENV === 'development') {
     mainWindow.webContents.openDevTools();
@@ -111,28 +119,12 @@ function setMainWindowLoaded(loaded: boolean): void {
   mainWindowHasLoaded = loaded;
 }
 
-// Export the shared session so other windows can use it
+// Export the shared session getter so other windows can use it
 export {
   createMainWindow,
   getMainWindow,
   isMainWindowLoaded,
   setMainWindowLoaded,
   injectTokensToWindow,
-  sharedSession,
+  getSharedSession,
 };
-
-// Utility function to get the shared session with proper configuration
-export function getSharedSession() {
-  // Ensure the session is properly configured
-  sharedSession.setPermissionRequestHandler(
-    (webContents, permission, callback) => {
-      if (permission === 'media' || permission === 'display-capture') {
-        callback(true); // Allow screen capture
-      } else {
-        callback(false);
-      }
-    }
-  );
-
-  return sharedSession;
-}

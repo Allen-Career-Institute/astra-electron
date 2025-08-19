@@ -1,8 +1,8 @@
 import { BrowserWindow, screen } from 'electron';
 import path from 'path';
-import { DEFAULT_URL, ENV } from './config';
+import { ENV, DEFAULT_URL } from './config';
 import { WhiteboardWindowConfig } from '@/types/electron';
-import { sharedSession } from './windowManager';
+import { getSharedSession } from './windowManager';
 
 let whiteboardWindow: BrowserWindow | null = null;
 let whiteboardWindowConfig: WhiteboardWindowConfig | null = null;
@@ -180,7 +180,7 @@ function createWhiteboardWindow(config: WhiteboardWindowConfig): BrowserWindow {
         enableBlinkFeatures:
           'WebCodecs,WebRTC,GetDisplayMedia,ScreenCaptureKit,DesktopCaptureKit,WebRTCPipeWireCapturer',
         // Use shared session for localStorage/cookies persistence
-        session: sharedSession,
+        session: getSharedSession(),
       },
       resizable: true,
       minimizable: true,

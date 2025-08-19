@@ -1,8 +1,8 @@
 import { BrowserWindow, screen } from 'electron';
 import path from 'path';
-import { DEFAULT_URL, ENV } from './config';
+import { ENV, DEFAULT_URL } from './config';
 import { StreamWindowConfig } from '@/types/electron';
-import { sharedSession } from './windowManager';
+import { getSharedSession } from './windowManager';
 
 let streamWindow: BrowserWindow | null = null;
 let streamWindowConfig: StreamWindowConfig | null = null;
@@ -128,7 +128,7 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
         enableBlinkFeatures:
           'WebCodecs,WebRTC,GetDisplayMedia,ScreenCaptureKit,DesktopCaptureKit,WebRTCPipeWireCapturer,MediaCapture,ScreenCapture',
         // Use shared session for localStorage/cookies persistence
-        session: sharedSession,
+        session: getSharedSession(),
       },
       resizable: true,
       minimizable: true,
