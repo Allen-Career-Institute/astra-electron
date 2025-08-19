@@ -158,8 +158,7 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
         streamWindow.show();
         streamWindow.setFullScreen(true);
         streamWindow.maximize();
-        getMainWindow()?.show();
-        // getMainWindow()?.focus();
+        getMainWindow()?.focus();
         streamWindowSettingUp = false;
         console.log('Stream window ready and shown');
       }

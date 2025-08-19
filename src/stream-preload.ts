@@ -147,6 +147,8 @@ window.setInterval = function (fn: any, delay?: number, ...args: any[]) {
 // the ipcRenderer without exposing the entire object
 try {
   contextBridge.exposeInMainWorld('electronAPI', {
+    isElectron: true,
+    isStreamWindow: true,
     requestStreamConfig: (): Promise<any> =>
       ipcRenderer.invoke('request-stream-config'),
     onStreamControl: (callback: (event: any, ...args: any[]) => void): void => {

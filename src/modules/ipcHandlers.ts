@@ -81,6 +81,8 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
             uid: parseInt(message.payload.uid),
             meetingId: message.payload.meetingId,
             deviceIds: message.payload.deviceIds,
+            isAudioEnabled: message.payload.isAudioEnabled,
+            isVideoEnabled: message.payload.isVideoEnabled,
             hosts: message.payload.hosts,
             url: message.payload.url,
             configuration: message.payload.configuration,
