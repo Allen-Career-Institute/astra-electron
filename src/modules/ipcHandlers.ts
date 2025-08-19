@@ -159,11 +159,6 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
             const action = message.payload.enabled
               ? 'unmute-video'
               : 'mute-video';
-            console.log(
-              'Sending video toggle to stream window:',
-              action,
-              message.payload.enabled
-            );
             try {
               streamWindowForVideo.webContents.send('stream-control', action);
               console.log('Video toggle sent successfully to stream window');
@@ -341,6 +336,32 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
               error: error instanceof Error ? error.message : 'Unknown error',
             };
           }
+        case 'CHANGE_AUDIO_DEVICE':
+          const streamWindowForChangeAudioDevice = getStreamWindow();
+          if (
+            streamWindowForChangeAudioDevice &&
+            !streamWindowForChangeAudioDevice.isDestroyed()
+          ) {
+            streamWindowForChangeAudioDevice.webContents.send(
+              'stream-control',
+              'change-audio-device',
+              message.payload.deviceId
+            );
+          }
+          return { type: 'SUCCESS', payload: 'Audio device changed' };
+        case 'CHANGE_VIDEO_DEVICE':
+          const streamWindowForChangeVideoDevice = getStreamWindow();
+          if (
+            streamWindowForChangeVideoDevice &&
+            !streamWindowForChangeVideoDevice.isDestroyed()
+          ) {
+            streamWindowForChangeVideoDevice.webContents.send(
+              'stream-control',
+              'change-video-device',
+              message.payload.deviceId
+            );
+          }
+          return { type: 'SUCCESS', payload: 'Video device changed' };
         default:
           return { type: 'ERROR', error: 'Unknown message type' };
       }
@@ -368,7 +389,7 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
   });
 
   // Stream control handler
-  ipcMain.handle('stream-control', async (event, action, enabled) => {
+  ipcMain.handle('stream-control', async (event, action, deviceId) => {
     try {
       const streamWindow = getStreamWindow();
       if (streamWindow && !streamWindow.isDestroyed()) {
@@ -379,7 +400,7 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
           streamWindow.focus();
           streamWindow.show();
         }
-        streamWindow.webContents.send('stream-control', action, enabled);
+        streamWindow.webContents.send('stream-control', action, deviceId);
       }
       return {
         success: true,
