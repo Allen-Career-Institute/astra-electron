@@ -53,10 +53,7 @@
     "icon": "assets/icons/win/icon.ico",
     "artifactName": "${productName}-${version}-installer.${ext}",
     "publisherName": "Allen Digital",
-    "verifyUpdateCodeSignature": false,
-    "signingHashAlgorithms": ["sha256"],
-    "certificateFile": "certificates/windows_certificate.pfx",
-    "certificatePassword": "${env.CSC_KEY_PASSWORD}"
+    "verifyUpdateCodeSignature": false
   },
   "appx": {
     "identityName": "AllenDigital.AllenConsole",
