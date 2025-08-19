@@ -7,6 +7,7 @@ import {
   getStreamWindowConfig,
   createStreamWindow,
   safeCloseStreamWindow,
+  isStreamWindowSettingUp,
 } from './streamWindow';
 import {
   createWhiteboardWindow,
@@ -20,6 +21,32 @@ import { rollingMergeManager } from './rollingMergeManager';
 
 // Global variables for FFmpeg processing
 let ffmpegProcesses = new Map<string, any>(); // Map to store FFmpeg processes by meetingId
+
+// Helper function to check if stream window is ready
+function isStreamWindowReady(): boolean {
+  const streamWindow = getStreamWindow();
+  return !!(
+    streamWindow &&
+    !streamWindow.isDestroyed() &&
+    !isStreamWindowSettingUp()
+  );
+}
+
+// Helper function to wait for stream window to be ready
+async function waitForStreamWindowReady(
+  maxWaitMs: number = 5000
+): Promise<boolean> {
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < maxWaitMs) {
+    if (isStreamWindowReady()) {
+      return true;
+    }
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+
+  return false;
+}
 
 // IPC Handlers
 function setupIpcHandlers(ipcMain: IpcMain): void {
@@ -63,26 +90,94 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
           return { type: 'SUCCESS', payload: 'Stream window created' };
 
         case 'AUDIO_TOGGLE':
+          console.log(
+            'Audio toggle request received:',
+            message.payload.enabled
+          );
+
+          // Wait for stream window to be ready
+          const audioWindowReady = await waitForStreamWindowReady();
+          if (!audioWindowReady) {
+            console.warn(
+              'Stream window not ready for audio toggle, request ignored'
+            );
+            return { type: 'ERROR', error: 'Stream window not ready' };
+          }
+
           const streamWindowForAudio = getStreamWindow();
           if (streamWindowForAudio && !streamWindowForAudio.isDestroyed()) {
             const action = message.payload.enabled
               ? 'unmute-audio'
               : 'mute-audio';
-            streamWindowForAudio.webContents.send(
-              'stream-control',
+            console.log(
+              'Sending audio toggle to stream window:',
               action,
               message.payload.enabled
             );
+            try {
+              streamWindowForAudio.webContents.send(
+                'stream-control',
+                action,
+                message.payload.enabled
+              );
+              console.log('Audio toggle sent successfully to stream window');
+            } catch (error) {
+              console.error(
+                'Failed to send audio toggle to stream window:',
+                error
+              );
+              return {
+                type: 'ERROR',
+                error: 'Failed to send audio toggle to stream window',
+              };
+            }
+          } else {
+            console.warn('Stream window not available for audio toggle');
+            return { type: 'ERROR', error: 'Stream window not available' };
           }
           return { type: 'SUCCESS', payload: 'Audio toggle sent' };
 
         case 'VIDEO_TOGGLE':
+          console.log(
+            'Video toggle request received:',
+            message.payload.enabled
+          );
+
+          // Wait for stream window to be ready
+          const videoWindowReady = await waitForStreamWindowReady();
+          if (!videoWindowReady) {
+            console.warn(
+              'Stream window not ready for video toggle, request ignored'
+            );
+            return { type: 'ERROR', error: 'Stream window not ready' };
+          }
+
           const streamWindowForVideo = getStreamWindow();
           if (streamWindowForVideo && !streamWindowForVideo.isDestroyed()) {
             const action = message.payload.enabled
               ? 'unmute-video'
               : 'mute-video';
-            streamWindowForVideo.webContents.send('stream-control', action);
+            console.log(
+              'Sending video toggle to stream window:',
+              action,
+              message.payload.enabled
+            );
+            try {
+              streamWindowForVideo.webContents.send('stream-control', action);
+              console.log('Video toggle sent successfully to stream window');
+            } catch (error) {
+              console.error(
+                'Failed to send video toggle to stream window:',
+                error
+              );
+              return {
+                type: 'ERROR',
+                error: 'Failed to send video toggle to stream window',
+              };
+            }
+          } else {
+            console.warn('Stream window not available for video toggle');
+            return { type: 'ERROR', error: 'Stream window not available' };
           }
           return { type: 'SUCCESS', payload: 'Video toggle sent' };
 
