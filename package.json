@@ -26,6 +26,7 @@
     "dist:win": "electron-builder --config electron-builder.json --win --x64",
     "dist:win-appx": "electron-builder --config electron-builder.json --win appx --x64",
     "dist:win-installer": "electron-builder --config electron-builder.json --win --x64",
+    "dist:win-installer-unsigned": "electron-builder --config electron-builder.json --win --x64 --config.win.certificateFile=",
     "dist:win-msix": "electron-builder --config electron-builder.json --win --x64 --target msix",
     "dist:mac": "electron-builder --config electron-builder.json --mac --x64",
     "dist:linux": "electron-builder --config electron-builder.json --linux --x64",
