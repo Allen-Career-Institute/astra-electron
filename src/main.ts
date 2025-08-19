@@ -13,14 +13,15 @@ try {
   console.log('No .env file found, using default environment variables');
 }
 
-// Log environment variables for debugging (only in development)
-if (process.env.NODE_ENV === 'development') {
-  console.log('Environment variables loaded:');
-  console.log('NODE_ENV:', process.env.NODE_ENV);
-  console.log('STAGE_URL:', process.env.STAGE_URL);
-  console.log('PROD_URL:', process.env.PROD_URL);
-  console.log('CUSTOM_URL:', process.env.CUSTOM_URL);
-}
+// Log environment variables for debugging (always log in development, sometimes in production for debugging)
+// if (process.env.NODE_ENV === 'development') {
+console.log('Environment variables loaded:');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('STAGE_URL:', process.env.STAGE_URL);
+console.log('PROD_URL:', process.env.PROD_URL);
+console.log('CUSTOM_URL:', process.env.CUSTOM_URL);
+console.log('DEV_URL:', process.env.DEV_URL);
+//}
 
 // Import modules
 import { initializeSentry } from './modules/sentry';
