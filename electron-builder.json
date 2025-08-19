@@ -11,6 +11,7 @@
     "node_modules/electron-store/**/*",
     "node_modules/dotenv/**/*",
     "node_modules/@sentry/**/*",
+    "node_modules/electron-updater/**/*",
     "!**/*.d.ts",
     "!**/*.map",
     "!**/*.ts",
