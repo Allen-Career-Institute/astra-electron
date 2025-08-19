@@ -119,19 +119,6 @@ app.on('web-contents-created', (event, contents: WebContents) => {
 app.on('ready', () => {
   try {
     initializeSentry();
-
-    // Initialize Agora engine in main process
-    const appId = process.env.AGORA_APP_ID || 'your-app-id-here';
-    try {
-      agoraManager.initialize(appId);
-      console.log('Agora engine initialized in main process');
-    } catch (agoraError) {
-      console.error(
-        'Failed to initialize Agora engine in main process:',
-        agoraError
-      );
-    }
-
     createMainWindow();
     createMenu();
     setupAutoUpdater();

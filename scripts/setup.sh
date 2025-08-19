@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Allen UI Console Electron App - Yarn 4 Setup Script
+# Allen Console Electron App - Yarn 4 Setup Script
 
-echo "🚀 Setting up Allen UI Console Electron App with Yarn 4..."
+echo "🚀 Setting up Allen Console Electron App with Yarn 4..."
 
 # Check if Yarn is installed
 if ! command -v yarn &> /dev/null; then

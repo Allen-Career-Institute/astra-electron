@@ -29,6 +29,13 @@ module.exports = {
   module: {
     rules: [
       {
+        test: /\.node$/,
+        use: {
+          loader: 'node-loader',
+          options: { name: '[name].[ext]' },
+        },
+      },
+      {
         test: /\.(ts|tsx)$/,
         exclude: /node_modules/,
         use: {

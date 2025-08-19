@@ -46,7 +46,7 @@ function createMainWindow(): BrowserWindow {
       experimentalFeatures: true,
       enableBlinkFeatures: 'MediaCapture,ScreenCapture',
     },
-    title: 'Allen UI Console',
+    title: 'Allen Console',
   });
 
   mainWindow.loadURL(DEFAULT_URL);

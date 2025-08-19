@@ -63,7 +63,7 @@ function createMenu(): void {
           click: () => {
             dialog.showMessageBox({
               type: 'info',
-              title: 'About Allen UI Console',
+              title: 'About Allen Console',
               message: 'Allen Console',
               detail: 'Version: ' + app.getVersion() + '\nEnvironment: ' + ENV,
             });
