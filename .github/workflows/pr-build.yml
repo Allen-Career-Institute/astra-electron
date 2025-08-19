@@ -71,12 +71,18 @@ jobs:
         timeout-minutes: 5
         env:
           NODE_ENV: stage
+          STAGE_URL: ${{ secrets.STAGE_CONSOLE_URL }}
+          PROD_URL: ${{ secrets.PROD_CONSOLE_URL }}
+          CUSTOM_URL: "https://allen-ic-stage-ui-live-web-pr-709-allen-frontend-team.vercel.app"
 
       - name: Build renderer
         run: yarn renderer:build
         timeout-minutes: 5
         env:
           NODE_ENV: stage
+          STAGE_URL: ${{ secrets.STAGE_CONSOLE_URL }}
+          PROD_URL: ${{ secrets.PROD_CONSOLE_URL }}
+          CUSTOM_URL: "https://allen-ic-stage-ui-live-web-pr-709-allen-frontend-team.vercel.app"
 
       - name: Build Electron app (Installer)
         run: yarn dist:win-installer
