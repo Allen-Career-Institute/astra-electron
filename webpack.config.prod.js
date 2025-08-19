@@ -2,6 +2,7 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
+const webpack = require('webpack');
 
 module.exports = {
   mode: 'production',
@@ -19,6 +20,26 @@ module.exports = {
     alias: {
       '@': path.resolve(__dirname, 'src/renderer'),
     },
+    fallback: {
+      fs: false,
+      path: require.resolve('path-browserify'),
+      crypto: require.resolve('crypto-browserify'),
+      stream: require.resolve('stream-browserify'),
+      buffer: require.resolve('buffer'),
+      util: require.resolve('util'),
+      os: require.resolve('os-browserify/browser'),
+      url: require.resolve('url'),
+      querystring: require.resolve('querystring-es3'),
+      http: false,
+      https: false,
+      net: false,
+      tls: false,
+      child_process: false,
+    },
+  },
+  externals: {
+    electron: 'commonjs electron',
+    'electron-store': 'commonjs electron-store',
   },
   module: {
     rules: [
@@ -82,6 +103,10 @@ module.exports = {
         minifyURLs: true,
       },
       chunks: ['main'],
+    }),
+    new webpack.ProvidePlugin({
+      Buffer: ['buffer', 'Buffer'],
+      process: 'process/browser',
     }),
   ],
   optimization: {
