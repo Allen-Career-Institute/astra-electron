@@ -40,6 +40,8 @@
     "version:tag": "./scripts/version-manager.sh tag",
     "analyze:size": "./scripts/analyze-size.sh",
     "test:builds": "./scripts/test-builds.sh",
+    "verify:deps": "./scripts/verify-dependencies.sh",
+    "test:updater": "node scripts/test-electron-updater.js",
     "icons:generate": "electron-icon-builder --input=assets/icons/png/1024x1024.png --output=assets/icons --flatten",
     "prepare": "husky install",
     "postinstall": "yarn dlx husky install"

@@ -74,7 +74,14 @@ app.on('ready', () => {
     initializeSentry();
     createMainWindow();
     createMenu();
-    setupAutoUpdater();
+
+    // Setup auto-updater with error handling
+    try {
+      setupAutoUpdater();
+    } catch (autoUpdaterError) {
+      console.error('Failed to setup auto-updater:', autoUpdaterError);
+      // Continue with app initialization even if auto-updater fails
+    }
 
     // Start cleanup worker from main window
     // startCleanupWorker();

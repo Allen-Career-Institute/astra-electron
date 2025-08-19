@@ -12,6 +12,8 @@
     "node_modules/dotenv/**/*",
     "node_modules/@sentry/**/*",
     "node_modules/electron-updater/**/*",
+    "node_modules/uuid/**/*",
+    "node_modules/date-fns/**/*",
     "!**/*.d.ts",
     "!**/*.map",
     "!**/*.ts",
@@ -133,5 +135,21 @@
   "asar": false,
   "compression": "maximum",
   "removePackageScripts": true,
-  "removePackageKeywords": true
+  "removePackageKeywords": true,
+  "extraResources": [
+    {
+      "from": "node_modules/electron-updater",
+      "to": "electron-updater"
+    },
+    {
+      "from": "node_modules/uuid",
+      "to": "uuid"
+    },
+    {
+      "from": "node_modules/date-fns",
+      "to": "date-fns"
+    }
+  ],
+  "nodeGypRebuild": false,
+  "buildDependenciesFromSource": false
 }
