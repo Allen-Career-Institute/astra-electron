@@ -35,7 +35,7 @@ function createMainWindow(): BrowserWindow {
     minimizable: true,
     webPreferences: {
       nodeIntegration: true,
-      contextIsolation: false,
+      contextIsolation: true,
       preload: path.join(__dirname, '../preload.js'),
       webSecurity: false, // only if you trust the content
       sandbox: false,

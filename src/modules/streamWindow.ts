@@ -116,7 +116,7 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
       show: false,
       webPreferences: {
         nodeIntegration: true,
-        contextIsolation: false,
+        contextIsolation: true,
         sandbox: false,
         preload: path.join(__dirname, '../stream-preload.js'),
         webSecurity: false, // Disable for screen sharing to work

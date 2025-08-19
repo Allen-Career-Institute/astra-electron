@@ -169,7 +169,7 @@ function createWhiteboardWindow(config: WhiteboardWindowConfig): BrowserWindow {
       show: false,
       webPreferences: {
         nodeIntegration: true,
-        contextIsolation: false,
+        contextIsolation: true,
         preload: path.join(__dirname, '../whiteboard-preload.js'),
         webSecurity: false, // Disable for screen sharing to work
         allowRunningInsecureContent: true,
