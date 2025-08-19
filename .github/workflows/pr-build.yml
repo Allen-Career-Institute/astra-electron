@@ -8,6 +8,7 @@ on:
 env:
   NODE_VERSION: '18'
   YARN_VERSION: '4.9.2'
+  NODE_ENV: stage
 
 # Cancel in-progress jobs when new commits are pushed
 concurrency:
@@ -68,10 +69,14 @@ jobs:
       - name: Build TypeScript
         run: yarn build:ts
         timeout-minutes: 5
+        env:
+          NODE_ENV: stage
 
       - name: Build renderer
         run: yarn renderer:build
         timeout-minutes: 5
+        env:
+          NODE_ENV: stage
 
       - name: Build Electron app (Installer)
         run: yarn dist:win-installer
