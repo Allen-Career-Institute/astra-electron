@@ -115,8 +115,8 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
       title: config.title || 'Allen Live Stream',
       show: false,
       webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
+        nodeIntegration: true,
+        contextIsolation: false,
         sandbox: false,
         preload: path.join(__dirname, '../stream-preload.js'),
         webSecurity: false, // Disable for screen sharing to work

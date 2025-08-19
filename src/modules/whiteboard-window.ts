@@ -168,8 +168,8 @@ function createWhiteboardWindow(config: WhiteboardWindowConfig): BrowserWindow {
       title: 'Allen Whiteboard',
       show: false,
       webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
+        nodeIntegration: true,
+        contextIsolation: false,
         preload: path.join(__dirname, '../whiteboard-preload.js'),
         webSecurity: false, // Disable for screen sharing to work
         allowRunningInsecureContent: true,
