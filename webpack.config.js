@@ -21,7 +21,14 @@ module.exports = {
   externals: {
     'agora-electron-sdk': 'commonjs2 agora-electron-sdk',
     'koffi': 'commonjs2 koffi',
-    'ref-napi': 'commonjs2 ref-napi'
+    'ref-napi': 'commonjs2 ref-napi',
+    'electron': 'commonjs2 electron',
+    'electron-store': 'commonjs2 electron-store',
+    'electron-updater': 'commonjs2 electron-updater',
+    '@electron/remote': 'commonjs2 @electron/remote',
+    '@sentry/electron': 'commonjs2 @sentry/electron',
+    '@sentry/node': 'commonjs2 @sentry/node',
+    '@sentry/tracing': 'commonjs2 @sentry/tracing'
   },
   module: {
     rules: [

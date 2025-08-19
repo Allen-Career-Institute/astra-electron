@@ -1,8 +1,12 @@
 import 'agora-electron-sdk/js/Private/ipc/main.js';
-import { app, BrowserWindow, ipcMain, shell, WebContents } from 'electron';
+import { app, BrowserWindow, ipcMain, WebContents } from 'electron';
 
 // Load environment variables
-require('dotenv').config({ path: '.env.local' });
+try {
+  require('dotenv').config({ path: '.env.local' });
+} catch (error) {
+  console.log('No .env.local file found, using default environment variables');
+}
 
 // Import modules
 import { initializeSentry } from './modules/sentry';

@@ -106,8 +106,20 @@ jobs:
             echo "CSC_LINK=certificates/windows_certificate.pfx" >> $GITHUB_ENV
           fi
 
-      - name: Build Electron app
+      - name: Build Electron app (NSIS)
         run: yarn dist:win-installer
+        timeout-minutes: 25
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_ENV: production
+          STAGE_URL: ${{ secrets.STAGE_CONSOLE_URL }}
+          PROD_URL: ${{ secrets.PROD_CONSOLE_URL }}
+          CUSTOM_URL: ${{ secrets.CUSTOM_CONSOLE_URL }}
+          CSC_LINK: ${{ env.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+
+      - name: Build AppX package
+        run: yarn dist:win-appx
         timeout-minutes: 25
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -242,12 +254,19 @@ jobs:
 
             ### Downloads
             - **Windows (64-bit):** Installer (.exe)
+            - **Windows Store:** AppX Package (.appx) - Ready for Windows Store submission
 
             ### Build Info
             - **Build Tool:** Electron Builder
             - **Node.js:** 18
-            - **Platforms:** Windows 64-bit only
+            - **Platforms:** Windows 64-bit (NSIS + AppX)
             - **Commit:** ${{ github.sha }}
+
+            ### Windows Store
+            The AppX package is ready for submission to the Windows Store. Use the AppX file for:
+            - Windows Store publishing
+            - Enterprise distribution
+            - Testing on Windows 10/11 devices
 
             ### Changes
             See the [commit history](https://github.com/${{ github.repository }}/compare/${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', needs.version-manager.outputs.version) }}...main) for details.
