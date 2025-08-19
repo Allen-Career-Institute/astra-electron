@@ -1,10 +1,7 @@
-import { Menu, dialog, app, BrowserWindow } from 'electron';
-import Store from 'electron-store';
-import { ENV, DEFAULT_URL } from './config';
+import { Menu, dialog, app } from 'electron';
+import { ENV } from './config';
 import { getMainWindow } from './windowManager';
 import { reloadMainWindow } from './reloadUtils';
-
-const store = new Store();
 
 function createMenu(): void {
   const template = [

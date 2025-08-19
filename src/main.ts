@@ -1,6 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell, WebContents } from 'electron';
-import path from 'path';
-import Store from 'electron-store';
+import { app, BrowserWindow, ipcMain, WebContents } from 'electron';
 
 // Load environment variables
 try {
