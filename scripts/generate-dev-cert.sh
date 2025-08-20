@@ -104,8 +104,7 @@ PROD_URL=https://astra.allen.in
 CUSTOM_URL=http://localhost:3000
 
 # Sentry Configuration (optional)
-SENTRY_DSN=
-SENTRY_DSN_DEV=
+ASTRA_ELECTRON_SENTRY_DSN=
 
 EOF
     fi

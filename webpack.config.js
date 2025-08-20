@@ -90,7 +90,7 @@ module.exports = {
       'process.env.DEV_URL': JSON.stringify(
         process.env.DEV_URL || 'http://localhost:3000/'
       ),
-      'process.env.SENTRY_DSN': JSON.stringify(
+      'process.env.ASTRA_ELECTRON_SENTRY_DSN': JSON.stringify(
         process.env.ASTRA_ELECTRON_SENTRY_DSN || ''
       ),
     }),

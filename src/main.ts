@@ -8,12 +8,12 @@ try {
   console.log('No .env.local file found, trying .env');
 }
 
-if (process.env.SENTRY_DSN) {
+if (process.env.ASTRA_ELECTRON_SENTRY_DSN) {
   const { init } = require('@sentry/electron/main');
   if (init) {
     init({
-      dsn: process.env.SENTRY_DSN,
-      environment: process.env.ENV,
+      dsn: process.env.ASTRA_ELECTRON_SENTRY_DSN,
+      environment: process.env.NODE_ENV,
       sendDefaultPii: true,
       tracesSampleRate: 0.01,
 
