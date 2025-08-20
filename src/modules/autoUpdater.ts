@@ -28,7 +28,7 @@ function setupAutoUpdater(): void {
     }
 
     // Check if running in development mode
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.ENV === 'development') {
       console.log('Auto-updater disabled in development mode');
       return;
     }

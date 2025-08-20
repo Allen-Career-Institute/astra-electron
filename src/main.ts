@@ -6,8 +6,10 @@ import {
   WebContents,
   dialog,
 } from 'electron';
+import path from 'path';
 
 // Load environment variables
+let envLoadError: Error | null = null;
 try {
   const dotenv = require('dotenv');
   dotenv.config({
@@ -16,17 +18,11 @@ try {
       : path.resolve(process.cwd(), '.env.local'),
   });
 } catch (error) {
-  dialog
-    .showMessageBox({
-      type: 'info',
-      title: 'Environment Variables from Webpack',
-      message: 'Environment variables not loaded',
-      detail: error instanceof Error ? error.message : 'Unknown error',
-      buttons: ['OK'],
-    })
-    .catch(err => {
-      console.error('Failed to show environment dialog:', err);
-    });
+  envLoadError =
+    error instanceof Error
+      ? error
+      : new Error('Unknown error loading environment variables');
+  console.error('Failed to load environment variables:', envLoadError);
 }
 
 if (process.env.ASTRA_ELECTRON_SENTRY_DSN) {
@@ -34,7 +30,7 @@ if (process.env.ASTRA_ELECTRON_SENTRY_DSN) {
   if (init) {
     init({
       dsn: process.env.ASTRA_ELECTRON_SENTRY_DSN,
-      environment: process.env.NODE_ENV,
+      environment: process.env.ENV,
       sendDefaultPii: true,
       tracesSampleRate: 0.01,
 
@@ -60,7 +56,6 @@ import { setupAutoUpdater } from './modules/autoUpdater';
 import { cleanup } from './modules/cleanup';
 import { createMainWindow } from './modules/windowManager';
 import { getStreamWindow } from './modules/streamWindow';
-import path from 'path';
 
 // Enable hardware acceleration and WebRTC optimizations for better video quality
 app.commandLine.appendSwitch(
@@ -120,32 +115,49 @@ app.on('ready', () => {
     createMainWindow();
     createMenu();
 
-    // Log environment variables from webpack in native dialog
-    const envVars = {
-      NODE_ENV: process.env.NODE_ENV,
-      STAGE_URL: process.env.STAGE_URL,
-      PROD_URL: process.env.PROD_URL,
-      CUSTOM_URL: process.env.CUSTOM_URL,
-      DEV_URL: process.env.DEV_URL,
-      ASTRA_ELECTRON_SENTRY_DSN: process.env.ASTRA_ELECTRON_SENTRY_DSN,
-      // Add any other environment variables you want to log
-    };
+    // Show error dialog if environment variables failed to load
+    if (envLoadError) {
+      dialog
+        .showMessageBox({
+          type: 'error',
+          title: 'Environment Variables Error',
+          message: 'Environment variables not loaded',
+          detail: envLoadError.message,
+          buttons: ['OK'],
+        })
+        .catch(err => {
+          console.error('Failed to show environment error dialog:', err);
+        });
+    }
 
-    const envString = Object.entries(envVars)
-      .map(([key, value]) => `${key}: ${value || 'undefined'}`)
-      .join('\n');
+    if (!envLoadError) {
+      // Log environment variables from webpack in native dialog
+      const envVars = {
+        ENV: process.env.ENV,
+        STAGE_URL: process.env.STAGE_URL,
+        PROD_URL: process.env.PROD_URL,
+        CUSTOM_URL: process.env.CUSTOM_URL,
+        DEV_URL: process.env.DEV_URL,
+        ASTRA_ELECTRON_SENTRY_DSN: process.env.ASTRA_ELECTRON_SENTRY_DSN,
+        // Add any other environment variables you want to log
+      };
 
-    dialog
-      .showMessageBox({
-        type: 'info',
-        title: 'Environment Variables from Webpack',
-        message: 'Environment variables loaded from webpack configuration:',
-        detail: envString,
-        buttons: ['OK'],
-      })
-      .catch(err => {
-        console.error('Failed to show environment dialog:', err);
-      });
+      const envString = Object.entries(envVars)
+        .map(([key, value]) => `${key}: ${value || 'undefined'}`)
+        .join('\n');
+
+      dialog
+        .showMessageBox({
+          type: 'info',
+          title: 'Environment Variables from Webpack',
+          message: 'Environment variables loaded from webpack configuration:',
+          detail: envString,
+          buttons: ['OK'],
+        })
+        .catch(err => {
+          console.error('Failed to show environment dialog:', err);
+        });
+    }
 
     // Setup auto-updater with error handling
     try {

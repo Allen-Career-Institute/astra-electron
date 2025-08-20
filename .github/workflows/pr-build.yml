@@ -9,6 +9,7 @@ env:
   NODE_VERSION: '18'
   YARN_VERSION: '4.9.2'
   NODE_ENV: stage
+  ENV: stage
   STAGE_URL: ${{ secrets.STAGE_CONSOLE_URL }}
   PROD_URL: ${{ secrets.PROD_CONSOLE_URL }}
   CUSTOM_URL: ${{ secrets.CUSTOM_CONSOLE_URL }}
@@ -54,7 +55,8 @@ jobs:
 
       - name: Create .env.local file
         run: |
-          echo "NODE_ENV=${{ env.NODE_ENV }}" > .env.local
+          echo "ENV=${{ env.ENV }}" > .env.local
+          echo "NODE_ENV=${{ env.NODE_ENV }}" >> .env.local
           echo "STAGE_URL=${{ env.STAGE_URL }}" >> .env.local
           echo "PROD_URL=${{ env.PROD_URL }}" >> .env.local
           echo "CUSTOM_URL=${{ env.CUSTOM_URL }}" >> .env.local
@@ -86,6 +88,7 @@ jobs:
         timeout-minutes: 2
         env:
           NODE_ENV: ${{ env.NODE_ENV }}
+          ENV: ${{ env.ENV }}
           STAGE_URL: ${{ env.STAGE_URL }}
           PROD_URL: ${{ env.PROD_URL }}
           CUSTOM_URL: ${{ env.CUSTOM_URL }}
@@ -97,6 +100,7 @@ jobs:
         timeout-minutes: 5
         env: 
           NODE_ENV: ${{ env.NODE_ENV }}
+          ENV: ${{ env.ENV }}
           STAGE_URL: ${{ env.STAGE_URL }}
           PROD_URL: ${{ env.PROD_URL }}
           CUSTOM_URL: ${{ env.CUSTOM_URL }}
@@ -108,6 +112,7 @@ jobs:
         timeout-minutes: 5
         env: 
           NODE_ENV: ${{ env.NODE_ENV }}
+          ENV: ${{ env.ENV }}
           STAGE_URL: ${{ env.STAGE_URL }}
           PROD_URL: ${{ env.PROD_URL }}
           CUSTOM_URL: ${{ env.CUSTOM_URL }}
@@ -120,6 +125,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_ENV: ${{ env.NODE_ENV }}
+          ENV: ${{ env.ENV }}
           STAGE_URL: ${{ env.STAGE_URL }}
           PROD_URL: ${{ env.PROD_URL }}
           CUSTOM_URL: ${{ env.CUSTOM_URL }}

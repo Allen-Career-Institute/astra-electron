@@ -78,27 +78,27 @@ module.exports = {
     ]
   },
   plugins: [
-    new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-      'process.env.STAGE_URL': JSON.stringify(
-        process.env.STAGE_URL || 'https://console.allen-stage.in/'
-      ),
-      'process.env.PROD_URL': JSON.stringify(
-        process.env.PROD_URL || 'https://astra.allen.in/'
-      ),
-      'process.env.CUSTOM_URL': JSON.stringify(process.env.CUSTOM_URL),
-      'process.env.DEV_URL': JSON.stringify(
-        process.env.DEV_URL || 'http://localhost:3000/'
-      ),
-      'process.env.ASTRA_ELECTRON_SENTRY_DSN': JSON.stringify(
-        process.env.ASTRA_ELECTRON_SENTRY_DSN || ''
-      ),
-    }),
+    // new webpack.DefinePlugin({
+    //   'process.env.ENV': JSON.stringify(process.env.ENV || 'development'),
+    //   'process.env.STAGE_URL': JSON.stringify(
+    //     process.env.STAGE_URL || 'https://console.allen-stage.in/'
+    //   ),
+    //   'process.env.PROD_URL': JSON.stringify(
+    //     process.env.PROD_URL || 'https://astra.allen.in/'
+    //   ),
+    //   'process.env.CUSTOM_URL': JSON.stringify(process.env.CUSTOM_URL),
+    //   'process.env.DEV_URL': JSON.stringify(
+    //     process.env.DEV_URL || 'http://localhost:3000/'
+    //   ),
+    //   'process.env.ASTRA_ELECTRON_SENTRY_DSN': JSON.stringify(
+    //     process.env.ASTRA_ELECTRON_SENTRY_DSN || ''
+    //   ),
+    // }),
     new HtmlWebpackPlugin({
       template: './src/renderer/index.html',
       filename: 'index.html',
       inject: true,
-      minify: process.env.NODE_ENV === 'production' ? {
+      minify: process.env.ENV === 'production' ? {
         removeComments: true,
         collapseWhitespace: true,
         removeRedundantAttributes: true,
@@ -123,7 +123,7 @@ module.exports = {
   },
   target: 'electron-renderer',
   optimization: {
-    minimize: process.env.NODE_ENV === 'production',
+    minimize: process.env.ENV === 'production',
     splitChunks: {
       chunks: 'all',
       cacheGroups: {
@@ -136,7 +136,7 @@ module.exports = {
     },
   },
   performance: {
-    hints: process.env.NODE_ENV === 'production' ? 'warning' : false,
+    hints: process.env.ENV === 'production' ? 'warning' : false,
     maxEntrypointSize: 512000,
     maxAssetSize: 512000,
   }

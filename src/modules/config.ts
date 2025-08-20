@@ -1,5 +1,5 @@
 // Environment configuration
-// const ENV: string =  process.env.NODE_ENV || 'production';
+// const ENV: string =  process.env.ENV || 'production';
 
 // const URLS: Record<string, string> = {
 //   development:
