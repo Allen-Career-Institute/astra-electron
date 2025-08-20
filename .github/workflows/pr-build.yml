@@ -61,17 +61,6 @@ jobs:
           echo "Created .env.local file with environment variables:"
           cat .env.local
 
-      - name: Test environment variables
-        run: yarn test:env
-        timeout-minutes: 2
-        env:
-          NODE_ENV: ${{ env.NODE_ENV }}
-          STAGE_URL: ${{ env.STAGE_URL }}
-          PROD_URL: ${{ env.PROD_URL }}
-          CUSTOM_URL: ${{ env.CUSTOM_URL }}
-          DEV_URL: ${{ env.DEV_URL }}
-          ASTRA_ELECTRON_SENTRY_DSN: ${{ env.ASTRA_ELECTRON_SENTRY_DSN }}
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -89,6 +78,17 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
         timeout-minutes: 10
+    
+      - name: Test environment variables
+        run: yarn test:env
+        timeout-minutes: 2
+        env:
+          NODE_ENV: ${{ env.NODE_ENV }}
+          STAGE_URL: ${{ env.STAGE_URL }}
+          PROD_URL: ${{ env.PROD_URL }}
+          CUSTOM_URL: ${{ env.CUSTOM_URL }}
+          DEV_URL: ${{ env.DEV_URL }}
+          ASTRA_ELECTRON_SENTRY_DSN: ${{ env.ASTRA_ELECTRON_SENTRY_DSN }}
 
       - name: Build TypeScript
         run: yarn build:ts
