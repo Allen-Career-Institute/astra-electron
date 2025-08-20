@@ -6,16 +6,9 @@
  * before the build process starts.
  */
 
-const requiredEnvVars = [
-  'NODE_ENV',
-  'STAGE_URL',
-  'PROD_URL',
-  'CUSTOM_URL',
-  'DEV_URL',
-  'ASTRA_ELECTRON_SENTRY_DSN',
-];
+const requiredEnvVars = ['NODE_ENV', 'ASTRA_ELECTRON_SENTRY_DSN'];
 
-const optionalEnvVars = ['DEV_URL'];
+const optionalEnvVars = ['STAGE_URL', 'PROD_URL', 'CUSTOM_URL', 'DEV_URL'];
 
 console.log('🔍 Validating environment variables...\n');
 
