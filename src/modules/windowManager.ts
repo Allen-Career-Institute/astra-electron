@@ -49,47 +49,6 @@ function injectTokensToWindow(window: BrowserWindow): void {
   }
 }
 
-function showEnvironmentValuesDialog(): void {
-  try {
-    // Get all environment variables
-    const envEntries = [
-      ...Object.entries(URLS),
-      ...Object.entries({
-        ENV_: ENV,
-        NODE_ENV_: process.env.NODE_ENV,
-        STAGE_URL_: process.env.STAGE_URL,
-        PROD_URL_: process.env.PROD_URL,
-        CUSTOM_URL_: process.env.CUSTOM_URL,
-        SENTRY_DSN_: process.env.SENTRY_DSN,
-        SENTRY_DSN_DEV_: process.env.ASTRA_ELECTRON_SENTRY_DSN,
-      }),
-    ];
-
-    // Filter out sensitive information and format for display
-    const safeEnvVars = envEntries
-      .filter(
-        ([key]) =>
-          !key.toLowerCase().includes('secret') &&
-          !key.toLowerCase().includes('password') &&
-          !key.toLowerCase().includes('token')
-      )
-      .map(([key, value]) => `${key}: ${value}`)
-      .join('\n');
-
-    // Show dialog with environment values
-    dialog.showMessageBox({
-      type: 'info',
-      title: 'Environment Variables',
-      message: 'Current environment variables:',
-      detail: safeEnvVars || 'No environment variables found',
-      buttons: ['OK'],
-      defaultId: 0,
-    });
-  } catch (error) {
-    console.error('Failed to show environment values dialog:', error);
-  }
-}
-
 function createMainWindow(): BrowserWindow {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -132,7 +91,6 @@ function createMainWindow(): BrowserWindow {
         mainWindow.setFullScreen(true);
         mainWindow.maximize();
         injectTokensToWindow(mainWindow);
-        showEnvironmentValuesDialog();
       }
     } catch (error) {
       console.error('Failed to inject tokens to main window:', error);

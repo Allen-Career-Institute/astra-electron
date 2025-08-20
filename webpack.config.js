@@ -79,12 +79,20 @@ module.exports = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': process.env.NODE_ENV || 'development',
-      'process.env.STAGE_URL': process.env.STAGE_URL || 'https://console.allen-stage.in/',
-      'process.env.PROD_URL': process.env.PROD_URL || 'https://astra.allen.in/',
-      'process.env.CUSTOM_URL': process.env.CUSTOM_URL,
-      'process.env.DEV_URL': process.env.DEV_URL || 'http://localhost:3000/',
-      'process.env.SENTRY_DSN': process.env.ASTRA_ELECTRON_SENTRY_DSN || '',
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+      'process.env.STAGE_URL': JSON.stringify(
+        process.env.STAGE_URL || 'https://console.allen-stage.in/'
+      ),
+      'process.env.PROD_URL': JSON.stringify(
+        process.env.PROD_URL || 'https://astra.allen.in/'
+      ),
+      'process.env.CUSTOM_URL': JSON.stringify(process.env.CUSTOM_URL),
+      'process.env.DEV_URL': JSON.stringify(
+        process.env.DEV_URL || 'http://localhost:3000/'
+      ),
+      'process.env.SENTRY_DSN': JSON.stringify(
+        process.env.ASTRA_ELECTRON_SENTRY_DSN || ''
+      ),
     }),
     new HtmlWebpackPlugin({
       template: './src/renderer/index.html',

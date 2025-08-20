@@ -32,6 +32,7 @@
     "dist:publish": "electron-builder --config electron-builder.json --publish always",
     "dist:publish-draft": "electron-builder --config electron-builder.json --publish draft",
     "dev:build": "yarn build:ts && yarn renderer:build && yarn dist:win-installer",
+    "test:env": "node scripts/validate-env.js",
     "version:current": "./scripts/version-manager.sh current",
     "version:bump": "./scripts/version-manager.sh bump",
     "version:set": "./scripts/version-manager.sh set",
