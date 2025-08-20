@@ -130,16 +130,8 @@ jobs:
             echo "CSC_LINK=certificates/windows_certificate.pfx" >> $GITHUB_ENV
           fi
 
-      - name: Build Electron app (NSIS)
-        run: yarn dist:win-installer
-        timeout-minutes: 25
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_LINK: ${{ env.CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-
-      - name: Build AppX package
-        run: yarn dist:win-appx
+      - name: Build Electron app (MSIX)
+        run: yarn dist:win
         timeout-minutes: 25
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
