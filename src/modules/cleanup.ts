@@ -13,7 +13,7 @@ function cleanup(): void {
     streamWindow.close();
   }
 
-  if (mainWindow) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.close();
   }
 
