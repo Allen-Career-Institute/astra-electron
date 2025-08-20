@@ -87,21 +87,13 @@ module.exports = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify(
-        process.env.NODE_ENV || 'development'
-      ),
-      'process.env.STAGE_URL': JSON.stringify(
-        process.env.STAGE_URL || 'https://console.allen-stage.in/'
-      ),
-      'process.env.PROD_URL': JSON.stringify(
-        process.env.PROD_URL || 'https://astra.allen.in/'
-      ),
-      'process.env.CUSTOM_URL': JSON.stringify(
-        process.env.CUSTOM_URL || 'https://console.allen-stage.in/'
-      ),
-      'process.env.DEV_URL': JSON.stringify(
-        process.env.DEV_URL || 'https://console.allen-stage.in/'
-      ),
+      'process.env.NODE_ENV': process.env.NODE_ENV || 'production',
+      'process.env.STAGE_URL':
+        process.env.STAGE_URL || 'https://console.allen-stage.in/',
+      'process.env.PROD_URL': process.env.PROD_URL || 'https://astra.allen.in/',
+      'process.env.CUSTOM_URL':
+        process.env.CUSTOM_URL || 'https://console.allen-stage.in/',
+      'process.env.DEV_URL': process.env.DEV_URL || 'http://localhost:3000/',
     }),
     new HtmlWebpackPlugin({
       template: './src/renderer/index.html',

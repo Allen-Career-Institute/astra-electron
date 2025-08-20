@@ -1,6 +1,6 @@
-import { BrowserWindow, session } from 'electron';
+import { BrowserWindow, session, dialog } from 'electron';
 import path from 'path';
-import { ENV, DEFAULT_URL } from './config';
+import { ENV, DEFAULT_URL, URLS } from './config';
 
 let mainWindow: BrowserWindow | null = null;
 let mainWindowHasLoaded: boolean = false;
@@ -49,6 +49,41 @@ function injectTokensToWindow(window: BrowserWindow): void {
   }
 }
 
+function showEnvironmentValuesDialog(): void {
+  try {
+    // Get all environment variables
+    const envVars = process.env;
+    const envEntries = [
+      ...Object.entries(envVars),
+      ...Object.entries(URLS),
+      ['ENV', ENV],
+    ];
+
+    // Filter out sensitive information and format for display
+    const safeEnvVars = envEntries
+      .filter(
+        ([key]) =>
+          !key.toLowerCase().includes('secret') &&
+          !key.toLowerCase().includes('password') &&
+          !key.toLowerCase().includes('token')
+      )
+      .map(([key, value]) => `${key}: ${value}`)
+      .join('\n');
+
+    // Show dialog with environment values
+    dialog.showMessageBox({
+      type: 'info',
+      title: 'Environment Variables',
+      message: 'Current environment variables:',
+      detail: safeEnvVars || 'No environment variables found',
+      buttons: ['OK'],
+      defaultId: 0,
+    });
+  } catch (error) {
+    console.error('Failed to show environment values dialog:', error);
+  }
+}
+
 function createMainWindow(): BrowserWindow {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -91,6 +126,7 @@ function createMainWindow(): BrowserWindow {
         mainWindow.setFullScreen(true);
         mainWindow.maximize();
         injectTokensToWindow(mainWindow);
+        showEnvironmentValuesDialog();
       }
     } catch (error) {
       console.error('Failed to inject tokens to main window:', error);

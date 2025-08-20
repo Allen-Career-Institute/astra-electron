@@ -62,15 +62,6 @@ app.commandLine.appendSwitch('--webrtc-cpu-overuse-detection', 'false');
 
 setupIpcHandlers(ipcMain);
 
-// Log environment variables for debugging (always log in development, sometimes in production for debugging)
-if (ENV === 'development') {
-  console.log('Environment variables loaded:');
-  console.log('NODE_ENV:', process.env.NODE_ENV);
-  console.log('STAGE_URL:', process.env.STAGE_URL);
-  console.log('PROD_URL:', process.env.PROD_URL);
-  console.log('CUSTOM_URL:', process.env.CUSTOM_URL);
-}
-
 // Security: Prevent new window creation
 app.on('web-contents-created', (event, contents: WebContents) => {
   // contents.on('new-window-for-tab', (event: any, navigationUrl: string) => {
