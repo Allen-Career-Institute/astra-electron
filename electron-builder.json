@@ -49,21 +49,6 @@
     "publisherName": "Allen Digital",
     "verifyUpdateCodeSignature": false
   },
-  "appx": {
-    "identityName": "AllenDigital.Astra",
-    "publisher": "CN=AllenDigital",
-    "displayName": "Astra",
-    "publisherDisplayName": "ALLEN Digital",
-    "backgroundColor": "#ffffff",
-    "languages": ["en-US"],
-    "assets": "assets/appx",
-    "artifactName": "${productName}-${version}-msix.${ext}",
-    "capabilities": {
-      "internetClient": true,
-      "privateNetworkClientServer": true,
-      "runFullTrust": true
-    }
-  },
   "msix": {
     "identityName": "AllenDigital.Astra",
     "publisher": "CN=AllenDigital",
