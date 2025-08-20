@@ -93,6 +93,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Cleanup build artifacts
+        run: rmdir /s /q dist-electron-builder\\win-unpacked
+        timeout-minutes: 5
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         timeout-minutes: 5
