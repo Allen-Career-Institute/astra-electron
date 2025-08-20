@@ -1,4 +1,11 @@
-import { app, BrowserWindow, ipcMain, session, WebContents } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  session,
+  WebContents,
+  dialog,
+} from 'electron';
 
 // Load environment variables
 try {
@@ -97,6 +104,33 @@ app.on('ready', () => {
   try {
     createMainWindow();
     createMenu();
+
+    // Log environment variables from webpack in native dialog
+    const envVars = {
+      NODE_ENV: process.env.NODE_ENV,
+      STAGE_URL: process.env.STAGE_URL,
+      PROD_URL: process.env.PROD_URL,
+      CUSTOM_URL: process.env.CUSTOM_URL,
+      DEV_URL: process.env.DEV_URL,
+      ASTRA_ELECTRON_SENTRY_DSN: process.env.ASTRA_ELECTRON_SENTRY_DSN,
+      // Add any other environment variables you want to log
+    };
+
+    const envString = Object.entries(envVars)
+      .map(([key, value]) => `${key}: ${value || 'undefined'}`)
+      .join('\n');
+
+    dialog
+      .showMessageBox({
+        type: 'info',
+        title: 'Environment Variables from Webpack',
+        message: 'Environment variables loaded from webpack configuration:',
+        detail: envString,
+        buttons: ['OK'],
+      })
+      .catch(err => {
+        console.error('Failed to show environment dialog:', err);
+      });
 
     // Setup auto-updater with error handling
     try {
