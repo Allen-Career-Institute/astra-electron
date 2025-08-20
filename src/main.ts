@@ -10,7 +10,11 @@ import {
 // Load environment variables
 try {
   const dotenv = require('dotenv');
-  dotenv.config({ path: '.env.local' });
+  dotenv.config({
+    path: app.isPackaged
+      ? path.join(process.resourcesPath, '.env.local')
+      : path.resolve(process.cwd(), '.env.local'),
+  });
 } catch (error) {
   console.log('No .env.local file found, trying .env');
 }
@@ -46,6 +50,7 @@ import { setupAutoUpdater } from './modules/autoUpdater';
 import { cleanup } from './modules/cleanup';
 import { createMainWindow } from './modules/windowManager';
 import { getStreamWindow } from './modules/streamWindow';
+import path from 'path';
 
 // Enable hardware acceleration and WebRTC optimizations for better video quality
 app.commandLine.appendSwitch(

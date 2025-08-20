@@ -166,7 +166,8 @@
     {
       "from": "node_modules/date-fns",
       "to": "date-fns"
-    }
+    },
+    ".env.local"
   ],
   "nodeGypRebuild": false,
   "buildDependenciesFromSource": false

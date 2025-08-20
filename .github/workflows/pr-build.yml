@@ -58,6 +58,8 @@ jobs:
           echo "STAGE_URL=${{ env.STAGE_URL }}" >> .env.local
           echo "PROD_URL=${{ env.PROD_URL }}" >> .env.local
           echo "CUSTOM_URL=${{ env.CUSTOM_URL }}" >> .env.local
+          echo "DEV_URL=${{ env.DEV_URL }}" >> .env.local
+          echo "ASTRA_ELECTRON_SENTRY_DSN=${{ env.ASTRA_ELECTRON_SENTRY_DSN }}" >> .env.local
           echo "Created .env.local file with environment variables:"
           cat .env.local
 
