@@ -6,7 +6,11 @@
  * before the build process starts.
  */
 
-const requiredEnvVars = ['NODE_ENV', 'ASTRA_ELECTRON_SENTRY_DSN'];
+const requiredEnvVars = [
+  'NODE_ENV',
+  'ASTRA_ELECTRON_SENTRY_DSN',
+  'ASTRA_ELECTRON_SENTRY_ENDPOINT',
+];
 
 const optionalEnvVars = ['STAGE_URL', 'PROD_URL', 'CUSTOM_URL', 'DEV_URL'];
 

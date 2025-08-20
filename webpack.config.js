@@ -26,10 +26,7 @@ module.exports = {
     'electron': 'commonjs2 electron',
     'electron-store': 'commonjs2 electron-store',
     'electron-updater': 'commonjs2 electron-updater',
-    '@electron/remote': 'commonjs2 @electron/remote',
-    '@sentry/electron': 'commonjs2 @sentry/electron',
-    '@sentry/node': 'commonjs2 @sentry/node',
-    '@sentry/tracing': 'commonjs2 @sentry/tracing'
+    '@electron/remote': 'commonjs2 @electron/remote'
   },
   module: {
     rules: [
@@ -78,22 +75,29 @@ module.exports = {
     ]
   },
   plugins: [
-    // new webpack.DefinePlugin({
-    //   'process.env.ENV': JSON.stringify(process.env.ENV || 'development'),
-    //   'process.env.STAGE_URL': JSON.stringify(
-    //     process.env.STAGE_URL || 'https://console.allen-stage.in/'
-    //   ),
-    //   'process.env.PROD_URL': JSON.stringify(
-    //     process.env.PROD_URL || 'https://astra.allen.in/'
-    //   ),
-    //   'process.env.CUSTOM_URL': JSON.stringify(process.env.CUSTOM_URL),
-    //   'process.env.DEV_URL': JSON.stringify(
-    //     process.env.DEV_URL || 'http://localhost:3000/'
-    //   ),
-    //   'process.env.ASTRA_ELECTRON_SENTRY_DSN': JSON.stringify(
-    //     process.env.ASTRA_ELECTRON_SENTRY_DSN || ''
-    //   ),
-    // }),
+    new webpack.DefinePlugin({
+      'process.env.ENV': JSON.stringify(
+        process.env.ENV || 'development'
+      ),
+      'process.env.STAGE_URL': JSON.stringify(
+        process.env.STAGE_URL || 'https://console.allen-stage.in/'
+      ),
+      'process.env.PROD_URL': JSON.stringify(
+        process.env.PROD_URL || 'https://astra.allen.in/'
+      ),
+      'process.env.CUSTOM_URL': JSON.stringify(
+        process.env.CUSTOM_URL || 'https://console.allen-stage.in/'
+      ),
+      'process.env.DEV_URL': JSON.stringify(
+        process.env.DEV_URL || 'http://localhost:3000/'
+      ),
+      'process.env.ASTRA_ELECTRON_SENTRY_DSN': JSON.stringify(
+        process.env.ASTRA_ELECTRON_SENTRY_DSN || ''
+      ),
+      'process.env.ASTRA_ELECTRON_SENTRY_ENDPOINT': JSON.stringify(
+        process.env.ASTRA_ELECTRON_SENTRY_ENDPOINT || ''
+      ),
+    }),
     new HtmlWebpackPlugin({
       template: './src/renderer/index.html',
       filename: 'index.html',

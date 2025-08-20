@@ -10,9 +10,6 @@
     "assets/**/*",
     "assets/installer/**/*",
     "node_modules/electron-store/**/*",
-    "node_modules/dotenv/**/*",
-    "node_modules/@sentry/electron/main/**/*",
-    "node_modules/@sentry/**/*",
     "node_modules/electron-updater/**/*",
     "node_modules/uuid/**/*",
     "node_modules/date-fns/**/*",
@@ -167,7 +164,14 @@
       "from": "node_modules/date-fns",
       "to": "date-fns"
     },
-    ".env.local"
+    {
+      "from": "node_modules/electron-store",
+      "to": "electron-store"
+    },
+    {
+      "from": ".env.local",
+      "to": ".env.local"
+    }
   ],
   "nodeGypRebuild": false,
   "buildDependenciesFromSource": false

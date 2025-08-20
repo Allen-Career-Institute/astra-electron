@@ -5,48 +5,79 @@ import {
   session,
   WebContents,
   dialog,
+  crashReporter,
 } from 'electron';
 import path from 'path';
 
-// Load environment variables
+// Load environment variables using hybrid approach
 let envLoadError: Error | null = null;
-try {
-  const dotenv = require('dotenv');
-  dotenv.config({
-    path: app.isPackaged
+
+// Function to load runtime environment variables from .env.local
+function loadRuntimeEnv() {
+  try {
+    const fs = require('fs');
+    const envPath = app.isPackaged
       ? path.join(process.resourcesPath, '.env.local')
-      : path.resolve(process.cwd(), '.env.local'),
-  });
+      : path.resolve(process.cwd(), '.env.local');
+
+    if (fs.existsSync(envPath)) {
+      const envContent = fs.readFileSync(envPath, 'utf8');
+      const envVars = envContent
+        .split('\n')
+        .filter((line: string) => line.trim() && !line.startsWith('#'))
+        .reduce(
+          (acc: Record<string, string>, line: string) => {
+            const [key, ...valueParts] = line.split('=');
+            if (key && valueParts.length > 0) {
+              const value = valueParts
+                .join('=')
+                .trim()
+                .replace(/^["']|["']$/g, '');
+              acc[key.trim()] = value;
+            }
+            return acc;
+          },
+          {} as Record<string, string>
+        );
+
+      // Override webpack-defined variables with runtime values
+      Object.entries(envVars).forEach(([key, value]) => {
+        process.env[key] = value as string;
+      });
+
+      console.log('✅ Runtime environment variables loaded from:', envPath);
+      console.log('📋 Loaded variables:', Object.keys(envVars).join(', '));
+      return true;
+    } else {
+      console.log(
+        'ℹ️  Runtime .env.local file not found, using webpack defaults'
+      );
+      throw new Error('Runtime .env.local file not found');
+    }
+  } catch (error) {
+    console.warn('⚠️  Failed to load runtime environment variables:', error);
+    throw error;
+  }
+}
+
+// Try to load runtime environment variables
+try {
+  loadRuntimeEnv();
 } catch (error) {
   envLoadError =
     error instanceof Error
       ? error
-      : new Error('Unknown error loading environment variables');
-  console.error('Failed to load environment variables:', envLoadError);
+      : new Error('Unknown error loading runtime environment variables');
+  console.error('Failed to load runtime environment variables:', error);
 }
 
-if (process.env.ASTRA_ELECTRON_SENTRY_DSN) {
-  const { init } = require('@sentry/electron/main');
-  if (init) {
-    init({
-      dsn: process.env.ASTRA_ELECTRON_SENTRY_DSN,
-      environment: process.env.ENV,
-      sendDefaultPii: true,
-      tracesSampleRate: 0.01,
-
-      getSessions: () => [
-        session.defaultSession,
-        session.fromPartition('persist:shared'),
-      ],
-      transportOptions: {
-        /* The maximum number of days to keep an envelope in the queue. */
-        maxAgeDays: 30,
-        /* The maximum number of envelopes to keep in the queue. */
-        maxQueueSize: 30,
-        flushAtStartup: true,
-      },
-    });
-  }
+if (process.env.ASTRA_ELECTRON_SENTRY_ENDPOINT) {
+  crashReporter.start({
+    companyName: 'Allen Digital',
+    productName: 'Astra',
+    submitURL: process.env.ASTRA_ELECTRON_SENTRY_ENDPOINT,
+    uploadToServer: true,
+  });
 }
 
 // Import modules
@@ -139,6 +170,8 @@ app.on('ready', () => {
         CUSTOM_URL: process.env.CUSTOM_URL,
         DEV_URL: process.env.DEV_URL,
         ASTRA_ELECTRON_SENTRY_DSN: process.env.ASTRA_ELECTRON_SENTRY_DSN,
+        ASTRA_ELECTRON_SENTRY_ENDPOINT:
+          process.env.ASTRA_ELECTRON_SENTRY_ENDPOINT,
         // Add any other environment variables you want to log
       };
 
