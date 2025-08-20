@@ -1,7 +1,7 @@
 import { IpcMain, app } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
-import { spawn } from 'child_process';
+
 import {
   getStreamWindow,
   getStreamWindowConfig,
@@ -12,10 +12,7 @@ import {
 import {
   createWhiteboardWindow,
   safeClosewhiteboardWindow,
-  getWhiteboardWindow,
 } from './whiteboard-window';
-import { getMainWindow } from './windowManager';
-import { ENV, DEFAULT_URL } from './config';
 import { screenSharingManager } from './screenSharing';
 import { rollingMergeManager } from './rollingMergeManager';
 
@@ -50,20 +47,6 @@ async function waitForStreamWindowReady(
 
 // IPC Handlers
 function setupIpcHandlers(ipcMain: IpcMain): void {
-  ipcMain.handle('get-environment', () => {
-    return ENV;
-  });
-
-  ipcMain.handle('get-default-url', () => {
-    return DEFAULT_URL;
-  });
-
-  ipcMain.handle('get-window-status', async () => {
-    return {
-      mainWindow: !!getMainWindow(),
-    };
-  });
-
   // Centralized IPC Communication handler for allen-ui-live web app
   ipcMain.handle('sendMessage', async (event, message) => {
     try {
@@ -179,7 +162,6 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
           return { type: 'SUCCESS', payload: 'Video toggle sent' };
 
         case 'LEAVE_MEETING':
-          console.log('LEAVE_MEETING', message.payload);
           safeCloseStreamWindow('LEAVE_MEETING');
           safeClosewhiteboardWindow('LEAVE_MEETING');
 
@@ -523,33 +505,29 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
       };
     }
   });
-
-  // Cleanup function for FFmpeg processes
-  const cleanupFFmpegProcesses = () => {
-    console.log('Cleaning up FFmpeg processes...');
-    ffmpegProcesses.forEach((process, meetingId) => {
-      if (process && !process.killed) {
-        try {
-          process.stdin.end();
-          process.kill('SIGTERM');
-          console.log(`FFmpeg process killed for meeting ${meetingId}`);
-        } catch (error) {
-          console.error(
-            `Error killing FFmpeg process for meeting ${meetingId}:`,
-            error
-          );
-        }
-      }
-    });
-    ffmpegProcesses.clear();
-
-    // Cleanup rolling merge processes using the manager
-    rollingMergeManager.cleanup();
-  };
-
-  // Register cleanup on app exit
-  app.on('before-quit', cleanupFFmpegProcesses);
-  app.on('window-all-closed', cleanupFFmpegProcesses);
 }
 
-export { setupIpcHandlers };
+// Cleanup function for FFmpeg processes
+const cleanupFFmpegProcesses = () => {
+  console.log('Cleaning up FFmpeg processes...');
+  ffmpegProcesses.forEach((process, meetingId) => {
+    if (process && !process.killed) {
+      try {
+        process.stdin.end();
+        process.kill('SIGTERM');
+        console.log(`FFmpeg process killed for meeting ${meetingId}`);
+      } catch (error) {
+        console.error(
+          `Error killing FFmpeg process for meeting ${meetingId}:`,
+          error
+        );
+      }
+    }
+  });
+  ffmpegProcesses.clear();
+
+  // Cleanup rolling merge processes using the manager
+  rollingMergeManager.cleanup();
+};
+
+export { setupIpcHandlers, cleanupFFmpegProcesses };

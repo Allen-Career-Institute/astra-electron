@@ -1,6 +1,8 @@
-import { BrowserWindow, session, dialog } from 'electron';
+import { BrowserWindow, session, app } from 'electron';
 import path from 'path';
-import { ENV, DEFAULT_URL, URLS } from './config';
+import { getUrlByEnv, isDev } from './config';
+import { safeCloseStreamWindow } from './streamWindow';
+import { safeClosewhiteboardWindow } from './whiteboard-window';
 
 let mainWindow: BrowserWindow | null = null;
 let mainWindowHasLoaded: boolean = false;
@@ -31,7 +33,7 @@ function getSharedSession(): Electron.Session {
 }
 
 function injectTokensToWindow(window: BrowserWindow): void {
-  if (ENV === 'development') {
+  if (isDev()) {
     const tokens = JSON.parse(process.env.AUTH_TOKEN || '{}');
 
     if (tokens && Object.keys(tokens).length > 0) {
@@ -50,10 +52,14 @@ function injectTokensToWindow(window: BrowserWindow): void {
 }
 
 function createMainWindow(): BrowserWindow {
+  // Use app.getAppPath() for packaged app, process.cwd() for development
+  const appPath = app.isPackaged ? app.getAppPath() : process.cwd();
+  const preloadPath = path.join(appPath, 'dist', 'preload.js');
+
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
-    fullscreen: false,
+    fullscreen: true,
     frame: true,
     maximizable: true,
     resizable: true,
@@ -62,7 +68,7 @@ function createMainWindow(): BrowserWindow {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: true,
-      preload: path.join(__dirname, '../preload.js'),
+      preload: preloadPath,
       webSecurity: false, // only if you trust the content
       sandbox: false,
       allowRunningInsecureContent: true, // only if HTTP content
@@ -76,10 +82,10 @@ function createMainWindow(): BrowserWindow {
     title: 'Astra',
   });
 
-  mainWindow.loadURL(DEFAULT_URL);
+  mainWindow.loadURL(getUrlByEnv());
   mainWindow.maximize();
 
-  if (ENV === 'development') {
+  if (isDev()) {
     mainWindow.webContents.openDevTools();
   }
 
@@ -89,6 +95,7 @@ function createMainWindow(): BrowserWindow {
     try {
       if (mainWindow) {
         mainWindow.maximize();
+        mainWindow.setFullScreen(true);
         injectTokensToWindow(mainWindow);
       }
     } catch (error) {
@@ -98,6 +105,10 @@ function createMainWindow(): BrowserWindow {
 
   mainWindow.webContents.on('did-start-loading', () => {
     mainWindowHasLoaded = false;
+  });
+  mainWindow.on('close', () => {
+    safeCloseStreamWindow();
+    safeClosewhiteboardWindow();
   });
 
   // Stream window is now floating and independent - no need to update its position

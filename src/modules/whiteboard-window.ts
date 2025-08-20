@@ -1,8 +1,8 @@
-import { BrowserWindow, screen } from 'electron';
+import { BrowserWindow, screen, app } from 'electron';
 import path from 'path';
-import { ENV, DEFAULT_URL } from './config';
 import { WhiteboardWindowConfig } from '@/types/electron';
 import { getSharedSession } from './windowManager';
+import { getEnv, isDev } from './config';
 
 let whiteboardWindow: BrowserWindow | null = null;
 let whiteboardWindowConfig: WhiteboardWindowConfig | null = null;
@@ -171,7 +171,11 @@ function createWhiteboardWindow(config: WhiteboardWindowConfig): BrowserWindow {
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: true,
-        preload: path.join(__dirname, '../whiteboard-preload.js'),
+        preload: path.join(
+          app.isPackaged ? app.getAppPath() : process.cwd(),
+          'dist',
+          'whiteboard-preload.js'
+        ),
         webSecurity: false, // Disable for screen sharing to work
         allowRunningInsecureContent: true,
         // Enable experimental features for better screen sharing
@@ -198,9 +202,9 @@ function createWhiteboardWindow(config: WhiteboardWindowConfig): BrowserWindow {
 
     // Load the whiteboard window content
     // whiteboardWindow.loadFile(path.join(__dirname, '../renderer/recording-window.html'));
-    whiteboardWindow.loadURL(whiteboardWindowConfig.url || DEFAULT_URL);
+    whiteboardWindow.loadURL(whiteboardWindowConfig.url);
 
-    if (ENV === 'development') {
+    if (isDev()) {
       whiteboardWindow.webContents.openDevTools();
     }
     // Handle window events

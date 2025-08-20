@@ -1,5 +1,5 @@
 import { Menu, dialog, app } from 'electron';
-import { ENV } from './config';
+import { getEnv, getUrlByEnv } from './config';
 import { getMainWindow } from './windowManager';
 import { reloadMainWindow } from './reloadUtils';
 
@@ -73,7 +73,13 @@ function createMenu(): void {
               type: 'info',
               title: 'About Astra Application',
               message: 'Astra',
-              detail: 'Version: ' + app.getVersion() + '\nEnvironment: ' + ENV,
+              detail:
+                'Version: ' +
+                app.getVersion() +
+                '\nEnvironment: ' +
+                getEnv() +
+                '\nURL: ' +
+                getUrlByEnv(),
             });
           },
         },

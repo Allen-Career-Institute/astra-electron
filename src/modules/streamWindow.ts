@@ -1,8 +1,8 @@
-import { BrowserWindow, screen } from 'electron';
+import { BrowserWindow, screen, app } from 'electron';
 import path from 'path';
-import { ENV, DEFAULT_URL } from './config';
 import { StreamWindowConfig } from '@/types/electron';
 import { getSharedSession } from './windowManager';
+import { getEnv, isDev } from './config';
 
 let streamWindow: BrowserWindow | null = null;
 let streamWindowConfig: StreamWindowConfig | null = null;
@@ -119,7 +119,11 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
         nodeIntegration: true,
         contextIsolation: true,
         sandbox: false,
-        preload: path.join(__dirname, '../stream-preload.js'),
+        preload: path.join(
+          app.isPackaged ? app.getAppPath() : process.cwd(),
+          'dist',
+          'stream-preload.js'
+        ),
         webSecurity: false, // Disable for screen sharing to work
         allowRunningInsecureContent: true,
         // Enable experimental features for better screen sharing
@@ -145,11 +149,11 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
     });
 
     // Load the stream window content
-    streamWindow.loadURL(streamWindowConfig.url || DEFAULT_URL);
+    streamWindow.loadURL(streamWindowConfig.url);
 
     // Initialize native screen capture immediately after window creation
     const { getMainWindow } = require('./windowManager');
-    if (ENV === 'development') {
+    if (isDev()) {
       streamWindow.webContents.openDevTools();
     }
     // Handle window events

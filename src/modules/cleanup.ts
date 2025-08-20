@@ -1,21 +1,14 @@
 import { dialog } from 'electron';
 import { getMainWindow } from './windowManager';
-import { getStreamWindow } from './streamWindow';
-import { getWhiteboardWindow } from './whiteboard-window';
-import { ENV } from './config';
+import { safeCloseStreamWindow } from './streamWindow';
+import { safeClosewhiteboardWindow } from './whiteboard-window';
+import { isDev } from './config';
 
 function cleanup(): void {
   const mainWindow = getMainWindow();
-  const streamWindow = getStreamWindow();
-  const whiteboardWindow = getWhiteboardWindow();
 
-  if (streamWindow && !streamWindow.isDestroyed()) {
-    streamWindow.close();
-  }
-
-  if (whiteboardWindow && !whiteboardWindow.isDestroyed()) {
-    whiteboardWindow.close();
-  }
+  safeCloseStreamWindow();
+  safeClosewhiteboardWindow();
 
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.close();
@@ -25,7 +18,7 @@ function cleanup(): void {
 function handleUncaughtException(error: Error): void {
   console.error('Uncaught Exception:', error);
 
-  if (ENV === 'development') {
+  if (isDev()) {
     dialog.showErrorBox(
       'Uncaught Exception',
       `An uncaught exception occurred: ${error.message}\n\nStack: ${error.stack}`
@@ -39,7 +32,7 @@ function handleUnhandledRejection(
 ): void {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 
-  if (ENV === 'development') {
+  if (isDev()) {
     dialog.showErrorBox(
       'Unhandled Rejection',
       `An unhandled rejection occurred: ${reason}`

@@ -1,4 +1,5 @@
 import { dialog } from 'electron';
+import { isDev } from './config';
 
 // Try to import electron-updater with fallback
 let autoUpdater: any = null;
@@ -28,7 +29,7 @@ function setupAutoUpdater(): void {
     }
 
     // Check if running in development mode
-    if (process.env.ENV === 'development') {
+    if (isDev()) {
       console.log('Auto-updater disabled in development mode');
       return;
     }

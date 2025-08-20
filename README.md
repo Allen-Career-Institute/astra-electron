@@ -288,8 +288,13 @@ yarn dev:full        # Full-stack development (renderer + main process)
 # 🏗️ Building Commands
 yarn build:ts        # Compile TypeScript to JavaScript
 yarn build           # Build TypeScript and create distributables
-yarn make            # Create distributables using Electron Forge
-yarn package         # Package the application for distribution
+yarn dist:all        # Build for all platforms (macOS, Windows, Linux)
+yarn dist:win-only   # Build for Windows only
+yarn dist:mac-only   # Build for macOS only
+yarn dist:linux-only # Build for Linux only
+yarn dist:win        # Build Windows package (requires previous build steps)
+yarn dist:mac        # Build macOS package (requires previous build steps)
+yarn dist:linux      # Build Linux package (requires previous build steps)
 
 # 🧹 Cleanup Commands
 yarn clean           # Remove all build artifacts and dependencies

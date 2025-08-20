@@ -97,19 +97,9 @@ jobs:
           DEV_URL: ${{ env.DEV_URL }}
           ASTRA_ELECTRON_SENTRY_DSN: ${{ env.ASTRA_ELECTRON_SENTRY_DSN }}
 
-      - name: Build TypeScript
-        run: yarn build:ts
-        timeout-minutes: 5
-
-      - name: Build renderer
-        run: yarn renderer:build
-        timeout-minutes: 5
-        
-      - name: Build Electron app (MSIX)
-        run: yarn dist:win
-        timeout-minutes: 25
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build
+        run: yarn build:win-only
+        timeout-minutes: 10
 
       - name: Cleanup build artifacts
         run: Remove-Item -Recurse -Force "dist-electron-builder\win-unpacked" -ErrorAction SilentlyContinue

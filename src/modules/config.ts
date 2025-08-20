@@ -1,28 +1,65 @@
 // Environment configuration
-// const ENV: string =  process.env.ENV || 'production';
+let ENV: 'development' | 'stage' | 'production' = 'production';
+let URLS = {
+  development: '',
+  stage: '',
+  production: '',
+};
+let ASTRA_ELECTRON_SENTRY_DSN: string = '';
+let ASTRA_ELECTRON_SENTRY_ENDPOINT: string = '';
 
-// const URLS: Record<string, string> = {
-//   development:
-//     process.env.CUSTOM_URL ||
-//     process.env.DEV_URL ||
-//     'https://console.allen-stage.in/',
-//   stage:
-//     process.env.CUSTOM_URL ||
-//     process.env.STAGE_URL ||
-//     'https://console.allen-stage.in/',
-//   production: process.env.PROD_URL || 'https://astra.allen.in/',
-// };
-
-const ENV: string = 'stage';
-const URLS: Record<string, string> = {
-  development:
-    'https://allen-ic-stage-ui-live-web-pr-709-allen-frontend-team.vercel.app',
-  stage:
-    'https://allen-ic-stage-ui-live-web-pr-709-allen-frontend-team.vercel.app',
-  production:
-    'https://allen-ic-stage-ui-live-web-pr-709-allen-frontend-team.vercel.app',
+const getEnv = () => {
+  return ENV;
 };
 
-const DEFAULT_URL: string = URLS[ENV] || URLS.development;
+const setEnv = (env: 'development' | 'stage' | 'production') => {
+  ENV = env;
+};
 
-export { ENV, URLS, DEFAULT_URL };
+const getSentryDsn = () => {
+  return ASTRA_ELECTRON_SENTRY_DSN;
+};
+
+const setSentryDsn = (dsn: string) => {
+  ASTRA_ELECTRON_SENTRY_DSN = dsn;
+};
+
+const getSentryEndpoint = () => {
+  return ASTRA_ELECTRON_SENTRY_ENDPOINT;
+};
+
+const setSentryEndpoint = (endpoint: string) => {
+  ASTRA_ELECTRON_SENTRY_ENDPOINT = endpoint;
+};
+
+const getUrls = () => {
+  return URLS;
+};
+
+const getUrlByEnv = () => {
+  return URLS[ENV];
+};
+
+const setUrlByEnv = (
+  url: string,
+  env: 'development' | 'stage' | 'production'
+) => {
+  URLS[env] = url;
+};
+
+const isDev = () => {
+  return getEnv() === 'development';
+};
+
+export {
+  isDev,
+  getEnv,
+  setEnv,
+  getUrls,
+  setUrlByEnv,
+  getUrlByEnv,
+  setSentryDsn,
+  setSentryEndpoint,
+  getSentryDsn,
+  getSentryEndpoint,
+};
