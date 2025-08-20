@@ -11,6 +11,7 @@
     "assets/installer/**/*",
     "node_modules/electron-store/**/*",
     "node_modules/dotenv/**/*",
+    "node_modules/@sentry/electron/main/**/*",
     "node_modules/@sentry/**/*",
     "node_modules/electron-updater/**/*",
     "node_modules/uuid/**/*",
@@ -42,10 +43,6 @@
     "target": [
       {
         "target": "nsis",
-        "arch": ["x64"]
-      },
-      {
-        "target": "appx",
         "arch": ["x64"]
       }
     ],
