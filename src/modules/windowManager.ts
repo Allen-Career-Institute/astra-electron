@@ -52,11 +52,17 @@ function injectTokensToWindow(window: BrowserWindow): void {
 function showEnvironmentValuesDialog(): void {
   try {
     // Get all environment variables
-    const envVars = process.env;
     const envEntries = [
-      ...Object.entries(envVars),
       ...Object.entries(URLS),
-      ['ENV', ENV],
+      ...Object.entries({
+        ENV_: ENV,
+        NODE_ENV_: process.env.NODE_ENV,
+        STAGE_URL_: process.env.STAGE_URL,
+        PROD_URL_: process.env.PROD_URL,
+        CUSTOM_URL_: process.env.CUSTOM_URL,
+        SENTRY_DSN_: process.env.SENTRY_DSN,
+        SENTRY_DSN_DEV_: process.env.ASTRA_ELECTRON_SENTRY_DSN,
+      }),
     ];
 
     // Filter out sensitive information and format for display

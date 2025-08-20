@@ -1,4 +1,5 @@
-import { app, BrowserWindow, ipcMain, WebContents } from 'electron';
+import { app, BrowserWindow, ipcMain, session, WebContents } from 'electron';
+import * as Sentry from '@sentry/electron/main';
 
 // Load environment variables
 try {
@@ -8,15 +9,35 @@ try {
   console.log('No .env.local file found, trying .env');
 }
 
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.ENV,
+    ipcMode: Sentry.IPCMode.Protocol,
+    sendDefaultPii: true,
+    tracesSampleRate: 0.01,
+
+    getSessions: () => [
+      session.defaultSession,
+      session.fromPartition('persist:shared'),
+    ],
+    transportOptions: {
+      /* The maximum number of days to keep an envelope in the queue. */
+      maxAgeDays: 30,
+      /* The maximum number of envelopes to keep in the queue. */
+      maxQueueSize: 30,
+      flushAtStartup: true,
+    },
+  });
+}
+
 // Import modules
-import { initializeSentry } from './modules/sentry';
 import { createMenu } from './modules/menu';
 import { setupIpcHandlers } from './modules/ipcHandlers';
 import { setupAutoUpdater } from './modules/autoUpdater';
-import { cleanup, setupCleanupHandlers } from './modules/cleanup';
+import { cleanup } from './modules/cleanup';
 import { createMainWindow } from './modules/windowManager';
 import { getStreamWindow } from './modules/streamWindow';
-import { ENV } from './modules/config';
 
 // Enable hardware acceleration and WebRTC optimizations for better video quality
 app.commandLine.appendSwitch(
@@ -73,7 +94,6 @@ app.on('web-contents-created', (event, contents: WebContents) => {
 // App event handlers
 app.on('ready', () => {
   try {
-    initializeSentry();
     createMainWindow();
     createMenu();
 

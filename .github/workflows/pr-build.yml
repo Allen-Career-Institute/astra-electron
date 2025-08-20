@@ -12,6 +12,7 @@ env:
   STAGE_URL: ${{ secrets.STAGE_CONSOLE_URL }}
   PROD_URL: ${{ secrets.PROD_CONSOLE_URL }}
   CUSTOM_URL: ${{ secrets.CUSTOM_CONSOLE_URL }}
+  ASTRA_ELECTRON_SENTRY_DSN: ${{ secrets.ASTRA_ELECTRON_SENTRY_DSN }}
 
 # Cancel in-progress jobs when new commits are pushed
 concurrency:
@@ -96,7 +97,7 @@ jobs:
         uses: actions/upload-artifact@v4
         timeout-minutes: 5
         with:
-          name: allen-ui-console-win32-x64-pr-${{ github.event.number }}
+          name: astra-win32-x64-pr-${{ github.event.number }}
           path: |
             dist-electron-builder/
             !dist-electron-builder/**/*.blockmap

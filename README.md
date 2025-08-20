@@ -110,7 +110,6 @@ CUSTOM_URL=http://localhost:3000
 
 # Sentry Configuration
 SENTRY_DSN=your-sentry-dsn
-SENTRY_DSN_DEV=your-sentry-dev-dsn
 
 # GitHub Secrets (for CI/CD)
 GITHUB_TOKEN=your-github-token
