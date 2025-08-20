@@ -1,8 +1,8 @@
-# PowerShell script to close Allen Console application
+# PowerShell script to close Astra application
 # This script is called by the NSIS installer
 
 param(
-    [string]$AppName = "Allen Console"
+    [string]$AppName = "Astra"
 )
 
 Write-Host "Attempting to close $AppName..."
@@ -68,12 +68,12 @@ function Close-ProcessByExecutable {
 }
 
 # Close specific process names
-Close-ProcessGracefully "Allen Console"
-Close-ProcessGracefully "allen-ui-console-electron"
+Close-ProcessGracefully "Astra"
+Close-ProcessGracefully "astra-electron"
 
 # Close processes by executable name patterns
-Close-ProcessByExecutable "allen-ui-console"
-Close-ProcessByExecutable "Allen Console"
+Close-ProcessByExecutable "astra-electron"
+Close-ProcessByExecutable "Astra"
 
 # Additional cleanup using WMI for stubborn processes
 try {
@@ -81,8 +81,8 @@ try {
     
     # Kill any remaining processes with similar names
     Get-WmiObject -Class Win32_Process | Where-Object { 
-        $_.Name -like "*Allen Console*" -or 
-        $_.Name -like "*allen-ui-console*" 
+        $_.Name -like "*Astra*" -or 
+        $_.Name -like "*astra-electron*" 
     } | ForEach-Object {
         Write-Host "Terminating process: $($_.Name) (ID: $($_.ProcessId))"
         $_.Terminate()

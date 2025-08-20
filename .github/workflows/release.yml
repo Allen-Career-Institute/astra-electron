@@ -137,7 +137,7 @@ jobs:
         uses: actions/upload-artifact@v4
         timeout-minutes: 5
         with:
-          name: allen-ui-console-win32-x64
+          name: astra-electron-win32-x64
           path: |
             dist-electron-builder/
             !dist-electron-builder/**/*.blockmap
@@ -273,7 +273,7 @@ jobs:
             ### Changes
             See the [commit history](https://github.com/${{ github.repository }}/compare/${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', needs.version-manager.outputs.version) }}...main) for details.
           files: |
-            artifacts/allen-ui-console-win32-x64/dist-electron-builder/*
+            artifacts/astra-win32-x64/dist-electron-builder/*
           draft: false
           prerelease: false
         env:

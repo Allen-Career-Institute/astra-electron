@@ -1,7 +1,7 @@
 {
-  "name": "allen-ui-console-electron",
+  "name": "astra-electron",
   "version": "1.0.0",
-  "description": "Allen UI Console Electron App with WebView and Video Streaming",
+  "description": "Astra Console Electron App with WebView and Video Streaming",
   "main": "dist/main.js",
   "packageManager": "yarn@4.9.2",
   "scripts": {

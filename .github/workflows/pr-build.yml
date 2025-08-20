@@ -100,7 +100,7 @@ jobs:
           path: |
             dist-electron-builder/
             !dist-electron-builder/**/*.blockmap
-          retention-days: 2
+          retention-days: 1
 
       - name: Create build summary
         run: |

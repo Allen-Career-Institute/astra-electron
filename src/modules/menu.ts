@@ -60,8 +60,8 @@ function createMenu(): void {
           click: () => {
             dialog.showMessageBox({
               type: 'info',
-              title: 'About Allen UI Console',
-              message: 'Allen Console',
+              title: 'About Astra Application',
+              message: 'Astra',
               detail: 'Version: ' + app.getVersion() + '\nEnvironment: ' + ENV,
             });
           },

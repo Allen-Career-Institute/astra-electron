@@ -120,7 +120,7 @@ jobs:
         uses: actions/upload-artifact@v4
         timeout-minutes: 5
         with:
-          name: allen-ui-console-appx
+          name: astra-electron-appx
           path: |
             dist-electron-builder/*.appx
             dist-electron-builder/*.appx.blockmap
@@ -143,7 +143,7 @@ jobs:
       - name: Download AppX artifacts
         uses: actions/download-artifact@v4
         with:
-          name: allen-ui-console-appx
+          name: astra-electron-appx
           path: appx-files
 
       - name: Setup Windows Store credentials
@@ -187,7 +187,7 @@ jobs:
       - name: Download AppX artifacts
         uses: actions/download-artifact@v4
         with:
-          name: allen-ui-console-appx
+          name: astra-electron-appx
           path: appx-files
 
       - name: Create AppX Release

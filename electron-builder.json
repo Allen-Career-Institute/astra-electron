@@ -1,6 +1,6 @@
 {
-  "appId": "com.allendigital.allen-ui-console",
-  "productName": "Allen Console",
+  "appId": "com.allendigital.astra",
+  "productName": "Astra",
   "directories": {
     "output": "dist-electron-builder",
     "buildResources": "assets"
@@ -56,10 +56,10 @@
     "verifyUpdateCodeSignature": false
   },
   "appx": {
-    "identityName": "AllenDigital.AllenConsole",
+    "identityName": "AllenDigital.Astra",
     "publisher": "CN=AllenDigital",
-    "displayName": "Allen Console",
-    "publisherDisplayName": "Allen Digital",
+    "displayName": "Astra",
+    "publisherDisplayName": "ALLEN Digital",
     "backgroundColor": "#ffffff",
     "languages": ["en-US"]
   },
@@ -68,7 +68,7 @@
     "allowToChangeInstallationDirectory": true,
     "createDesktopShortcut": true,
     "createStartMenuShortcut": true,
-    "shortcutName": "Allen Console",
+    "shortcutName": "Astra",
     "perMachine": false,
     "deleteAppDataOnUninstall": true,
     "include": "assets/installer/installer.nsh",
@@ -76,9 +76,9 @@
     "uninstallerIcon": "assets/icons/win/icon.ico",
     "installerHeaderIcon": "assets/icons/win/icon.ico",
     "artifactName": "${productName}-${version}-setup.${ext}",
-    "uninstallDisplayName": "Allen Console",
+    "uninstallDisplayName": "Astra",
     "runAfterFinish": true,
-    "menuCategory": "Allen Console",
+    "menuCategory": "Astra",
     "allowElevation": true,
     "installerSidebar": "assets/icons/win/icon.ico",
     "uninstallerSidebar": "assets/icons/win/icon.ico",
@@ -108,11 +108,11 @@
     "gatekeeperAssess": false,
     "notarize": false,
     "extendInfo": {
-      "CFBundleDisplayName": "Allen Console",
-      "CFBundleExecutable": "Allen Console",
-      "CFBundleIdentifier": "com.allendigital.allen-ui-console",
+      "CFBundleDisplayName": "Astra",
+      "CFBundleExecutable": "Astra",
+      "CFBundleIdentifier": "com.allendigital.astra",
       "CFBundleInfoDictionaryVersion": "6.0",
-      "CFBundleName": "Allen Console",
+      "CFBundleName": "Astra",
       "CFBundlePackageType": "APPL",
       "CFBundleShortVersionString": "1.0.0",
       "CFBundleVersion": "1.0.0",

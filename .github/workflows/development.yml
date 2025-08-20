@@ -88,7 +88,7 @@ jobs:
         uses: actions/upload-artifact@v4
         timeout-minutes: 5
         with:
-          name: allen-ui-console-dev-win32-x64
+          name: astra-dev-win32-x64
           path: |
             dist-electron-builder/
             !dist-electron-builder/**/*.blockmap
@@ -143,7 +143,7 @@ jobs:
             ### Note
             This is a development build for Windows 64-bit only. For production releases, see the main releases.
           files: |
-            artifacts/allen-ui-console-dev-win32-x64/dist-electron-builder/*
+            artifacts/astra-dev-win32-x64/dist-electron-builder/*
           draft: true
           prerelease: true
         env:
