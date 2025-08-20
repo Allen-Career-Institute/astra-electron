@@ -113,9 +113,7 @@ SENTRY_DSN=your-sentry-dsn
 
 # GitHub Secrets (for CI/CD)
 GITHUB_TOKEN=your-github-token
-SENTRY_AUTH_TOKEN=your-sentry-auth-token
-SENTRY_ORG=your-sentry-org
-SENTRY_PROJECT=your-sentry-project
+
 ```
 
 ## 🚀 **GitHub Actions & CI/CD**

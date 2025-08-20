@@ -4,31 +4,9 @@ This guide explains how to use the development environment with automatic restar
 
 ## Development Scripts
 
-### 1. **Full Development Environment** (Recommended)
-
-```bash
-yarn dev:script
-```
-
-This runs both React watcher and Electron with nodemon in a single command.
-
-### 2. **Electron Only with Auto-Restart**
-
-```bash
-yarn dev:watch
-```
-
-Watches main process files and restarts Electron automatically.
-
-### 3. **React Only with Auto-Build**
-
-```bash
-yarn renderer:dev
-```
-
 Watches React files and rebuilds automatically.
 
-### 4. **Both React and Electron** (Alternative)
+### 1. **Both React and Electron** (Alternative)
 
 ```bash
 yarn dev:full
