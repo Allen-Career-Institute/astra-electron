@@ -1,5 +1,4 @@
 import { app, BrowserWindow, ipcMain, session, WebContents } from 'electron';
-import * as Sentry from '@sentry/electron/main';
 
 // Load environment variables
 try {
@@ -10,25 +9,27 @@ try {
 }
 
 if (process.env.SENTRY_DSN) {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-    environment: process.env.ENV,
-    ipcMode: Sentry.IPCMode.Protocol,
-    sendDefaultPii: true,
-    tracesSampleRate: 0.01,
+  const { init } = require('@sentry/electron/main');
+  if (init) {
+    init({
+      dsn: process.env.SENTRY_DSN,
+      environment: process.env.ENV,
+      sendDefaultPii: true,
+      tracesSampleRate: 0.01,
 
-    getSessions: () => [
-      session.defaultSession,
-      session.fromPartition('persist:shared'),
-    ],
-    transportOptions: {
-      /* The maximum number of days to keep an envelope in the queue. */
-      maxAgeDays: 30,
-      /* The maximum number of envelopes to keep in the queue. */
-      maxQueueSize: 30,
-      flushAtStartup: true,
-    },
-  });
+      getSessions: () => [
+        session.defaultSession,
+        session.fromPartition('persist:shared'),
+      ],
+      transportOptions: {
+        /* The maximum number of days to keep an envelope in the queue. */
+        maxAgeDays: 30,
+        /* The maximum number of envelopes to keep in the queue. */
+        maxQueueSize: 30,
+        flushAtStartup: true,
+      },
+    });
+  }
 }
 
 // Import modules
