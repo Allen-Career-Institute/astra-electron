@@ -39,7 +39,7 @@
   "win": {
     "target": [
       {
-        "target": "nsis",
+        "target": "msix",
         "arch": ["x64"]
       }
     ],
@@ -55,7 +55,29 @@
     "displayName": "Astra",
     "publisherDisplayName": "ALLEN Digital",
     "backgroundColor": "#ffffff",
-    "languages": ["en-US"]
+    "languages": ["en-US"],
+    "assets": "assets/appx",
+    "artifactName": "${productName}-${version}-msix.${ext}",
+    "capabilities": {
+      "internetClient": true,
+      "privateNetworkClientServer": true,
+      "runFullTrust": true
+    }
+  },
+  "msix": {
+    "identityName": "AllenDigital.Astra",
+    "publisher": "CN=AllenDigital",
+    "displayName": "Astra",
+    "publisherDisplayName": "ALLEN Digital",
+    "backgroundColor": "#ffffff",
+    "languages": ["en-US"],
+    "assets": "assets/appx",
+    "artifactName": "${productName}-${version}-msix.${ext}",
+    "capabilities": {
+      "internetClient": true,
+      "privateNetworkClientServer": true,
+      "runFullTrust": true
+    }
   },
   "nsis": {
     "oneClick": false,
