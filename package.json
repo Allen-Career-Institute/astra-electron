@@ -20,7 +20,7 @@
     "clean:dist": "yarn dlx rimraf dist dist-electron-builder",
     "rebuild": "yarn clean:dist && yarn build:ts",
     "renderer:dev": "webpack --mode development --watch",
-    "renderer:build": "cross-env NODE_ENV=$NODE_ENV STAGE_URL=$STAGE_URL PROD_URL=$PROD_URL CUSTOM_URL=$CUSTOM_URL DEV_URL=$DEV_URL ASTRA_ELECTRON_SENTRY_DSN=$ASTRA_ELECTRON_SENTRY_DSN webpack --config webpack.config.prod.js",
+    "renderer:build": "cross-env-shell 'webpack --config webpack.config.prod.js'",
     "renderer:start": "webpack serve --mode development",
     "dist": "electron-builder --config electron-builder.json",
     "dist:win": "electron-builder --config electron-builder.json --win --x64",
