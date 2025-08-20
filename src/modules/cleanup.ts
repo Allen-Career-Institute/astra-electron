@@ -13,12 +13,12 @@ function cleanup(): void {
     streamWindow.close();
   }
 
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.close();
-  }
-
   if (whiteboardWindow && !whiteboardWindow.isDestroyed()) {
     whiteboardWindow.close();
+  }
+
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.close();
   }
 }
 
