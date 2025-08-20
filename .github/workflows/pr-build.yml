@@ -61,6 +61,17 @@ jobs:
           echo "Created .env.local file with environment variables:"
           cat .env.local
 
+      - name: Test environment variables
+        run: yarn test:env
+        timeout-minutes: 2
+        env:
+          NODE_ENV: ${{ env.NODE_ENV }}
+          STAGE_URL: ${{ env.STAGE_URL }}
+          PROD_URL: ${{ env.PROD_URL }}
+          CUSTOM_URL: ${{ env.CUSTOM_URL }}
+          DEV_URL: ${{ env.DEV_URL }}
+          ASTRA_ELECTRON_SENTRY_DSN: ${{ env.ASTRA_ELECTRON_SENTRY_DSN }}
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -82,16 +93,36 @@ jobs:
       - name: Build TypeScript
         run: yarn build:ts
         timeout-minutes: 5
+        env: 
+          NODE_ENV: ${{ env.NODE_ENV }}
+          STAGE_URL: ${{ env.STAGE_URL }}
+          PROD_URL: ${{ env.PROD_URL }}
+          CUSTOM_URL: ${{ env.CUSTOM_URL }}
+          DEV_URL: ${{ env.DEV_URL }}
+          ASTRA_ELECTRON_SENTRY_DSN: ${{ env.ASTRA_ELECTRON_SENTRY_DSN }}
 
       - name: Build renderer
         run: yarn renderer:build
         timeout-minutes: 5
+        env: 
+          NODE_ENV: ${{ env.NODE_ENV }}
+          STAGE_URL: ${{ env.STAGE_URL }}
+          PROD_URL: ${{ env.PROD_URL }}
+          CUSTOM_URL: ${{ env.CUSTOM_URL }}
+          DEV_URL: ${{ env.DEV_URL }}
+          ASTRA_ELECTRON_SENTRY_DSN: ${{ env.ASTRA_ELECTRON_SENTRY_DSN }}
 
       - name: Build Electron app (Installer)
         run: yarn dist:win-installer
         timeout-minutes: 25
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_ENV: ${{ env.NODE_ENV }}
+          STAGE_URL: ${{ env.STAGE_URL }}
+          PROD_URL: ${{ env.PROD_URL }}
+          CUSTOM_URL: ${{ env.CUSTOM_URL }}
+          DEV_URL: ${{ env.DEV_URL }}
+          ASTRA_ELECTRON_SENTRY_DSN: ${{ env.ASTRA_ELECTRON_SENTRY_DSN }}
 
       - name: Cleanup build artifacts
         run: Remove-Item -Recurse -Force "dist-electron-builder\win-unpacked" -ErrorAction SilentlyContinue
