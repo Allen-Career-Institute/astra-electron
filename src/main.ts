@@ -16,7 +16,17 @@ try {
       : path.resolve(process.cwd(), '.env.local'),
   });
 } catch (error) {
-  console.log('No .env.local file found, trying .env');
+  dialog
+    .showMessageBox({
+      type: 'info',
+      title: 'Environment Variables from Webpack',
+      message: 'Environment variables not loaded',
+      detail: error instanceof Error ? error.message : 'Unknown error',
+      buttons: ['OK'],
+    })
+    .catch(err => {
+      console.error('Failed to show environment dialog:', err);
+    });
 }
 
 if (process.env.ASTRA_ELECTRON_SENTRY_DSN) {

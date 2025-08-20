@@ -53,11 +53,12 @@ function createMainWindow(): BrowserWindow {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
-    fullscreen: true,
+    fullscreen: false,
     frame: true,
     maximizable: true,
     resizable: true,
     minimizable: true,
+    autoHideMenuBar: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: true,
@@ -76,19 +77,17 @@ function createMainWindow(): BrowserWindow {
   });
 
   mainWindow.loadURL(DEFAULT_URL);
-  mainWindow.setFullScreen(true);
   mainWindow.maximize();
 
   if (ENV === 'development') {
     mainWindow.webContents.openDevTools();
   }
 
-  // Ensure fullscreen is properly set after content loads
+  // Ensure window is properly set after content loads
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindowHasLoaded = true;
     try {
       if (mainWindow) {
-        mainWindow.setFullScreen(true);
         mainWindow.maximize();
         injectTokensToWindow(mainWindow);
       }

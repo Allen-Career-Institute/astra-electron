@@ -37,6 +37,17 @@ function createMenu(): void {
         },
         { type: 'separator' as const },
         {
+          label: 'Toggle Fullscreen',
+          accelerator: 'F11',
+          click: () => {
+            const mainWindow = getMainWindow();
+            if (mainWindow && !mainWindow.isDestroyed()) {
+              mainWindow.setFullScreen(!mainWindow.isFullScreen());
+            }
+          },
+        },
+        { type: 'separator' as const },
+        {
           label: 'Toggle DevTools',
           accelerator: 'F12',
           click: () => {
