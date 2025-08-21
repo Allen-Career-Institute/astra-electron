@@ -101,7 +101,7 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
     const mainWindow = getMainWindow();
 
     // Calculate window dimensions and position for 16:9 aspect ratio
-    const baseWidth = config.width || 480; // Base width for 16:9 ratio
+    const baseWidth = config.width || 320; // Base width for 16:9 ratio
     const windowWidth = baseWidth;
     const windowHeight = Math.round((baseWidth * 9) / 16); // 16:9 aspect ratio
 
@@ -129,7 +129,7 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
       height: windowHeight,
       x,
       y,
-      title: config.title || 'Agora Live Stream',
+      title: config.title || 'Live Stream',
       show: false,
       fullscreen: false, // Explicitly prevent fullscreen
       webPreferences: {
@@ -152,7 +152,7 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
         session: getSharedSession(),
       },
       resizable: true,
-      minimizable: true,
+      minimizable: false,
       maximizable: false, // Disable maximize to keep it floating
       closable: false,
       alwaysOnTop: true, // Keep on top of main window
@@ -161,18 +161,15 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
       frame: true,
       transparent: false,
       hasShadow: true,
-      thickFrame: true,
+      thickFrame: false,
       titleBarStyle: 'default',
-      // Additional properties for floating window
       movable: true,
       focusable: true,
-      // Set parent to main window to keep it on top
       parent: mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined,
-      // Prevent fullscreen and set size constraints for 16:9 aspect ratio
       minWidth: 320,
-      minHeight: 180, // 320 * 9/16 = 180
-      maxWidth: 640,
-      maxHeight: 360, // 640 * 9/16 = 360
+      minHeight: 180,
+      maxWidth: 480,
+      maxHeight: 270,
     });
 
     // Load the stream window content
