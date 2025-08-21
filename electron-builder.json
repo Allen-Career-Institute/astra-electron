@@ -60,8 +60,7 @@
     "publisherDisplayName": "ALLEN Digital",
     "backgroundColor": "#ffffff",
     "languages": ["en-US"],
-    "makeappxArgs": ["--verbose"],
-    "applicationId": "Astra",
+    "applicationId": "AllenDigital.Astra",
     "showNameOnTiles": true
   },
   "mac": {
