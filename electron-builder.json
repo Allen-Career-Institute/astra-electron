@@ -33,21 +33,25 @@
     "!**/scripts/**",
     "!**/build/**",
     "!**/out/**",
-    "!**/node_modules/**",
+    "!**/*.node_modules/**",
     "!**/src/**"
   ],
   "win": {
     "target": [
       {
-        "target": "nsis",
+        "target": "appx",
         "arch": ["x64"]
       }
     ],
     "requestedExecutionLevel": "asInvoker",
     "icon": "assets/icons/win/icon.ico",
-    "artifactName": "${productName}-${version}-installer.${ext}",
+    "artifactName": "${productName}-${version}-appx.${ext}",
     "publisherName": "Allen Digital",
-    "verifyUpdateCodeSignature": false
+    "verifyUpdateCodeSignature": false,
+    "certificateFile": null,
+    "certificatePassword": null,
+    "rfc3161TimeStampServer": null,
+    "timeStampServer": null
   },
   "appx": {
     "identityName": "AllenDigital.Astra",
@@ -55,32 +59,47 @@
     "displayName": "Astra",
     "publisherDisplayName": "ALLEN Digital",
     "backgroundColor": "#ffffff",
-    "languages": ["en-US"]
-  },
-  "nsis": {
-    "oneClick": false,
-    "allowToChangeInstallationDirectory": true,
-    "createDesktopShortcut": true,
-    "createStartMenuShortcut": true,
-    "shortcutName": "Astra",
-    "perMachine": false,
-    "deleteAppDataOnUninstall": true,
-    "include": "assets/installer/installer.nsh",
-    "installerIcon": "assets/icons/win/icon.ico",
-    "uninstallerIcon": "assets/icons/win/icon.ico",
-    "installerHeaderIcon": "assets/icons/win/icon.ico",
-    "artifactName": "${productName}-${version}-setup.${ext}",
-    "uninstallDisplayName": "Astra",
-    "runAfterFinish": true,
-    "menuCategory": "Astra",
-    "allowElevation": true,
-    "installerSidebar": "assets/icons/win/icon.ico",
-    "uninstallerSidebar": "assets/icons/win/icon.ico",
-    "installerHeader": "assets/icons/win/icon.ico",
-    "installerLanguages": ["en"],
-    "warningsAsErrors": false,
-    "multiLanguageInstaller": false,
-    "displayLanguageSelector": false
+    "languages": ["en-US"],
+    "generateModernAppPackage": true,
+    "makeappxArgs": ["--verbose"],
+    "makecertArgs": ["--r"],
+    "signDlls": false,
+    "sign": false,
+    "applicationId": "Astra",
+    "backgroundColor": "#ffffff",
+    "capabilities": {
+      "internetClient": true,
+      "privateNetworkClientServer": true,
+      "runFullTrust": true,
+      "documentsLibrary": true,
+      "picturesLibrary": true,
+      "videosLibrary": true,
+      "musicLibrary": true,
+      "removableStorage": true
+    },
+    "deviceFamily": ["Desktop"],
+    "executable": "Astra.exe",
+    "fileAssociations": [],
+    "protocols": [],
+    "resources": [
+      "assets/appx/Square150x150Logo.png",
+      "assets/appx/Square44x44Logo.png",
+      "assets/appx/StoreLogo.png",
+      "assets/appx/LargeTile.png",
+      "assets/appx/SmallTile.png",
+      "assets/appx/Wide310x150Logo.png"
+    ],
+    "showNameOnTiles": true,
+    "tile": {
+      "square150x150Logo": "assets/appx/Square150x150Logo.png",
+      "square44x44Logo": "assets/appx/Square44x44Logo.png",
+      "square70x70Logo": "assets/appx/Square44x44Logo.png",
+      "wide310x150Logo": "assets/appx/Wide310x150Logo.png",
+      "largeTile": "assets/appx/LargeTile.png",
+      "smallTile": "assets/appx/SmallTile.png"
+    },
+    "minimumOSVersion": "10.0.0.0",
+    "targetOSVersion": "10.0.0.0"
   },
   "mac": {
     "target": [
@@ -147,6 +166,7 @@
     "releaseType": "release"
   },
   "forceCodeSigning": false,
+  "codeSigning": false,
   "asar": false,
   "compression": "maximum",
   "removePackageScripts": true,

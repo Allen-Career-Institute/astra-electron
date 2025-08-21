@@ -1,7 +1,43 @@
-# Allen UI Console Electron App
+# Astra Electron Console
 
-A powerful Electron application for web content display, video streaming, and advanced recording
-capabilities with Agora integration.
+A modern Electron application for Allen Digital's Astra console with webview integration and video streaming capabilities.
+
+## Build Migration: NSIS → APPX
+
+This project has been migrated from NSIS installer builds to APPX package builds for Windows. This change provides several benefits:
+
+### Benefits of APPX over NSIS:
+
+- **Windows Store Ready**: APPX packages can be directly submitted to the Microsoft Store
+- **Enterprise Distribution**: Better support for enterprise deployment and management
+- **Modern Windows Integration**: Enhanced integration with Windows 10/11 features
+- **Automatic Updates**: Better support for automatic updates through Windows Store
+- **Security**: Improved security model with Windows Store signing
+
+### Build Artifacts:
+
+- **Before**: Windows installer (.exe) using NSIS
+- **After**: Windows APPX package (.appx) ready for store submission
+
+### Build Commands:
+
+```bash
+# Build Windows APPX package
+yarn build:win-appx
+
+# Build all platforms
+yarn build:all
+
+# Build only Windows
+yarn build:win-only
+```
+
+### Migration Notes:
+
+- **Removed**: NSIS installer configuration and scripts
+- **Kept**: PowerShell and batch scripts in `assets/installer/` for process management
+- **New**: Enhanced APPX configuration with proper tile assets and capabilities
+- **Output**: APPX packages are generated in `dist-electron-builder/` directory
 
 ## 🚀 **Features**
 

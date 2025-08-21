@@ -1,5 +1,5 @@
 # PowerShell script to close Astra application
-# This script is called by the NSIS installer
+# This script can be used for process management and cleanup
 
 param(
     [string]$AppName = "Astra"

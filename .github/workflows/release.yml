@@ -28,6 +28,7 @@ env:
   PROD_URL: ${{ secrets.PROD_CONSOLE_URL }}
   CUSTOM_URL: ${{ secrets.CUSTOM_CONSOLE_URL }}
   ASTRA_ELECTRON_SENTRY_DSN: ${{ secrets.ASTRA_ELECTRON_SENTRY_DSN }}
+  ASTRA_ELECTRON_SENTRY_ENDPOINT: ${{ secrets.ASTRA_ELECTRON_SENTRY_ENDPOINT }}
           
 
 # Cancel in-progress jobs when new commits are pushed
@@ -106,37 +107,14 @@ jobs:
       - name: Build renderer
         run: yarn renderer:build
         timeout-minutes: 5
-        env:
-          NODE_ENV: ${{ env.NODE_ENV }}
-          STAGE_URL: ${{ env.STAGE_URL }}
-          PROD_URL: ${{ env.PROD_URL }}
-          CUSTOM_URL: ${{ env.CUSTOM_URL }}
-          DEV_URL: ${{ env.DEV_URL }}
-          ASTRA_ELECTRON_SENTRY_DSN: ${{ env.ASTRA_ELECTRON_SENTRY_DSN }}
 
-      - name: Setup certificates (Windows)
-        run: |
-          # Create certificates directory
-          mkdir -p certificates
-
-          # Decode and create Windows certificate
-          if [ "${{ secrets.WINDOWS_CERTIFICATE_BASE64 }}" != "" ]; then
-            echo "${{ secrets.WINDOWS_CERTIFICATE_BASE64 }}" | base64 -d > certificates/windows_certificate.pfx
-            echo "Windows certificate created"
-          fi
-
-          # Set certificate environment variables
-          if [ -f "certificates/windows_certificate.pfx" ]; then
-            echo "CSC_LINK=certificates/windows_certificate.pfx" >> $GITHUB_ENV
-          fi
-
-      - name: Build Electron app (NSIS)
-        run: yarn dist:win
+      - name: Build Electron app (APPX)
+        run: yarn build:win-appx
         timeout-minutes: 25
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_LINK: ${{ env.CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+    
+      - name: Cleanup build artifacts
+        run: Remove-Item -Recurse -Force "dist-electron-builder\win-unpacked" -ErrorAction SilentlyContinue
+        timeout-minutes: 5
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -260,13 +238,12 @@ jobs:
             ## Allen UI Console Electron ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', needs.version-manager.outputs.version) }}
 
             ### Downloads
-            - **Windows (64-bit):** Installer (.exe)
-            - **Windows Store:** AppX Package (.appx) - Ready for Windows Store submission
+            - **Windows (64-bit):** AppX Package (.appx) - Ready for Windows Store submission
 
             ### Build Info
             - **Build Tool:** Electron Builder
             - **Node.js:** 18
-            - **Platforms:** Windows 64-bit (NSIS + AppX)
+            - **Platforms:** Windows 64-bit (APPX)
             - **Commit:** ${{ github.sha }}
 
             ### Windows Store

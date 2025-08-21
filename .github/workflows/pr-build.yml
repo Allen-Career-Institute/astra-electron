@@ -97,8 +97,8 @@ jobs:
           DEV_URL: ${{ env.DEV_URL }}
           ASTRA_ELECTRON_SENTRY_DSN: ${{ env.ASTRA_ELECTRON_SENTRY_DSN }}
 
-      - name: Build
-        run: yarn build:win-only
+      - name: Build Windows APPX
+        run: yarn build:win-appx
         timeout-minutes: 10
 
       - name: Cleanup build artifacts
@@ -118,8 +118,9 @@ jobs:
       - name: Create build summary
         run: |
           echo "## Build Summary for PR #${{ github.event.number }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Platforms:** Windows (x64 only)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platforms:** Windows (x64 only) - APPX Package" >> $GITHUB_STEP_SUMMARY
           echo "- **Build Status:** ✅ Success" >> $GITHUB_STEP_SUMMARY
           echo "- **Build Tool:** Electron Builder" >> $GITHUB_STEP_SUMMARY
+          echo "- **Package Type:** APPX (Windows Store Ready)" >> $GITHUB_STEP_SUMMARY
           echo "- **Artifacts:** Available for download above" >> $GITHUB_STEP_SUMMARY
-          echo "- **Retention:** 30 days" >> $GITHUB_STEP_SUMMARY
+          echo "- **Retention:** 1 day" >> $GITHUB_STEP_SUMMARY
