@@ -22,9 +22,6 @@ This project has been migrated from NSIS installer builds to APPX package builds
 ### Build Commands:
 
 ```bash
-# Build Windows APPX package
-yarn build:win-appx
-
 # Build all platforms
 yarn build:all
 

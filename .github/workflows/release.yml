@@ -88,10 +88,6 @@ jobs:
         run: yarn install --immutable
         timeout-minutes: 10
 
-      - name: Build TypeScript
-        run: yarn build:ts
-        timeout-minutes: 5
-
       - name: Test environment variables
         run: yarn test:env
         timeout-minutes: 2
@@ -104,12 +100,10 @@ jobs:
           ASTRA_ELECTRON_SENTRY_DSN: ${{ env.ASTRA_ELECTRON_SENTRY_DSN }}
           ASTRA_ELECTRON_SENTRY_ENDPOINT: ${{ env.ASTRA_ELECTRON_SENTRY_ENDPOINT }}
 
-      - name: Build renderer
-        run: yarn renderer:build
-        timeout-minutes: 5
+ 
 
-      - name: Build Electron app (APPX)
-        run: yarn build:win-appx
+      - name: Build Windows
+        run: yarn build:win-only
         timeout-minutes: 25
     
       - name: Cleanup build artifacts

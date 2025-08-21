@@ -97,8 +97,8 @@ jobs:
           DEV_URL: ${{ env.DEV_URL }}
           ASTRA_ELECTRON_SENTRY_DSN: ${{ env.ASTRA_ELECTRON_SENTRY_DSN }}
 
-      - name: Build Windows APPX
-        run: yarn build:win-appx
+      - name: Build Windows
+        run: yarn build:win-only
         timeout-minutes: 10
 
       - name: Cleanup build artifacts
