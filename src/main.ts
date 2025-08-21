@@ -14,7 +14,7 @@ loadEnv();
 
 if (getSentryEndpoint()) {
   crashReporter.start({
-    companyName: 'Allen Digital',
+    companyName: 'Allen Career Institute',
     productName: 'Astra',
     submitURL: getSentryEndpoint(),
     uploadToServer: true,
