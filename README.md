@@ -25,8 +25,12 @@ This project has been migrated from NSIS installer builds to APPX package builds
 # Build all platforms
 yarn build:all
 
-# Build only Windows
-yarn build:win-only
+# Build only Windows Appx
+yarn build:win-appx
+
+# Build only Windows NSIS
+yarn build:win-nsis
+
 ```
 
 ### Migration Notes:

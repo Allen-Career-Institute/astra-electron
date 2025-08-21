@@ -98,7 +98,7 @@ jobs:
           ASTRA_ELECTRON_SENTRY_DSN: ${{ env.ASTRA_ELECTRON_SENTRY_DSN }}
 
       - name: Build Windows
-        run: yarn build:win-only
+        run: yarn build:win-nsis
         timeout-minutes: 10
 
       - name: Cleanup build artifacts
@@ -118,9 +118,9 @@ jobs:
       - name: Create build summary
         run: |
           echo "## Build Summary for PR #${{ github.event.number }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Platforms:** Windows (x64 only) - APPX Package" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platforms:** Windows (x64 only) - NSIS Installer" >> $GITHUB_STEP_SUMMARY
           echo "- **Build Status:** ✅ Success" >> $GITHUB_STEP_SUMMARY
           echo "- **Build Tool:** Electron Builder" >> $GITHUB_STEP_SUMMARY
-          echo "- **Package Type:** APPX (Windows Store Ready)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Package Type:** NSIS (Windows Installer)" >> $GITHUB_STEP_SUMMARY
           echo "- **Artifacts:** Available for download above" >> $GITHUB_STEP_SUMMARY
           echo "- **Retention:** 1 day" >> $GITHUB_STEP_SUMMARY

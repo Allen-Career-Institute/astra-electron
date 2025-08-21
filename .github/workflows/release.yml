@@ -103,7 +103,7 @@ jobs:
  
 
       - name: Build Windows
-        run: yarn build:win-only
+        run: yarn build:win-appx
         timeout-minutes: 25
     
       - name: Cleanup build artifacts

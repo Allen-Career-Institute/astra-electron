@@ -39,13 +39,13 @@
   "win": {
     "target": [
       {
-        "target": "nsis",
+        "target": "appx",
         "arch": ["x64"]
       }
     ],
     "requestedExecutionLevel": "asInvoker",
     "icon": "assets/icons/win/icon.ico",
-    "artifactName": "${productName}-${version}.${ext}",
+    "artifactName": "${productName}-${version}-appx.${ext}",
     "publisherName": "Allen Digital",
     "verifyUpdateCodeSignature": false,
     "certificateFile": null,
@@ -53,20 +53,16 @@
     "rfc3161TimeStampServer": null,
     "timeStampServer": null
   },
-  "nsis": {
-    "oneClick": false,
-    "allowToChangeInstallationDirectory": true,
-    "createDesktopShortcut": true,
-    "createStartMenuShortcut": true,
-    "shortcutName": "Astra",
-    "installerIcon": "assets/icons/win/icon.ico",
-    "uninstallerIcon": "assets/icons/win/icon.ico",
-    "installerHeaderIcon": "assets/icons/win/icon.ico",
-    "deleteAppDataOnUninstall": false,
-    "displayLanguageSelector": false,
-    "language": "1033",
-    "installerLanguages": ["en-US"],
-    "include": "assets/installer/installer.nsh"
+  "appx": {
+    "identityName": "AllenDigital.Astra",
+    "publisher": "CN=AllenDigital",
+    "displayName": "Astra",
+    "publisherDisplayName": "ALLEN Digital",
+    "backgroundColor": "#ffffff",
+    "languages": ["en-US"],
+    "applicationId": "AllenDigital.Astra",
+    "showNameOnTiles": true,
+    "makeappxArgs": ["--verbose"]
   },
   "mac": {
     "target": [
@@ -125,7 +121,13 @@
     "artifactName": "${productName}-${version}-linux.${ext}",
     "category": "Utility"
   },
-  "publish": null,
+  "publish": {
+    "provider": "github",
+    "owner": "dinesh-kumar-allen",
+    "repo": "allen-ui-console-electron",
+    "private": false,
+    "releaseType": "release"
+  },
   "forceCodeSigning": false,
   "asar": false,
   "compression": "maximum",
