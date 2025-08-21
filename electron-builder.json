@@ -33,7 +33,7 @@
     "!**/scripts/**",
     "!**/build/**",
     "!**/out/**",
-    "!**/*.node_modules/**",
+    "!**/node_modules/**",
     "!**/src/**"
   ],
   "win": {
@@ -47,11 +47,7 @@
     "icon": "assets/icons/win/icon.ico",
     "artifactName": "${productName}-${version}.${ext}",
     "publisherName": "Allen Digital",
-    "verifyUpdateCodeSignature": false,
-    "certificateFile": null,
-    "certificatePassword": null,
-    "rfc3161TimeStampServer": null,
-    "timeStampServer": null
+    "verifyUpdateCodeSignature": false
   },
   "nsis": {
     "oneClick": false,
@@ -59,14 +55,24 @@
     "createDesktopShortcut": true,
     "createStartMenuShortcut": true,
     "shortcutName": "Astra",
+    "perMachine": false,
+    "deleteAppDataOnUninstall": true,
+    "include": "assets/installer/installer.nsh",
     "installerIcon": "assets/icons/win/icon.ico",
     "uninstallerIcon": "assets/icons/win/icon.ico",
     "installerHeaderIcon": "assets/icons/win/icon.ico",
-    "deleteAppDataOnUninstall": false,
-    "displayLanguageSelector": false,
-    "language": "1033",
-    "installerLanguages": ["en-US"],
-    "include": "assets/installer/installer.nsh"
+    "artifactName": "${productName}-${version}-setup.${ext}",
+    "uninstallDisplayName": "Astra",
+    "runAfterFinish": true,
+    "menuCategory": "Astra",
+    "allowElevation": true,
+    "installerSidebar": "assets/icons/win/icon.ico",
+    "uninstallerSidebar": "assets/icons/win/icon.ico",
+    "installerHeader": "assets/icons/win/icon.ico",
+    "installerLanguages": ["en"],
+    "warningsAsErrors": false,
+    "multiLanguageInstaller": false,
+    "displayLanguageSelector": false
   },
   "mac": {
     "target": [
@@ -125,7 +131,13 @@
     "artifactName": "${productName}-${version}-linux.${ext}",
     "category": "Utility"
   },
-  "publish": null,
+  "publish": {
+    "provider": "github",
+    "owner": "dinesh-kumar-allen",
+    "repo": "allen-ui-console-electron",
+    "private": false,
+    "releaseType": "release"
+  },
   "forceCodeSigning": false,
   "asar": false,
   "compression": "maximum",
