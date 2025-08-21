@@ -59,7 +59,7 @@ function createMainWindow(): BrowserWindow {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
-    fullscreen: true,
+    fullscreen: process.platform === 'darwin' ? true : false,
     frame: true,
     maximizable: true,
     resizable: true,
@@ -95,7 +95,9 @@ function createMainWindow(): BrowserWindow {
     try {
       if (mainWindow) {
         mainWindow.maximize();
-        mainWindow.setFullScreen(true);
+        if (process.platform === 'darwin') {
+          mainWindow.setFullScreen(true);
+        }
         injectTokensToWindow(mainWindow);
       }
     } catch (error) {
