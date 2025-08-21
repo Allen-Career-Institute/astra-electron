@@ -1,6 +1,16 @@
-import { app } from 'electron';
+import { app, dialog } from 'electron';
 import path from 'path';
-import { setEnv, setSentryDsn, setSentryEndpoint, setUrlByEnv } from './config';
+import {
+  getEnv,
+  getSentryDsn,
+  getSentryEndpoint,
+  getUrlByEnv,
+  getUrls,
+  setEnv,
+  setSentryDsn,
+  setSentryEndpoint,
+  setUrlByEnv,
+} from './config';
 
 // Load environment variables using hybrid approach
 let envLoadError: Error | null = null;
@@ -78,8 +88,39 @@ const loadEnv = () => {
   }
 };
 
+const logEnv = () => {
+  if (!getLoadEnvError()) {
+    // Log environment variables from webpack in native dialog
+    const envVars = {
+      ENV: getEnv(),
+      ASTRA_ELECTRON_SENTRY_DSN: getSentryDsn(),
+      ASTRA_ELECTRON_SENTRY_ENDPOINT: getSentryEndpoint(),
+      URL: getUrlByEnv(),
+      ...getUrls(),
+
+      // Add any other environment variables you want to log
+    };
+
+    const envString = Object.entries(envVars)
+      .map(([key, value]) => `${key}: ${value || 'undefined'}`)
+      .join('\n');
+
+    dialog
+      .showMessageBox({
+        type: 'info',
+        title: 'Environment Variables from Webpack',
+        message: 'Environment variables loaded from webpack configuration:',
+        detail: envString,
+        buttons: ['OK'],
+      })
+      .catch(err => {
+        console.error('Failed to show environment dialog:', err);
+      });
+  }
+};
+
 const getLoadEnvError = () => {
   return envLoadError;
 };
 
-export { loadEnv, getLoadEnvError };
+export { loadEnv, getLoadEnvError, logEnv };
