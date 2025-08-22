@@ -1,8 +1,9 @@
 import { BrowserWindow, session, app } from 'electron';
 import path from 'path';
-import { getUrlByEnv, isDev } from './config';
+import { getUrlByEnv, isDev, setCurrentUrl } from './config';
 import { safeCloseStreamWindow } from './streamWindow';
 import { safeClosewhiteboardWindow } from './whiteboard-window';
+import { createMenu } from './menu';
 
 let mainWindow: BrowserWindow | null = null;
 let mainWindowHasLoaded: boolean = false;
@@ -111,6 +112,11 @@ function createMainWindow(): BrowserWindow {
   mainWindow.on('close', () => {
     safeCloseStreamWindow();
     safeClosewhiteboardWindow();
+  });
+
+  mainWindow.webContents.on('did-navigate', (event, url) => {
+    setCurrentUrl(url);
+    createMenu();
   });
 
   // Stream window is now floating and independent - no need to update its position

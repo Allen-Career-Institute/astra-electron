@@ -7,6 +7,7 @@ let URLS = {
 };
 let ASTRA_ELECTRON_SENTRY_DSN: string = '';
 let ASTRA_ELECTRON_SENTRY_ENDPOINT: string = '';
+let CURRENT_URL: string = '';
 
 const getEnv = () => {
   return ENV;
@@ -51,11 +52,21 @@ const isDev = () => {
   return getEnv() === 'development';
 };
 
+const setCurrentUrl = (url: string) => {
+  CURRENT_URL = url;
+};
+
+const getCurrentUrl = () => {
+  return CURRENT_URL;
+};
+
 export {
   isDev,
   getEnv,
   setEnv,
   getUrls,
+  setCurrentUrl,
+  getCurrentUrl,
   setUrlByEnv,
   getUrlByEnv,
   setSentryDsn,
