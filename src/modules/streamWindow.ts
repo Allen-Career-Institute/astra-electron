@@ -153,7 +153,7 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
       },
       resizable: true,
       minimizable: false,
-      maximizable: false, // Disable maximize to keep it floating
+      maximizable: true,
       closable: false,
       alwaysOnTop: true, // Keep on top of main window
       skipTaskbar: false,
