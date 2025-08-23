@@ -1,6 +1,13 @@
 // Whiteboard window preload script
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge } from 'electron';
 import { WhiteboardElectronAPI } from './types/preload';
+
+// Set process name for OS task manager visibility
+try {
+  if (typeof process !== 'undefined') {
+    process.title = 'Astra-Whiteboard';
+  }
+} catch (error) {}
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object

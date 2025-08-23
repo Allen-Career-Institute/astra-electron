@@ -4,6 +4,7 @@ import { getUrlByEnv, isDev, setCurrentUrl } from './config';
 import { safeCloseStreamWindow } from './streamWindow';
 import { safeClosewhiteboardWindow } from './whiteboard-window';
 import { createMenu } from './menu';
+import { registerMainUI } from './processNaming';
 
 let mainWindow: BrowserWindow | null = null;
 let mainWindowHasLoaded: boolean = false;
@@ -93,6 +94,10 @@ function createMainWindow(): BrowserWindow {
   // Ensure window is properly set after content loads
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindowHasLoaded = true;
+    if (mainWindow) {
+      // Register with new process naming system
+      registerMainUI(mainWindow);
+    }
     try {
       if (mainWindow) {
         mainWindow.maximize();

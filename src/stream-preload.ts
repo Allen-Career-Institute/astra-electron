@@ -2,6 +2,13 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { StreamElectronAPI } from './types/preload';
 
+// Set process name for OS task manager visibility
+try {
+  if (typeof process !== 'undefined') {
+    process.title = 'Astra-Stream';
+  }
+} catch (error) {}
+
 // Prevent any reload attempts from the renderer process
 window.addEventListener('beforeunload', (event: BeforeUnloadEvent) => {
   event.preventDefault();

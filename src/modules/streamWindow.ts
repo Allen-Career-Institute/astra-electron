@@ -2,7 +2,8 @@ import { BrowserWindow, screen, app } from 'electron';
 import path from 'path';
 import { StreamWindowConfig } from '@/types/electron';
 import { getSharedSession } from './windowManager';
-import { getEnv, isDev } from './config';
+import { isDev } from './config';
+import { registerStreamWindow } from './processNaming';
 
 let streamWindow: BrowserWindow | null = null;
 let streamWindowConfig: StreamWindowConfig | null = null;
@@ -177,6 +178,11 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
 
     // Inject JavaScript to prevent fullscreen requests from web content
     streamWindow.webContents.on('did-finish-load', () => {
+      if (streamWindow) {
+        // Register with new process naming system
+        registerStreamWindow(streamWindow);
+      }
+
       streamWindow?.webContents.executeJavaScript(`
         // Prevent fullscreen API usage
         if (document.documentElement.requestFullscreen) {

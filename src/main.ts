@@ -7,7 +7,7 @@ import {
   crashReporter,
 } from 'electron';
 import * as Sentry from '@sentry/electron/main';
-import { loadEnv, getLoadEnvError, logEnv } from './modules/loadEnv';
+import { loadEnv, getLoadEnvError } from './modules/loadEnv';
 import { getSentryDsn, getSentryEndpoint } from './modules/config';
 
 loadEnv();
@@ -36,6 +36,16 @@ if (getSentryDsn()) {
       maxQueueSize: 30,
       flushAtStartup: true,
     },
+    // Add process identification to Sentry
+    beforeSend: event => {
+      event.tags = {
+        ...event.tags,
+        process_type: 'main',
+        process_name: 'Main Process',
+        app_component: 'Astra Console',
+      };
+      return event;
+    },
   });
 }
 
@@ -49,7 +59,6 @@ import { setupAutoUpdater } from './modules/autoUpdater';
 import { cleanup } from './modules/cleanup';
 import { createMainWindow } from './modules/windowManager';
 import { getStreamWindow } from './modules/streamWindow';
-import { getUrlByEnv, getUrls } from './modules/config';
 import { getWhiteboardWindow } from './modules/whiteboard-window';
 
 // Enable hardware acceleration and WebRTC optimizations for better video quality
@@ -101,6 +110,10 @@ app.on('ready', () => {
   try {
     createMainWindow();
     createMenu();
+
+    process.title = 'Astra-Main';
+    // Set up automatic process naming for Electron processes
+    // setupAutomaticProcessNaming();
 
     // Show error dialog if environment variables failed to load
     if (getLoadEnvError()) {

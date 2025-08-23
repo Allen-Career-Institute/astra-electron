@@ -2,7 +2,8 @@ import { BrowserWindow, screen, app } from 'electron';
 import path from 'path';
 import { WhiteboardWindowConfig } from '@/types/electron';
 import { getSharedSession } from './windowManager';
-import { getEnv, isDev } from './config';
+import { isDev } from './config';
+import { registerWhiteboardWindow } from './processNaming';
 
 let whiteboardWindow: BrowserWindow | null = null;
 let whiteboardWindowConfig: WhiteboardWindowConfig | null = null;
@@ -214,6 +215,13 @@ function createWhiteboardWindow(config: WhiteboardWindowConfig): BrowserWindow {
         whiteboardWindow.focus();
         whiteboardWindow.maximize;
         whiteboardWindowSettingUp = false;
+      }
+    });
+
+    whiteboardWindow.webContents.on('did-finish-load', () => {
+      if (whiteboardWindow) {
+        // Register with new process naming system
+        registerWhiteboardWindow(whiteboardWindow);
       }
     });
 

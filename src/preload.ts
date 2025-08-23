@@ -1,6 +1,13 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { MainElectronAPI } from './types/preload';
 
+// Set process name for OS task manager visibility
+try {
+  if (typeof process !== 'undefined') {
+    process.title = 'Astra-Main';
+  }
+} catch (error) {}
+
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('electronAPI', {
