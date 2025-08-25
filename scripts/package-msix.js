@@ -11,6 +11,14 @@ async function packageMSIXApp() {
     const version = packageJson.version;
     const appName = packageJson.name;
 
+    // MSIX requires version in format: major.minor.build.revision
+    // Convert semantic version to MSIX format
+    const versionParts = version.split('.');
+    const msixVersion =
+      versionParts.length >= 3
+        ? `${versionParts[0]}.${versionParts[1]}.${versionParts[2]}.0`
+        : `${version}.0.0.0`;
+
     // Define paths
     const appDir = path.join(
       __dirname,
@@ -23,6 +31,19 @@ async function packageMSIXApp() {
 
     // Check if the unpacked app exists
     if (!fs.existsSync(appDir)) {
+      console.error(`❌ App directory not found: ${appDir}`);
+      console.log('📁 Available directories in dist-electron-builder:');
+      const distDir = path.join(__dirname, '..', 'dist-electron-builder');
+      if (fs.existsSync(distDir)) {
+        const contents = fs.readdirSync(distDir);
+        contents.forEach(item => {
+          const itemPath = path.join(distDir, item);
+          const stats = fs.statSync(itemPath);
+          console.log(`  ${item} (${stats.isDirectory() ? 'dir' : 'file'})`);
+        });
+      } else {
+        console.log('  dist-electron-builder directory does not exist');
+      }
       throw new Error(`App directory not found: ${appDir}`);
     }
 
@@ -36,6 +57,24 @@ async function packageMSIXApp() {
     console.log('Output directory:', outputDir);
     console.log('Assets directory:', assetsDir);
 
+    // Check if the executable exists
+    const executablePath = path.join(appDir, 'Astra Console.exe');
+    if (!fs.existsSync(executablePath)) {
+      console.error(`❌ Executable not found: ${executablePath}`);
+      console.log('📁 Available files in app directory:');
+      if (fs.existsSync(appDir)) {
+        const contents = fs.readdirSync(appDir);
+        contents.forEach(item => {
+          const itemPath = path.join(appDir, item);
+          const stats = fs.statSync(itemPath);
+          console.log(`  ${item} (${stats.isDirectory() ? 'dir' : 'file'})`);
+        });
+      }
+      throw new Error(`Executable not found: ${executablePath}`);
+    }
+    console.log('✅ Executable found:', executablePath);
+    console.log('📦 Using MSIX version:', msixVersion);
+
     // MSIX packaging configuration
     const msixConfig = {
       appDir: appDir,
@@ -44,8 +83,8 @@ async function packageMSIXApp() {
       manifestVariables: {
         publisher: 'CN=ALLEN CAREER INSTITUTE PRIVATE LIMITED',
         publisherDisplayName: 'ALLEN CAREER INSTITUTE PRIVATE LIMITED',
-        packageIdentity: 'com.allencareerinstitute.astra-console',
-        packageVersion: version,
+        packageIdentity: 'AllenCareerInstitute.AstraConsole',
+        packageVersion: msixVersion,
         packageDisplayName: 'Astra Console',
         packageDescription:
           'Astra Console Electron App with WebView and Video Streaming',
@@ -56,10 +95,12 @@ async function packageMSIXApp() {
         packageMinOSVersion: '10.0.19041.0',
         packageMaxOSVersionTested: '10.0.19041.0',
       },
-      packageName: `${appName}-${version}.msix`,
+      packageName: `${appName}-${msixVersion}.msix`,
       createPri: true,
       sign: false, // Set to true if you have a certificate
       logLevel: 'warn',
+      capabilities: ['internetClient', 'privateNetworkClientServer'],
+      deviceCapabilities: ['microphone', 'webcam'],
     };
 
     console.log('MSIX configuration:', JSON.stringify(msixConfig, null, 2));
@@ -67,9 +108,16 @@ async function packageMSIXApp() {
     // Package the MSIX
     await packageMSIX(msixConfig);
 
+    // Verify the MSIX file was created
+    const msixFilePath = path.join(outputDir, msixConfig.packageName);
+    if (!fs.existsSync(msixFilePath)) {
+      throw new Error(`MSIX file was not created: ${msixFilePath}`);
+    }
+
     console.log('✅ MSIX packaging completed successfully!');
+    console.log(`📦 MSIX file created: ${msixFilePath}`);
     console.log(
-      `📦 MSIX file created: ${path.join(outputDir, msixConfig.packageName)}`
+      `📊 File size: ${(fs.statSync(msixFilePath).size / 1024 / 1024).toFixed(2)} MB`
     );
   } catch (error) {
     console.error('❌ MSIX packaging failed:', error);

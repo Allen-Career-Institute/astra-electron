@@ -41,9 +41,6 @@ yarn build:win-appx
 # Build only Windows NSIS
 yarn build:win-nsis
 
-# Build Windows MSIX (includes AppX build)
-yarn build:win-msix
-
 # Package MSIX only (requires AppX build first)
 yarn package:msix
 ```

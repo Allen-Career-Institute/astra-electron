@@ -5,7 +5,7 @@
     <key>CFBundleDisplayName</key>
     <string>Astra</string>
     <key>CFBundleExecutable</key>
-    <string>Astra Console</string>
+    <string>AstraConsole</string>
     <key>CFBundleIdentifier</key>
     <string>com.allencareerinstitute.astra-console</string>
     <key>CFBundleInfoDictionaryVersion</key>

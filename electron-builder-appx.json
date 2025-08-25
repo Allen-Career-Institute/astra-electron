@@ -41,6 +41,10 @@
       {
         "target": "appx",
         "arch": ["x64"]
+      },
+      {
+        "target": "dir",
+        "arch": ["x64"]
       }
     ],
     "requestedExecutionLevel": "asInvoker",
@@ -84,7 +88,7 @@
     "notarize": false,
     "extendInfo": {
       "CFBundleDisplayName": "Astra Console",
-      "CFBundleExecutable": "Astra Console",
+      "CFBundleExecutable": "AstraConsole",
       "CFBundleIdentifier": "com.allencareerinstitute.astra-console",
       "CFBundleInfoDictionaryVersion": "6.0",
       "CFBundleName": "Astra Console",

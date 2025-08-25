@@ -104,9 +104,13 @@ jobs:
       #   run: yarn build:win-nsis
       #   timeout-minutes: 10
 
-      - name: Build Windows MSIX
-        run: yarn build:win-msix
-        timeout-minutes: 25
+      - name: Build Windows AppX
+        run: yarn build:win-appx
+        timeout-minutes: 20
+    
+      - name: Package MSIX
+        run: yarn package:msix
+        timeout-minutes: 10
 
       - name: Cleanup build artifacts
         run: Remove-Item -Recurse -Force "dist-electron-builder\win-unpacked" -ErrorAction SilentlyContinue
