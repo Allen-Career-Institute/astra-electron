@@ -9,10 +9,6 @@
     "dist/**/*",
     "assets/**/*",
     "assets/installer/**/*",
-    "node_modules/electron-store/**/*",
-    "node_modules/electron-updater/**/*",
-    "node_modules/uuid/**/*",
-    "node_modules/date-fns/**/*",
     "!**/*.d.ts",
     "!**/*.map",
     "!**/*.ts",
@@ -144,22 +140,6 @@
   "removePackageScripts": true,
   "removePackageKeywords": true,
   "extraResources": [
-    {
-      "from": "node_modules/electron-updater",
-      "to": "electron-updater"
-    },
-    {
-      "from": "node_modules/uuid",
-      "to": "uuid"
-    },
-    {
-      "from": "node_modules/date-fns",
-      "to": "date-fns"
-    },
-    {
-      "from": "node_modules/electron-store",
-      "to": "electron-store"
-    },
     {
       "from": ".env.local",
       "to": ".env.local"
