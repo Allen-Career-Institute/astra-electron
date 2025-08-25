@@ -1,6 +1,6 @@
 {
   "name": "astra-electron",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Astra Console Electron App with WebView and Video Streaming",
   "main": "dist/main.js",
   "packageManager": "yarn@4.9.2",
@@ -24,7 +24,7 @@
     "renderer:start": "webpack serve --mode development",
     "electron:build": "cross-env-shell 'electron-builder --config electron-builder.json'",
     "electron:win": "cross-env-shell 'electron-builder --config electron-builder.json --win --x64'",
-    "electron:win-appx": "cross-env-shell 'electron-builder --config electron-builder-appx.json --win --x64'",
+    "electron:win-appx": "cross-env-shell 'electron-builder --config electron-builder-appx.json --win --x64 --publish always'",
     "electron:win-nsis": "cross-env-shell 'electron-builder --config electron-builder.json --win --x64'",
     "electron:mac": "cross-env-shell 'electron-builder --config electron-builder.json --mac --x64'",
     "electron:linux": "cross-env-shell 'electron-builder --config electron-builder.json --linux --x64'",
