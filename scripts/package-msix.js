@@ -40,6 +40,14 @@ async function packageMSIXApp() {
 
     // Ensure the directory path is normalized
     appDir = path.normalize(appDir);
+
+    // Try to resolve any symlinks or relative paths
+    try {
+      appDir = fs.realpathSync(appDir);
+      console.log('✅ Resolved real path:', appDir);
+    } catch (error) {
+      console.warn('⚠️  Could not resolve real path:', error.message);
+    }
     const outputDir = path.join(__dirname, '..', 'dist-electron-builder');
     const assetsDir = path.join(__dirname, '..', 'assets', 'appx');
 
@@ -173,8 +181,21 @@ async function packageMSIXApp() {
     const normalizedOutputDir = outputDir.replace(/\\/g, '/');
     const normalizedAssetsDir = assetsDir.replace(/\\/g, '/');
 
+    // Try creating a temporary copy of the app directory
+    const tempAppDir = path.join(__dirname, '..', 'temp-msix-app');
+    console.log('📁 Creating temporary app directory:', tempAppDir);
+
+    // Remove temp directory if it exists
+    if (fs.existsSync(tempAppDir)) {
+      fs.rmSync(tempAppDir, { recursive: true, force: true });
+    }
+
+    // Copy the app directory to temp
+    fs.cpSync(appDir, tempAppDir, { recursive: true });
+    console.log('✅ Copied app directory to temp location');
+
     const minimalConfig = {
-      appDir: normalizedAppDir,
+      appDir: tempAppDir.replace(/\\/g, '/'),
       outputDir: normalizedOutputDir,
       packageAssets: normalizedAssetsDir,
       manifestVariables: {
@@ -216,6 +237,7 @@ async function packageMSIXApp() {
           packageVersion: msixConfig.manifestVariables.packageVersion,
           packageDisplayName: msixConfig.manifestVariables.packageDisplayName,
           appExecutable: msixConfig.manifestVariables.appExecutable,
+          targetArch: 'x64', // Add back targetArch as it's required
         },
         packageName: msixConfig.packageName,
         sign: false,
@@ -240,6 +262,13 @@ async function packageMSIXApp() {
     console.log(
       `📊 File size: ${(fs.statSync(msixFilePath).size / 1024 / 1024).toFixed(2)} MB`
     );
+
+    // Cleanup temporary directory
+    const tempDirToClean = path.join(__dirname, '..', 'temp-msix-app');
+    if (fs.existsSync(tempDirToClean)) {
+      fs.rmSync(tempDirToClean, { recursive: true, force: true });
+      console.log('🧹 Cleaned up temporary directory');
+    }
   } catch (error) {
     console.error('❌ MSIX packaging failed:', error);
     process.exit(1);
