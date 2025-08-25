@@ -5,13 +5,13 @@
     <key>CFBundleDisplayName</key>
     <string>Astra</string>
     <key>CFBundleExecutable</key>
-    <string>Astra</string>
+    <string>Astra Console</string>
     <key>CFBundleIdentifier</key>
-    <string>com.allendigital.astra</string>
+    <string>com.allencareerinstitute.astra-console</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>Astra</string>
+    <string>Astra Console</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>

@@ -4,7 +4,7 @@
 
 !macro customInstall
   ; Kill any running instances of Astra
-  nsExec::ExecToStack 'taskkill /f /im "Astra.exe"'
+  nsExec::ExecToStack 'taskkill /f /im "AstraConsole.exe"'
   nsExec::ExecToStack 'taskkill /f /im "astra-electron.exe"'
   
   ; Wait for processes to close
@@ -13,7 +13,7 @@
 
 !macro customUnInstall
   ; Kill any running instances of Astra
-  nsExec::ExecToStack 'taskkill /f /im "Astra.exe"'
+  nsExec::ExecToStack 'taskkill /f /im "AstraConsole.exe"'
   nsExec::ExecToStack 'taskkill /f /im "astra-electron.exe"'
   
   ; Wait for processes to close

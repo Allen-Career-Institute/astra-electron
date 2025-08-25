@@ -100,9 +100,13 @@ jobs:
           DEV_URL: ${{ env.DEV_URL }}
           ASTRA_ELECTRON_SENTRY_DSN: ${{ env.ASTRA_ELECTRON_SENTRY_DSN }}
 
-      - name: Build Windows
-        run: yarn build:win-nsis
-        timeout-minutes: 10
+      # - name: Build Windows NSIS
+      #   run: yarn build:win-nsis
+      #   timeout-minutes: 10
+
+      - name: Build Windows MSIX
+        run: yarn build:win-msix
+        timeout-minutes: 25
 
       - name: Cleanup build artifacts
         run: Remove-Item -Recurse -Force "dist-electron-builder\win-unpacked" -ErrorAction SilentlyContinue
@@ -121,9 +125,9 @@ jobs:
       - name: Create build summary
         run: |
           echo "## Build Summary for PR #${{ github.event.number }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Platforms:** Windows (x64 only) - NSIS Installer" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platforms:** Windows (x64 only) - NSIS Installer + MSIX Package" >> $GITHUB_STEP_SUMMARY
           echo "- **Build Status:** ✅ Success" >> $GITHUB_STEP_SUMMARY
-          echo "- **Build Tool:** Electron Builder" >> $GITHUB_STEP_SUMMARY
-          echo "- **Package Type:** NSIS (Windows Installer)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Tool:** Electron Builder + electron-windows-msix" >> $GITHUB_STEP_SUMMARY
+          echo "- **Package Types:** NSIS (Windows Installer) + MSIX (Modern Windows Package)" >> $GITHUB_STEP_SUMMARY
           echo "- **Artifacts:** Available for download above" >> $GITHUB_STEP_SUMMARY
           echo "- **Retention:** 1 day" >> $GITHUB_STEP_SUMMARY

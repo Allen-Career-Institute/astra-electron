@@ -2,9 +2,9 @@
 
 A modern Electron application for Allen Digital's Astra console with webview integration and video streaming capabilities.
 
-## Build Migration: NSIS → APPX
+## Build Migration: NSIS → APPX + MSIX
 
-This project has been migrated from NSIS installer builds to APPX package builds for Windows. This change provides several benefits:
+This project has been migrated from NSIS installer builds to APPX package builds for Windows, with additional MSIX packaging support. This change provides several benefits:
 
 ### Benefits of APPX over NSIS:
 
@@ -14,10 +14,20 @@ This project has been migrated from NSIS installer builds to APPX package builds
 - **Automatic Updates**: Better support for automatic updates through Windows Store
 - **Security**: Improved security model with Windows Store signing
 
+### Benefits of MSIX:
+
+- **Modern Packaging**: Latest Windows packaging format with better security
+- **App Isolation**: Enhanced security through containerization
+- **Enterprise Deployment**: Better support for enterprise distribution
+- **Automatic Updates**: Native Windows update mechanism
+- **Windows 10/11 Compatibility**: Full support for modern Windows features
+
 ### Build Artifacts:
 
 - **Before**: Windows installer (.exe) using NSIS
-- **After**: Windows APPX package (.appx) ready for store submission
+- **After**:
+  - Windows APPX package (.appx) ready for store submission
+  - Windows MSIX package (.msix) for modern deployment
 
 ### Build Commands:
 
@@ -31,6 +41,11 @@ yarn build:win-appx
 # Build only Windows NSIS
 yarn build:win-nsis
 
+# Build Windows MSIX (includes AppX build)
+yarn build:win-msix
+
+# Package MSIX only (requires AppX build first)
+yarn package:msix
 ```
 
 ### Migration Notes:
@@ -38,7 +53,8 @@ yarn build:win-nsis
 - **Removed**: NSIS installer configuration and scripts
 - **Kept**: PowerShell and batch scripts in `assets/installer/` for process management
 - **New**: Enhanced APPX configuration with proper tile assets and capabilities
-- **Output**: APPX packages are generated in `dist-electron-builder/` directory
+- **New**: MSIX packaging using electron-windows-msix library
+- **Output**: APPX and MSIX packages are generated in `dist-electron-builder/` directory
 
 ## 🚀 **Features**
 

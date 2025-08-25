@@ -2,14 +2,14 @@
 echo Attempting to close Astra...
 
 REM Try to close gracefully first
-taskkill /f /im "Astra.exe" 2>nul
+taskkill /f /im "AstraConsole.exe" 2>nul
 taskkill /f /im "astra-electron.exe" 2>nul
 
 REM Wait a moment
 timeout /t 2 /nobreak >nul
 
 REM Force kill any remaining processes
-wmic process where "name like '%%Astra%%'" call terminate 2>nul
+wmic process where "name like '%%Astra Console%%'" call terminate 2>nul
 wmic process where "name like '%%astra-electron%%'" call terminate 2>nul
 
 REM Additional cleanup
