@@ -296,12 +296,12 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
     });
 
     // Prevent maximize attempts
-    streamWindow.on('maximize', () => {
-      if (streamWindow && !streamWindow.isDestroyed()) {
-        streamWindow.unmaximize();
-        console.log('Maximize attempt blocked');
-      }
-    });
+    // streamWindow.on('maximize', () => {
+    //   if (streamWindow && !streamWindow.isDestroyed()) {
+    //     streamWindow.unmaximize();
+    //     console.log('Maximize attempt blocked');
+    //   }
+    // });
 
     streamWindow.on('closed', () => {
       streamWindow = null;

@@ -213,7 +213,7 @@ function createWhiteboardWindow(config: WhiteboardWindowConfig): BrowserWindow {
       if (whiteboardWindow && !whiteboardWindow.isDestroyed()) {
         whiteboardWindow.show();
         whiteboardWindow.focus();
-        whiteboardWindow.maximize;
+        whiteboardWindow.maximize();
         whiteboardWindowSettingUp = false;
       }
     });
