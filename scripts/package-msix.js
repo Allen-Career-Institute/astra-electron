@@ -200,11 +200,19 @@ async function packageMSIXApp() {
       packageAssets: normalizedAssetsDir,
       manifestVariables: {
         publisher: msixConfig.manifestVariables.publisher,
+        publisherDisplayName: msixConfig.manifestVariables.publisherDisplayName,
         packageIdentity: msixConfig.manifestVariables.packageIdentity,
         packageVersion: msixConfig.manifestVariables.packageVersion,
         packageDisplayName: msixConfig.manifestVariables.packageDisplayName,
+        packageDescription: msixConfig.manifestVariables.packageDescription,
+        packageBackgroundColor:
+          msixConfig.manifestVariables.packageBackgroundColor,
         appExecutable: msixConfig.manifestVariables.appExecutable,
+        appDisplayName: msixConfig.manifestVariables.appDisplayName,
         targetArch: msixConfig.manifestVariables.targetArch,
+        packageMinOSVersion: msixConfig.manifestVariables.packageMinOSVersion,
+        packageMaxOSVersionTested:
+          msixConfig.manifestVariables.packageMaxOSVersionTested,
       },
       packageName: msixConfig.packageName,
       createPri: false, // Disable PRI creation to simplify
@@ -219,37 +227,37 @@ async function packageMSIXApp() {
 
     // Package the MSIX
     console.log('🚀 Starting MSIX packaging with minimal config...');
-    try {
-      await packageMSIX(minimalConfig);
-    } catch (error) {
-      console.error('❌ MSIX packaging error details:');
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
+    // try {
+    await packageMSIX(minimalConfig);
+    // } catch (error) {
+    //   console.error('❌ MSIX packaging error details:');
+    //   console.error('Error message:', error.message);
+    //   console.error('Error stack:', error.stack);
 
-      // Try with even simpler config
-      console.log('🔄 Trying with even simpler configuration...');
-      const simplestConfig = {
-        appDir: msixConfig.appDir,
-        outputDir: msixConfig.outputDir,
-        manifestVariables: {
-          publisher: msixConfig.manifestVariables.publisher,
-          packageIdentity: msixConfig.manifestVariables.packageIdentity,
-          packageVersion: msixConfig.manifestVariables.packageVersion,
-          packageDisplayName: msixConfig.manifestVariables.packageDisplayName,
-          appExecutable: msixConfig.manifestVariables.appExecutable,
-          targetArch: 'x64', // Add back targetArch as it's required
-        },
-        packageName: msixConfig.packageName,
-        sign: false,
-        logLevel: 'debug',
-      };
+    //   // Try with even simpler config
+    //   console.log('🔄 Trying with even simpler configuration...');
+    //   const simplestConfig = {
+    //     appDir: msixConfig.appDir,
+    //     outputDir: msixConfig.outputDir,
+    //     manifestVariables: {
+    //       publisher: msixConfig.manifestVariables.publisher,
+    //       packageIdentity: msixConfig.manifestVariables.packageIdentity,
+    //       packageVersion: msixConfig.manifestVariables.packageVersion,
+    //       packageDisplayName: msixConfig.manifestVariables.packageDisplayName,
+    //       appExecutable: msixConfig.manifestVariables.appExecutable,
+    //       targetArch: 'x64', // Add back targetArch as it's required
+    //     },
+    //     packageName: msixConfig.packageName,
+    //     sign: false,
+    //     logLevel: 'debug',
+    //   };
 
-      console.log(
-        'Simplest MSIX configuration:',
-        JSON.stringify(simplestConfig, null, 2)
-      );
-      await packageMSIX(simplestConfig);
-    }
+    //   console.log(
+    //     'Simplest MSIX configuration:',
+    //     JSON.stringify(simplestConfig, null, 2)
+    //   );
+    //   await packageMSIX(simplestConfig);
+    // }
 
     // Verify the MSIX file was created
     const msixFilePath = path.join(outputDir, msixConfig.packageName);
