@@ -89,7 +89,7 @@ async function packageMSIXApp() {
         packageDescription:
           'Astra Console Electron App with WebView and Video Streaming',
         packageBackgroundColor: '#ffffff',
-        appExecutable: 'AstraConsole.exe',
+        appExecutable: 'Astra Console.exe',
         appDisplayName: 'Astra',
         targetArch: 'x64',
         packageMinOSVersion: '10.0.19041.0',

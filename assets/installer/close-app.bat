@@ -2,7 +2,7 @@
 echo Attempting to close Astra...
 
 REM Try to close gracefully first
-taskkill /f /im "AstraConsole.exe" 2>nul
+taskkill /f /im "Astra Console.exe" 2>nul
 taskkill /f /im "astra-electron.exe" 2>nul
 
 REM Wait a moment

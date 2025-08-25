@@ -88,7 +88,7 @@
     "notarize": false,
     "extendInfo": {
       "CFBundleDisplayName": "Astra Console",
-      "CFBundleExecutable": "AstraConsole",
+      "CFBundleExecutable": "Astra Console",
       "CFBundleIdentifier": "com.allencareerinstitute.astra-console",
       "CFBundleInfoDictionaryVersion": "6.0",
       "CFBundleName": "Astra Console",

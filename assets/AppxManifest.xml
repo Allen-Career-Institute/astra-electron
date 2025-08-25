@@ -13,7 +13,7 @@
     <Resource Language="en-US" />
   </Resources>
   <Applications>
-    <Application Id="AstraConsole" Executable="AstraConsole.exe" EntryPoint="Windows.FullTrustApplication">
+    <Application Id="AstraConsole" Executable="Astra Console.exe" EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements DisplayName="Astra Console" Square150x150Logo="assets\icons\win\icon.ico" Square44x44Logo="assets\icons\win\icon.ico" Description="Astra Console Electron App with WebView and Video Streaming" BackgroundColor="#ffffff">
         <uap:DefaultTile Wide310x150Logo="assets\icons\win\icon.ico" Square71x71Logo="assets\icons\win\icon.ico" />
         <uap:SplashScreen Image="assets\icons\win\icon.ico" />
