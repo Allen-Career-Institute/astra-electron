@@ -1,5 +1,5 @@
 import { Menu, dialog, app } from 'electron';
-import { getCurrentUrl, getEnv, getUrlByEnv } from './config';
+import { getAppVersion, getCurrentUrl, getEnv, getUrlByEnv } from './config';
 import { getMainWindow } from './windowManager';
 import { reloadMainWindow } from './reloadUtils';
 
@@ -78,8 +78,8 @@ function createMenu(): void {
                 getEnv() +
                 '\nURL: ' +
                 getCurrentUrl() +
-                '\nElectron Version: ' +
-                app.getVersion(),
+                'App Version: ' +
+                getAppVersion(),
             });
           },
         },

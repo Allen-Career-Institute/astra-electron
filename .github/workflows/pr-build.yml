@@ -56,12 +56,15 @@ jobs:
 
       - name: Create .env.local file
         run: |
+          # Read version from package.json and create APP_VERSION
+          $APP_VERSION = (Get-Content package.json | ConvertFrom-Json).version
           echo "ENV=${{ env.ENV }}" > .env.local
           echo "NODE_ENV=${{ env.NODE_ENV }}" >> .env.local
           echo "STAGE_URL=${{ env.STAGE_URL }}" >> .env.local
           echo "PROD_URL=${{ env.PROD_URL }}" >> .env.local
           echo "CUSTOM_URL=${{ env.CUSTOM_URL }}" >> .env.local
           echo "DEV_URL=${{ env.DEV_URL }}" >> .env.local
+          echo "APP_VERSION=$APP_VERSION" >> .env.local
           echo "ASTRA_ELECTRON_SENTRY_DSN=${{ env.ASTRA_ELECTRON_SENTRY_DSN }}" >> .env.local
           echo "ASTRA_ELECTRON_SENTRY_ENDPOINT=${{ env.ASTRA_ELECTRON_SENTRY_ENDPOINT }}" >> .env.local
           echo "Created .env.local file with environment variables:"

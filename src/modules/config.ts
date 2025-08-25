@@ -8,6 +8,7 @@ let URLS = {
 let ASTRA_ELECTRON_SENTRY_DSN: string = '';
 let ASTRA_ELECTRON_SENTRY_ENDPOINT: string = '';
 let CURRENT_URL: string = '';
+let APP_VERSION: string = '';
 
 const getEnv = () => {
   return ENV;
@@ -60,6 +61,14 @@ const getCurrentUrl = () => {
   return CURRENT_URL;
 };
 
+const getAppVersion = () => {
+  return APP_VERSION;
+};
+
+const setAppVersion = (version: string) => {
+  APP_VERSION = version;
+};
+
 export {
   isDev,
   getEnv,
@@ -73,4 +82,6 @@ export {
   setSentryEndpoint,
   getSentryDsn,
   getSentryEndpoint,
+  getAppVersion,
+  setAppVersion,
 };

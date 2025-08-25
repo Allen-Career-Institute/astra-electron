@@ -6,6 +6,7 @@ import {
   getSentryEndpoint,
   getUrlByEnv,
   getUrls,
+  setAppVersion,
   setEnv,
   setSentryDsn,
   setSentryEndpoint,
@@ -59,6 +60,7 @@ function loadRuntimeEnv() {
       );
       setSentryDsn(envVars.ASTRA_ELECTRON_SENTRY_DSN as string);
       setSentryEndpoint(envVars.ASTRA_ELECTRON_SENTRY_ENDPOINT as string);
+      setAppVersion(envVars.APP_VERSION as string);
 
       console.log('✅ Runtime environment variables loaded from:', envPath);
       console.log('📋 Loaded variables:', Object.keys(envVars).join(', '));
