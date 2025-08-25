@@ -25,13 +25,21 @@ async function packageMSIXApp() {
         ? `${versionParts[0]}.${versionParts[1]}.${versionParts[2]}.0`
         : `${version}.0.0.0`;
 
-    // Define paths
-    const appDir = path.join(
+    // Define paths - try different possible locations
+    let appDir = path.join(
       __dirname,
       '..',
       'dist-electron-builder',
       'win-unpacked'
     );
+
+    // If win-unpacked doesn't exist, try the dist-electron-builder directory itself
+    if (!fs.existsSync(appDir)) {
+      appDir = path.join(__dirname, '..', 'dist-electron-builder');
+    }
+
+    // Ensure the directory path is normalized
+    appDir = path.normalize(appDir);
     const outputDir = path.join(__dirname, '..', 'dist-electron-builder');
     const assetsDir = path.join(__dirname, '..', 'assets', 'appx');
 
@@ -107,15 +115,15 @@ async function packageMSIXApp() {
     console.log('✅ Executable found:', executablePath);
     console.log('📦 Using MSIX version:', msixVersion);
 
-    // MSIX packaging configuration
+    // MSIX packaging configuration - simplified
     const msixConfig = {
-      appDir: path.resolve(appDir), // Use absolute path
-      outputDir: path.resolve(outputDir), // Use absolute path
-      packageAssets: path.resolve(assetsDir), // Use absolute path
+      appDir: appDir,
+      outputDir: outputDir,
+      packageAssets: assetsDir,
       manifestVariables: {
         publisher: 'CN=ALLEN CAREER INSTITUTE PRIVATE LIMITED',
         publisherDisplayName: 'ALLEN CAREER INSTITUTE PRIVATE LIMITED',
-        packageIdentity: appId,
+        packageIdentity: 'AllenCareerInstitute.AstraConsole',
         packageVersion: msixVersion,
         packageDisplayName: 'Astra Console',
         packageDescription:
@@ -129,10 +137,8 @@ async function packageMSIXApp() {
       },
       packageName: `${appName}-${msixVersion}.msix`,
       createPri: true,
-      sign: false, // Set to true if you have a certificate
-      logLevel: 'info', // Changed to info for more debugging
-      capabilities: ['internetClient', 'privateNetworkClientServer'],
-      deviceCapabilities: ['microphone', 'webcam'],
+      sign: false,
+      logLevel: 'info',
     };
 
     console.log('MSIX configuration:', JSON.stringify(msixConfig, null, 2));
@@ -159,15 +165,68 @@ async function packageMSIXApp() {
       throw error;
     }
 
+    // Try alternative approach - create a minimal config file
+    console.log('🔧 Trying alternative configuration approach...');
+
+    // Try using forward slashes instead of backslashes
+    const normalizedAppDir = appDir.replace(/\\/g, '/');
+    const normalizedOutputDir = outputDir.replace(/\\/g, '/');
+    const normalizedAssetsDir = assetsDir.replace(/\\/g, '/');
+
+    const minimalConfig = {
+      appDir: normalizedAppDir,
+      outputDir: normalizedOutputDir,
+      packageAssets: normalizedAssetsDir,
+      manifestVariables: {
+        publisher: msixConfig.manifestVariables.publisher,
+        packageIdentity: msixConfig.manifestVariables.packageIdentity,
+        packageVersion: msixConfig.manifestVariables.packageVersion,
+        packageDisplayName: msixConfig.manifestVariables.packageDisplayName,
+        appExecutable: msixConfig.manifestVariables.appExecutable,
+        targetArch: msixConfig.manifestVariables.targetArch,
+      },
+      packageName: msixConfig.packageName,
+      createPri: false, // Disable PRI creation to simplify
+      sign: false,
+      logLevel: 'debug', // Use debug level for more info
+    };
+
+    console.log(
+      'Minimal MSIX configuration:',
+      JSON.stringify(minimalConfig, null, 2)
+    );
+
     // Package the MSIX
-    console.log('🚀 Starting MSIX packaging...');
+    console.log('🚀 Starting MSIX packaging with minimal config...');
     try {
-      await packageMSIX(msixConfig);
+      await packageMSIX(minimalConfig);
     } catch (error) {
       console.error('❌ MSIX packaging error details:');
       console.error('Error message:', error.message);
       console.error('Error stack:', error.stack);
-      throw error;
+
+      // Try with even simpler config
+      console.log('🔄 Trying with even simpler configuration...');
+      const simplestConfig = {
+        appDir: msixConfig.appDir,
+        outputDir: msixConfig.outputDir,
+        manifestVariables: {
+          publisher: msixConfig.manifestVariables.publisher,
+          packageIdentity: msixConfig.manifestVariables.packageIdentity,
+          packageVersion: msixConfig.manifestVariables.packageVersion,
+          packageDisplayName: msixConfig.manifestVariables.packageDisplayName,
+          appExecutable: msixConfig.manifestVariables.appExecutable,
+        },
+        packageName: msixConfig.packageName,
+        sign: false,
+        logLevel: 'debug',
+      };
+
+      console.log(
+        'Simplest MSIX configuration:',
+        JSON.stringify(simplestConfig, null, 2)
+      );
+      await packageMSIX(simplestConfig);
     }
 
     // Verify the MSIX file was created
