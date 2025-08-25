@@ -124,6 +124,7 @@ jobs:
           path: |
             dist-electron-builder/
             !dist-electron-builder/**/*.blockmap
+            !dist-electron-builder/msix_layout/
           retention-days: 1
 
       - name: Create build summary
