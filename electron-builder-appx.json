@@ -61,8 +61,7 @@
     "backgroundColor": "#ffffff",
     "languages": ["en-US"],
     "applicationId": "AllenCareerInstitute.AstraConsole",
-    "showNameOnTiles": true,
-    "makeappxArgs": ["--verbose"]
+    "showNameOnTiles": true
   },
   "mac": {
     "target": [
