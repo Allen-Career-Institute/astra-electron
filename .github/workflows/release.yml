@@ -118,21 +118,21 @@ jobs:
           tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', steps.get_version.outputs.version) }}
           name: Release ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', steps.get_version.outputs.version) }}
           body: |
-            ## Allen UI Console Electron ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', steps.get_version.outputs.version) }}
+            ## Astra Electron ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('v{0}', steps.get_version.outputs.version) }}
 
             ### Downloads
-            - **Windows (64-bit):** AppX Package (.appx) - Ready for Windows Store submission
+            - **Windows (64-bit):** NSIS Installer (.exe) - Ready for distribution
 
             ### Build Info
             - **Build Tool:** Electron Builder
             - **Node.js:** 18
-            - **Platforms:** Windows 64-bit (APPX)
+            - **Platforms:** Windows 64-bit (NSIS)
             - **Commit:** ${{ github.sha }}
 
-            ### Windows Store
-            The AppX package is ready for submission to the Windows Store. Use the AppX file for:
-            - Windows Store publishing
-            - Enterprise distribution
+            ### Windows Distribution
+            The NSIS installer is ready for distribution. Use the .exe file for:
+            - Windows application distribution
+            - Enterprise deployment
             - Testing on Windows 10/11 devices
 
             ### Changes

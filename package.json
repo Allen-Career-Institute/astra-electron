@@ -1,7 +1,7 @@
 {
   "name": "astra-electron",
   "version": "0.0.1",
-  "description": "Astra Console Electron App with WebView and Video Streaming",
+  "description": "Astra Electron App with WebView and Video Streaming",
   "main": "dist/main.js",
   "packageManager": "yarn@4.9.2",
   "scripts": {

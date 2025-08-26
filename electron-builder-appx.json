@@ -124,7 +124,7 @@
   "publish": {
     "provider": "github",
     "owner": "dinesh-kumar-allen",
-    "repo": "allen-ui-console-electron",
+    "repo": "astra-electron",
     "private": false,
     "releaseType": "release"
   },
