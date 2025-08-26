@@ -71,8 +71,8 @@ function createMenu(): void {
           click: () => {
             dialog.showMessageBox({
               type: 'info',
-              title: 'About Astra Application',
-              message: 'Astra',
+              title: 'About Application',
+              message: 'Astra Console',
               detail:
                 'Environment: ' +
                 getEnv() +
