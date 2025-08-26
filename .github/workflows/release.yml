@@ -111,6 +111,10 @@ jobs:
       - name: Build Windows
         run: yarn build:win-nsis
         timeout-minutes: 25
+        env:
+          GITHUB_TOKEN: ${{ secrets.ELECTRON_GIT_WRITE_PAT }}
+          GH_TOKEN: ${{ secrets.ELECTRON_GIT_WRITE_PAT }}
+
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -142,4 +146,5 @@ jobs:
           draft: false
           prerelease: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ELECTRON_GIT_WRITE_PAT }}
+          GH_TOKEN: ${{ secrets.ELECTRON_GIT_WRITE_PAT }}
