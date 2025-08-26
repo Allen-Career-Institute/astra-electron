@@ -108,6 +108,12 @@ jobs:
           ASTRA_ELECTRON_SENTRY_DSN: ${{ env.ASTRA_ELECTRON_SENTRY_DSN }}
           ASTRA_ELECTRON_SENTRY_ENDPOINT: ${{ env.ASTRA_ELECTRON_SENTRY_ENDPOINT }}
 
+      - name: Set Environment Variables
+        run: |
+          [Environment]::SetEnvironmentVariable("GH_TOKEN", "${{ secrets.ELECTRON_GIT_WRITE_PAT }}", "User")
+          [Environment]::SetEnvironmentVariable("GITHUB_TOKEN", "${{ secrets.ELECTRON_GIT_WRITE_PAT }}", "User")
+          echo "Environment variables set successfully"
+
       - name: Build Windows
         run: yarn build:win-nsis
         timeout-minutes: 25
