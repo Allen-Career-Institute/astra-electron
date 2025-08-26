@@ -37,6 +37,7 @@
     "!**/src/**"
   ],
   "win": {
+    "publish": ["github"],
     "target": [
       {
         "target": "appx",
@@ -126,6 +127,7 @@
     "owner": "dinesh-kumar-allen",
     "repo": "astra-electron",
     "private": false,
+    "token": "${grep GH_TOKEN' .env.local }",
     "releaseType": "release"
   },
   "forceCodeSigning": false,

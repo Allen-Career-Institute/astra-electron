@@ -76,6 +76,8 @@ jobs:
           echo "APP_VERSION=${{ steps.get_version.outputs.version }}" >> .env.local
           echo "ASTRA_ELECTRON_SENTRY_DSN=${{ env.ASTRA_ELECTRON_SENTRY_DSN }}" >> .env.local
           echo "ASTRA_ELECTRON_SENTRY_ENDPOINT=${{ env.ASTRA_ELECTRON_SENTRY_ENDPOINT }}" >> .env.local
+          echo "GH_TOKEN=${{ env.GH_TOKEN }}" >> .env.local
+          echo "GITHUB_TOKEN=${{ env.GITHUB_TOKEN }}" >> .env.local
           echo "Created .env.local file with environment variables:"
           cat .env.local
 
