@@ -270,8 +270,9 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
               fs.mkdirSync(recordingsDir, { recursive: true });
             }
 
-            // Store chunks as webm files
-            const chunkFileName = `chunk_${chunkIndex.toString().padStart(6, '0')}.webm`;
+            // Store chunks as webm files using timestamp for unique naming
+            // This prevents conflicts when page is reloaded and chunkIndex resets
+            const chunkFileName = `${timestamp}.webm`;
             const chunkFilePath = path.join(recordingsDir, chunkFileName);
 
             // Write chunk data to file
@@ -320,7 +321,7 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
             }
 
             console.log(
-              `Processed media chunk ${chunkIndex} - saved to ${chunkFilePath}`
+              `Processed media chunk ${chunkIndex} (timestamp: ${timestamp}) - saved to ${chunkFilePath}`
             );
             return {
               type: 'SUCCESS',
