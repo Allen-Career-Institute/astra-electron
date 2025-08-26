@@ -15,6 +15,8 @@ import {
 } from './whiteboard-window';
 import { screenSharingManager } from './screenSharing';
 import { rollingMergeManager } from './rollingMergeManager';
+import { getRollingMergeDisabled } from './config';
+import { isChunkLoggingEnabled } from './user-config';
 
 // Global variables for FFmpeg processing
 let ffmpegProcesses = new Map<string, any>(); // Map to store FFmpeg processes by meetingId
@@ -275,28 +277,46 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
             // Write chunk data to file
             fs.writeFileSync(chunkFilePath, chunkData);
 
-            // Add chunk to rolling merge manager
+            // Add chunk to rolling merge manager (for tracking purposes)
             rollingMergeManager.addChunk(meetingId, chunkFileName);
 
             // Get current chunk list
             const chunkList = rollingMergeManager.getChunkList(meetingId);
 
-            // Perform rolling merge when we have multiple chunks
-            if (chunkList.length > 1) {
-              await rollingMergeManager.performRollingMerge(
-                meetingId,
-                recordingsDir,
-                chunkList
-              );
-            }
+            // Check if rolling merge is disabled
+            if (!getRollingMergeDisabled()) {
+              // Perform rolling merge when we have multiple chunks
+              if (chunkList.length > 1) {
+                await rollingMergeManager.performRollingMerge(
+                  meetingId,
+                  recordingsDir,
+                  chunkList
+                );
+              }
 
-            // Handle final merge when recording stops
-            if (isLastChunk && chunkList.length > 0) {
-              await rollingMergeManager.performFinalMerge(
-                meetingId,
-                recordingsDir,
-                chunkList
+              // Handle final merge when recording stops
+              if (isLastChunk && chunkList.length > 0) {
+                await rollingMergeManager.performFinalMerge(
+                  meetingId,
+                  recordingsDir,
+                  chunkList
+                );
+              }
+            } else {
+              console.log(
+                `Rolling merge disabled - keeping ${chunkList.length} chunks as individual files for meeting ${meetingId}`
               );
+
+              // Log chunk details when rolling merge is disabled
+              if (isLastChunk && isChunkLoggingEnabled()) {
+                console.log(
+                  `Recording completed for meeting ${meetingId}. Total chunks saved: ${chunkList.length}`
+                );
+                console.log(`Chunks saved in: ${recordingsDir}`);
+                chunkList.forEach((chunk, index) => {
+                  console.log(`  - ${chunk}`);
+                });
+              }
             }
 
             console.log(
