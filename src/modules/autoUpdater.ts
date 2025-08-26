@@ -1,5 +1,5 @@
 import { dialog } from 'electron';
-import { isDev } from './config';
+import { getCurrentUrl, isDev } from './config';
 import * as Sentry from '@sentry/electron/main';
 import { getMainWindow } from './windowManager';
 import { ProgressInfo, UpdateInfo } from 'electron-updater';
@@ -50,6 +50,9 @@ function setupAutoUpdater(): void {
   if (!autoUpdater) return;
 
   autoUpdater.on('update-available', () => {
+    if (getCurrentUrl()?.includes('liveclass')) {
+      return;
+    }
     try {
       dialog.showMessageBox({
         type: 'info',
@@ -64,6 +67,9 @@ function setupAutoUpdater(): void {
   });
 
   autoUpdater.on('update-downloaded', () => {
+    if (getCurrentUrl()?.includes('liveclass')) {
+      return;
+    }
     try {
       const dialogOpts = {
         type: 'info' as const,
@@ -85,6 +91,9 @@ function setupAutoUpdater(): void {
   });
 
   autoUpdater.on('download-progress', (progress: ProgressInfo) => {
+    if (getCurrentUrl()?.includes('liveclass')) {
+      return;
+    }
     const mainWindow = getMainWindow();
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.setProgressBar(progress.percent);
