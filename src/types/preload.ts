@@ -15,6 +15,7 @@ export interface BaseElectronAPI {
 
 export interface MainElectronAPI extends BaseElectronAPI {
   sendMessage: (message: any) => Promise<any>;
+  logout: () => void;
 }
 
 export interface StreamElectronAPI extends BaseElectronAPI {}

@@ -1,4 +1,4 @@
-import { IpcMain, app } from 'electron';
+import { IpcMain, app, BrowserWindow, session } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -17,6 +17,7 @@ import { screenSharingManager } from './screenSharing';
 import { rollingMergeManager } from './rollingMergeManager';
 import { getRollingMergeDisabled } from './config';
 import { isChunkLoggingEnabled } from './user-config';
+import { reloadMainWindow } from './reloadUtils';
 
 // Global variables for FFmpeg processing
 let ffmpegProcesses = new Map<string, any>(); // Map to store FFmpeg processes by meetingId
@@ -523,6 +524,88 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  });
+
+  // Listen for logout events and clear storage
+  ipcMain.handle('app-logout', async () => {
+    try {
+      console.log('Logout request received, clearing all app data...');
+
+      // Get all browser windows to clear their data
+      const allWindows = BrowserWindow.getAllWindows();
+
+      // Clear cookies and storage data for all sessions
+      const sessions = [
+        session.defaultSession,
+        session.fromPartition('persist:shared'),
+        ...allWindows.map(win => win.webContents.session),
+      ];
+
+      // Clear cookies and storage data for each session
+      for (const sessionInstance of sessions) {
+        if (sessionInstance) {
+          try {
+            // Clear all cookies and storage data
+            await sessionInstance.clearStorageData({
+              storages: [
+                'cookies',
+                'localstorage',
+                'websql',
+                'indexdb',
+                'shadercache',
+                'serviceworkers',
+                'cachestorage',
+              ],
+            });
+
+            await sessionInstance.clearAuthCache();
+            await sessionInstance.clearCache();
+            await sessionInstance.clearData({
+              dataTypes: [
+                'backgroundFetch',
+                'cache',
+                'cookies',
+                'downloads',
+                'indexedDB',
+                'localStorage',
+                'serviceWorkers',
+                'webSQL',
+              ],
+            });
+
+            // Clear host resolver cache
+            await sessionInstance.clearHostResolverCache();
+
+            console.log(`Cleared storage data for session: default`);
+          } catch (error) {
+            console.error(`Error clearing session:`, error);
+          }
+        }
+      }
+
+      // Clear FFmpeg processes
+      cleanupFFmpegProcesses();
+
+      // Clear rolling merge processes
+      rollingMergeManager.cleanup();
+
+      reloadMainWindow(true);
+
+      console.log('Logout completed successfully - all app data cleared');
+      return {
+        type: 'SUCCESS',
+        payload: 'Logout completed - all app data cleared',
+      };
+    } catch (error) {
+      console.error('Error during logout:', error);
+      return {
+        type: 'ERROR',
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Unknown error during logout',
       };
     }
   });

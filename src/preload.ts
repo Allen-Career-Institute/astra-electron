@@ -73,6 +73,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
   removeAllListeners: (channel: string): void => {
     ipcRenderer.removeAllListeners(channel);
   },
+  // Logout event listener
+  logout: async (): Promise<any> => {
+    try {
+      return await ipcRenderer.invoke('app-logout');
+    } catch (error) {
+      return {
+        type: 'ERROR',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
 } as MainElectronAPI);
 
 // Extend the global Window interface
