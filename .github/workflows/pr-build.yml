@@ -49,7 +49,6 @@ jobs:
       !github.event.pull_request.head.repo.fork && 
       contains(fromJson('["write", "admin", "maintain"]'), needs.check-permissions.outputs.has-permissions)
     needs: check-permissions
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -87,7 +86,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
         timeout-minutes: 10
-    
+
       - name: Test environment variables
         run: yarn test:env
         timeout-minutes: 2
@@ -100,17 +99,17 @@ jobs:
           DEV_URL: ${{ env.DEV_URL }}
           ASTRA_ELECTRON_SENTRY_DSN: ${{ env.ASTRA_ELECTRON_SENTRY_DSN }}
 
-      # - name: Build Windows NSIS
-      #   run: yarn build:win-nsis
-      #   timeout-minutes: 10
-
-      - name: Build Windows AppX
-        run: yarn build:win-appx
-        timeout-minutes: 20
-    
-      - name: Package MSIX
-        run: yarn package:msix
+      - name: Build Windows NSIS
+        run: yarn build:win-nsis
         timeout-minutes: 10
+
+      # - name: Build Windows AppX
+      #   run: yarn build:win-appx
+      #   timeout-minutes: 20
+
+      # - name: Package MSIX
+      #   run: yarn package:msix
+      #   timeout-minutes: 10
 
       - name: Cleanup build artifacts
         run: Remove-Item -Recurse -Force "dist-electron-builder\win-unpacked" -ErrorAction SilentlyContinue
@@ -130,9 +129,9 @@ jobs:
       - name: Create build summary
         run: |
           echo "## Build Summary for PR #${{ github.event.number }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Platforms:** Windows (x64 only) - NSIS Installer + MSIX Package" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platforms:** Windows (x64 only) - NSIS Installer" >> $GITHUB_STEP_SUMMARY
           echo "- **Build Status:** ✅ Success" >> $GITHUB_STEP_SUMMARY
-          echo "- **Build Tool:** Electron Builder + electron-windows-msix" >> $GITHUB_STEP_SUMMARY
-          echo "- **Package Types:** NSIS (Windows Installer) + MSIX (Modern Windows Package)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Tool:** Electron Builder" >> $GITHUB_STEP_SUMMARY
+          echo "- **Package Type:** NSIS (Windows Installer)" >> $GITHUB_STEP_SUMMARY
           echo "- **Artifacts:** Available for download above" >> $GITHUB_STEP_SUMMARY
           echo "- **Retention:** 1 day" >> $GITHUB_STEP_SUMMARY

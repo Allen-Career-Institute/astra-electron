@@ -2,6 +2,8 @@ import { spawn, ChildProcess } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import { app } from 'electron';
+import { getRollingMergeDisabled } from './config';
+import { isVerboseLoggingEnabled, isChunkLoggingEnabled } from './user-config';
 
 export interface RollingMergeConfig {
   meetingId: string;
@@ -64,10 +66,12 @@ export class RollingMergeManager {
         outputFilePath,
       ];
 
-      console.log(
-        `Starting rolling merge for meeting ${meetingId} with ${chunkList.length} chunks`
-      );
-      console.log(`FFmpeg command: ffmpeg ${ffmpegArgs.join(' ')}`);
+      if (isVerboseLoggingEnabled()) {
+        console.log(
+          `Starting rolling merge for meeting ${meetingId} with ${chunkList.length} chunks`
+        );
+        console.log(`FFmpeg command: ffmpeg ${ffmpegArgs.join(' ')}`);
+      }
 
       // Spawn FFmpeg process
       const ffmpegProcess = spawn('ffmpeg', ffmpegArgs, {
@@ -86,9 +90,11 @@ export class RollingMergeManager {
       this.rollingMergeProcesses.set(meetingId, processRecord);
 
       // Handle process events
-      ffmpegProcess.stderr.on('data', (data: Buffer) => {
-        console.log(`Rolling merge stderr: ${data.toString()}`);
-      });
+      if (isVerboseLoggingEnabled()) {
+        ffmpegProcess.stderr.on('data', (data: Buffer) => {
+          console.log(`Rolling merge stderr: ${data.toString()}`);
+        });
+      }
 
       return new Promise<MergeResult>(resolve => {
         ffmpegProcess.on('close', (code: number) => {
@@ -101,14 +107,20 @@ export class RollingMergeManager {
               `Successfully merged ${chunkList.length} chunks into ${outputFilePath}`
             );
 
-            // Clean up individual chunk files after successful merge
-            chunkList.forEach(chunkFileName => {
-              const chunkPath = path.join(recordingsDir, chunkFileName);
-              if (fs.existsSync(chunkPath)) {
-                fs.unlinkSync(chunkPath);
-                console.log(`Cleaned up chunk file: ${chunkFileName}`);
-              }
-            });
+            // Clean up individual chunk files after successful merge (only if not preserving chunks)
+            if (!this.shouldPreserveChunks()) {
+              chunkList.forEach(chunkFileName => {
+                const chunkPath = path.join(recordingsDir, chunkFileName);
+                if (fs.existsSync(chunkPath)) {
+                  fs.unlinkSync(chunkPath);
+                  console.log(`Cleaned up chunk file: ${chunkFileName}`);
+                }
+              });
+            } else {
+              console.log(
+                `Preserving ${chunkList.length} chunk files as rolling merge is disabled`
+              );
+            }
 
             // Update chunk list to only contain the merged file
             this.chunkLists.set(meetingId, ['merged_output.webm']);
@@ -246,14 +258,22 @@ export class RollingMergeManager {
                 `Successfully created final recording: ${finalOutputPath}`
               );
 
-              // Clean up intermediate files
-              chunkList.forEach(chunkFileName => {
-                const chunkPath = path.join(recordingsDir, chunkFileName);
-                if (fs.existsSync(chunkPath)) {
-                  fs.unlinkSync(chunkPath);
-                  console.log(`Cleaned up intermediate file: ${chunkFileName}`);
-                }
-              });
+              // Clean up intermediate files (only if not preserving chunks)
+              if (!this.shouldPreserveChunks()) {
+                chunkList.forEach(chunkFileName => {
+                  const chunkPath = path.join(recordingsDir, chunkFileName);
+                  if (fs.existsSync(chunkPath)) {
+                    fs.unlinkSync(chunkPath);
+                    console.log(
+                      `Cleaned up intermediate file: ${chunkFileName}`
+                    );
+                  }
+                });
+              } else {
+                console.log(
+                  `Preserving ${chunkList.length} intermediate chunk files as rolling merge is disabled`
+                );
+              }
 
               // Clean up concat files
               const concatFiles = ['concat_list.txt', 'final_concat_list.txt'];
@@ -426,6 +446,13 @@ export class RollingMergeManager {
   cleanupMeeting(meetingId: string): void {
     this.stopRollingMerge(meetingId);
     this.chunkLists.delete(meetingId);
+  }
+
+  /**
+   * Check if chunks should be preserved (not deleted after merge)
+   */
+  shouldPreserveChunks(): boolean {
+    return getRollingMergeDisabled();
   }
 }
 

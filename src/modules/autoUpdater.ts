@@ -1,5 +1,8 @@
 import { dialog } from 'electron';
 import { isDev } from './config';
+import * as Sentry from '@sentry/electron/main';
+import { getMainWindow } from './windowManager';
+import { ProgressInfo, UpdateInfo } from 'electron-updater';
 
 // Try to import electron-updater with fallback
 let autoUpdater: any = null;
@@ -35,7 +38,7 @@ function setupAutoUpdater(): void {
     }
 
     // Configure auto-updater
-    autoUpdater.autoDownload = false;
+    autoUpdater.autoDownload = true;
     autoUpdater.autoInstallOnAppQuit = true;
 
     // Check for updates
@@ -55,6 +58,7 @@ function setupAutoUpdater(): void {
           'A new version is available. The app will update automatically.',
       });
     } catch (error) {
+      Sentry.captureException(error);
       console.error('Error showing update available dialog:', error);
     }
   });
@@ -75,7 +79,15 @@ function setupAutoUpdater(): void {
         if (returnValue.response === 0) autoUpdater.quitAndInstall();
       });
     } catch (error) {
+      Sentry.captureException(error);
       console.error('Error showing update downloaded dialog:', error);
+    }
+  });
+
+  autoUpdater.on('download-progress', (progress: ProgressInfo) => {
+    const mainWindow = getMainWindow();
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.setProgressBar(progress.percent);
     }
   });
 

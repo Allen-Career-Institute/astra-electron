@@ -1,9 +1,13 @@
 {
   "name": "astra-electron",
-  "version": "1.0.0",
-  "description": "Astra Console Electron App with WebView and Video Streaming",
+  "version": "0.0.4",
+  "description": "Astra Electron App with WebView and Video Streaming",
   "main": "dist/main.js",
   "packageManager": "yarn@4.9.2",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Allen-Career-Institute/astra-electron.git"
+  },
   "scripts": {
     "start": "electron dist/main.js",
     "lint": "npx oxlint .",
@@ -24,8 +28,8 @@
     "renderer:start": "webpack serve --mode development",
     "electron:build": "cross-env-shell 'electron-builder --config electron-builder.json'",
     "electron:win": "cross-env-shell 'electron-builder --config electron-builder.json --win --x64'",
-    "electron:win-appx": "cross-env-shell 'electron-builder --config electron-builder-appx.json --win --x64'",
-    "electron:win-nsis": "cross-env-shell 'electron-builder --config electron-builder.json --win --x64'",
+    "electron:win-appx": "cross-env-shell 'electron-builder --config electron-builder-appx.json --win --x64 --publish always'",
+    "electron:win-nsis": "cross-env-shell 'electron-builder --config electron-builder.json --win --x64 --publish always'",
     "electron:mac": "cross-env-shell 'electron-builder --config electron-builder.json --mac --x64'",
     "electron:linux": "cross-env-shell 'electron-builder --config electron-builder.json --linux --x64'",
     "build:all": "yarn clean:dist && yarn build:ts && yarn renderer:build && yarn electron:build",

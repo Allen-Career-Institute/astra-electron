@@ -37,6 +37,7 @@
     "!**/src/**"
   ],
   "win": {
+    "publish": ["github"],
     "target": [
       {
         "target": "appx",
@@ -93,8 +94,8 @@
       "CFBundleInfoDictionaryVersion": "6.0",
       "CFBundleName": "Astra Console",
       "CFBundlePackageType": "APPL",
-      "CFBundleShortVersionString": "1.0.0",
-      "CFBundleVersion": "1.0.0",
+      "CFBundleShortVersionString": "0.0.4",
+      "CFBundleVersion": "0.0.4",
       "LSMinimumSystemVersion": "10.15.0",
       "NSCameraUsageDescription": "This app requires camera access for streaming",
       "NSMicrophoneUsageDescription": "This app requires microphone access for streaming",
@@ -126,10 +127,12 @@
   },
   "publish": {
     "provider": "github",
-    "owner": "dinesh-kumar-allen",
-    "repo": "allen-ui-console-electron",
+    "owner": "Allen-Career-Institute",
+    "repo": "astra-electron",
     "private": false,
-    "releaseType": "release"
+    "token": "${grep GH_TOKEN' .env.local }",
+    "releaseType": "release",
+    "username": "dinesh-kumar-allen"
   },
   "forceCodeSigning": false,
   "asar": false,

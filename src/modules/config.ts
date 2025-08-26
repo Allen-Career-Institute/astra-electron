@@ -10,6 +10,19 @@ let ASTRA_ELECTRON_SENTRY_ENDPOINT: string = '';
 let CURRENT_URL: string = '';
 let APP_VERSION: string = '';
 
+// Rolling merge configuration
+import { isRollingMergeDisabled as getUserRollingMergeDisabled } from './user-config';
+
+let DISABLE_ROLLING_MERGE: boolean = getUserRollingMergeDisabled(); // Default from user config
+
+const getRollingMergeDisabled = () => {
+  return DISABLE_ROLLING_MERGE;
+};
+
+const setRollingMergeDisabled = (disabled: boolean) => {
+  DISABLE_ROLLING_MERGE = disabled;
+};
+
 const getEnv = () => {
   return ENV;
 };
@@ -84,4 +97,6 @@ export {
   getSentryEndpoint,
   getAppVersion,
   setAppVersion,
+  getRollingMergeDisabled,
+  setRollingMergeDisabled,
 };
