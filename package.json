@@ -4,6 +4,10 @@
   "description": "Astra Electron App with WebView and Video Streaming",
   "main": "dist/main.js",
   "packageManager": "yarn@4.9.2",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Allen-Career-Institute/astra-electron.git"
+  },
   "scripts": {
     "start": "electron dist/main.js",
     "lint": "npx oxlint .",
