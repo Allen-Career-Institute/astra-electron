@@ -78,7 +78,7 @@ function createMenu(): void {
                 getEnv() +
                 '\nURL: ' +
                 getCurrentUrl() +
-                'App Version: ' +
+                '\nApp Version: ' +
                 getAppVersion(),
             });
           },
