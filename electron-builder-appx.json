@@ -124,11 +124,12 @@
   },
   "publish": {
     "provider": "github",
-    "owner": "dinesh-kumar-allen",
+    "owner": "Allen-Career-Institute",
     "repo": "astra-electron",
     "private": false,
     "token": "${grep GH_TOKEN' .env.local }",
-    "releaseType": "release"
+    "releaseType": "release",
+    "userName": "dinesh-kumar-allen"
   },
   "forceCodeSigning": false,
   "asar": false,

@@ -129,7 +129,7 @@
   },
   "publish": {
     "provider": "github",
-    "owner": "dinesh-kumar-allen",
+    "owner": "Allen-Career-Institute",
     "repo": "astra-electron",
     "private": false,
     "releaseType": "release"
