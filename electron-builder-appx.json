@@ -129,7 +129,7 @@
     "private": false,
     "token": "${grep GH_TOKEN' .env.local }",
     "releaseType": "release",
-    "userName": "dinesh-kumar-allen"
+    "username": "dinesh-kumar-allen"
   },
   "forceCodeSigning": false,
   "asar": false,
