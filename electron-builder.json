@@ -5,6 +5,10 @@
     "output": "dist-electron-builder",
     "buildResources": "assets"
   },
+  "protocols": {
+    "name": "astra-console-protocol",
+    "schemes": ["astra-console"]
+  },
   "files": [
     "dist/**/*",
     "assets/**/*",

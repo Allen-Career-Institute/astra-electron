@@ -1,4 +1,11 @@
 // Shared types for preload scripts
+export interface DeepLinkData {
+  action?: string;
+  id?: string;
+  type?: string;
+  [key: string]: string | undefined;
+}
+
 export interface BaseElectronAPI {
   isElectron: boolean;
   requestStreamConfig: () => Promise<any>;
@@ -11,6 +18,9 @@ export interface BaseElectronAPI {
     isLastChunk?: boolean
   ) => Promise<any>;
   removeAllListeners: (channel: string) => void;
+  onDeepLink: (
+    callback: (event: any, deepLinkData: DeepLinkData) => void
+  ) => void;
 }
 
 export interface MainElectronAPI extends BaseElectronAPI {

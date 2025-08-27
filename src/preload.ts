@@ -84,6 +84,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
       };
     }
   },
+  // Deep link event listener
+  onDeepLink: (callback: (event: any, deepLinkData: any) => void): void => {
+    ipcRenderer.on('deep-link-received', callback);
+  },
 } as MainElectronAPI);
 
 // Extend the global Window interface

@@ -64,6 +64,7 @@ import {
 import { createMainWindow } from './modules/windowManager';
 import { getStreamWindow } from './modules/streamWindow';
 import { getWhiteboardWindow } from './modules/whiteboard-window';
+import { deepLinkHandler } from './modules/deepLinkHandler';
 
 // Enable hardware acceleration and WebRTC optimizations for better video quality
 app.commandLine.appendSwitch(
@@ -112,8 +113,13 @@ setupIpcHandlers(ipcMain);
 // App event handlers
 app.on('ready', () => {
   try {
-    createMainWindow();
+    const mainWindow = createMainWindow();
     createMenu();
+
+    // Set main window for deep link handler
+    if (mainWindow) {
+      deepLinkHandler.setMainWindow(mainWindow);
+    }
 
     process.title = 'Astra-Main';
     // Set up automatic process naming for Electron processes
