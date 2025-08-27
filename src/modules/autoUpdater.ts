@@ -1,26 +1,11 @@
 import { dialog } from 'electron';
-import { getCurrentUrl, isDev } from './config';
+import { getCurrentUrl, isDev, setUpdateAvailable } from './config';
 import * as Sentry from '@sentry/electron/main';
 import { getMainWindow } from './windowManager';
-import { ProgressInfo, UpdateInfo } from 'electron-updater';
+import { ProgressInfo, autoUpdater } from 'electron-updater';
 
-// Try to import electron-updater with fallback
-let autoUpdater: any = null;
-
-try {
-  autoUpdater = require('electron-updater').autoUpdater;
-} catch (error) {
-  console.error('Failed to load electron-updater:', error);
-  // Try alternative import path
-  try {
-    const electronUpdater = require('electron-updater');
-    autoUpdater = electronUpdater.autoUpdater || electronUpdater;
-  } catch (fallbackError) {
-    console.error(
-      'Failed to load electron-updater with fallback:',
-      fallbackError
-    );
-  }
+function getAutoUpdater() {
+  return autoUpdater;
 }
 
 function setupAutoUpdater(): void {
@@ -38,11 +23,19 @@ function setupAutoUpdater(): void {
     }
 
     // Configure auto-updater
+    autoUpdater.autoRunAppAfterInstall = true;
     autoUpdater.autoDownload = true;
     autoUpdater.autoInstallOnAppQuit = true;
 
     // Check for updates
     autoUpdater.checkForUpdatesAndNotify();
+
+    setInterval(
+      () => {
+        autoUpdater.checkForUpdatesAndNotify();
+      },
+      1000 * 60 * 60 * 0.5
+    ); // 1 hours
   } catch (error) {
     console.error('Failed to setup auto-updater:', error);
   }
@@ -51,6 +44,7 @@ function setupAutoUpdater(): void {
 
   autoUpdater.on('update-available', () => {
     if (getCurrentUrl()?.includes('liveclass')) {
+      setUpdateAvailable(true);
       return;
     }
     try {
@@ -68,6 +62,7 @@ function setupAutoUpdater(): void {
 
   autoUpdater.on('update-downloaded', () => {
     if (getCurrentUrl()?.includes('liveclass')) {
+      setUpdateAvailable(true);
       return;
     }
     try {
@@ -96,7 +91,7 @@ function setupAutoUpdater(): void {
     }
     const mainWindow = getMainWindow();
     if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.setProgressBar(progress.percent);
+      mainWindow.setProgressBar(progress.percent / 100);
     }
   });
 
@@ -105,4 +100,4 @@ function setupAutoUpdater(): void {
   });
 }
 
-export { setupAutoUpdater };
+export { setupAutoUpdater, getAutoUpdater };

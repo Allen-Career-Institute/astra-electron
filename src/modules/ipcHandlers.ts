@@ -15,9 +15,14 @@ import {
 } from './whiteboard-window';
 import { screenSharingManager } from './screenSharing';
 import { rollingMergeManager } from './rollingMergeManager';
-import { getRollingMergeDisabled } from './config';
+import {
+  getRollingMergeDisabled,
+  isUpdateAvailable,
+  setUpdateAvailable,
+} from './config';
 import { isChunkLoggingEnabled } from './user-config';
 import { reloadMainWindow } from './reloadUtils';
+import { getAutoUpdater } from './autoUpdater';
 
 // Global variables for FFmpeg processing
 let ffmpegProcesses = new Map<string, any>(); // Map to store FFmpeg processes by meetingId
@@ -183,6 +188,13 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
 
             // Stop rolling merge process and cleanup
             rollingMergeManager.cleanupMeeting(meetingId);
+
+            if (isUpdateAvailable()) {
+              setTimeout(() => {
+                setUpdateAvailable(false);
+                getAutoUpdater()?.quitAndInstall();
+              }, 5000);
+            }
           }
 
           return {
