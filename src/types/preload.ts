@@ -16,6 +16,7 @@ export interface BaseElectronAPI {
 export interface MainElectronAPI extends BaseElectronAPI {
   sendMessage: (message: any) => Promise<any>;
   logout: () => void;
+  getDesktopSources: (options: any) => Promise<any>;
 }
 
 export interface StreamElectronAPI extends BaseElectronAPI {}
