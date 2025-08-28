@@ -4206,6 +4206,7 @@ __metadata:
     electron-icon-builder: "npm:^2.0.1"
     electron-store: "npm:^10.1.0"
     electron-updater: "npm:6.6.2"
+    electron-windows-msix: "npm:^1.2.5"
     html-webpack-plugin: "npm:^5.5.3"
     husky: "npm:^8.0.3"
     lint-staged: "npm:^15.2.0"
@@ -4853,6 +4854,16 @@ __metadata:
     escape-string-regexp: "npm:^1.0.5"
     supports-color: "npm:^5.3.0"
   checksum: 10c0/e6543f02ec877732e3a2d1c3c3323ddb4d39fbab687c23f526e25bd4c6a9bf3b83a696e8c769d078e04e5754921648f7821b2a2acfd16c550435fd630026e073
+  languageName: node
+  linkType: hard
+
+"chalk@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "chalk@npm:3.0.0"
+  dependencies:
+    ansi-styles: "npm:^4.1.0"
+    supports-color: "npm:^7.1.0"
+  checksum: 10c0/ee650b0a065b3d7a6fda258e75d3a86fc8e4effa55871da730a9e42ccb035bf5fd203525e5a1ef45ec2582ecc4f65b47eb11357c526b84dd29a14fb162c414d2
   languageName: node
   linkType: hard
 
@@ -5672,7 +5683,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"debug@npm:4, debug@npm:^4, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.4, debug@npm:^4.3.5, debug@npm:^4.4.0, debug@npm:^4.4.1":
+"debug@npm:4, debug@npm:^4, debug@npm:^4.1.0, debug@npm:^4.1.1, debug@npm:^4.3.1, debug@npm:^4.3.4, debug@npm:^4.3.5, debug@npm:^4.3.7, debug@npm:^4.4.0, debug@npm:^4.4.1":
   version: 4.4.1
   resolution: "debug@npm:4.4.1"
   dependencies:
@@ -6165,6 +6176,18 @@ __metadata:
     semver: "npm:^7.6.3"
     tiny-typed-emitter: "npm:^2.1.0"
   checksum: 10c0/2b9ae5583b95f6772c4a2515ddba7ba52b65460ab81f09ae4f0b97c7e3d7b7e3d9426775eb9a53d3193bd4c3d5466bf30827c1a6ee75e4aca739c647f6ac46ff
+  languageName: node
+  linkType: hard
+
+"electron-windows-msix@npm:^1.2.5":
+  version: 1.2.5
+  resolution: "electron-windows-msix@npm:1.2.5"
+  dependencies:
+    chalk: "npm:^3.0.0"
+    fs-extra: "npm:^11.2.0"
+    spawn-rx: "npm:^5.1.2"
+    xml-escape: "npm:^1.1.0"
+  checksum: 10c0/b3e9caf70704f5932fe760e583e5d6dc2de750b62bbbfacf401e64588bdd37337a6df3b4cc7e9eccac9b7121558d61f57cbbbf6a5098b00d7d788bbb5c01e34a
   languageName: node
   linkType: hard
 
@@ -7055,6 +7078,17 @@ __metadata:
     jsonfile: "npm:^6.0.1"
     universalify: "npm:^2.0.0"
   checksum: 10c0/5f579466e7109719d162a9249abbeffe7f426eb133ea486e020b89bc6d67a741134076bf439983f2eb79276ceaf6bd7b7c1e43c3fd67fe889863e69072fb0a5e
+  languageName: node
+  linkType: hard
+
+"fs-extra@npm:^11.2.0":
+  version: 11.3.1
+  resolution: "fs-extra@npm:11.3.1"
+  dependencies:
+    graceful-fs: "npm:^4.2.0"
+    jsonfile: "npm:^6.0.1"
+    universalify: "npm:^2.0.0"
+  checksum: 10c0/61e5b7285b1ca72c68dfe1058b2514294a922683afac2a80aa90540f9bd85370763d675e3b408ef500077d355956fece3bd24b546790e261c3d3015967e2b2d9
   languageName: node
   linkType: hard
 
@@ -11615,6 +11649,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"spawn-rx@npm:^5.1.2":
+  version: 5.1.2
+  resolution: "spawn-rx@npm:5.1.2"
+  dependencies:
+    debug: "npm:^4.3.7"
+    rxjs: "npm:^7.8.1"
+  checksum: 10c0/1a8572da209161063c5ed25b44d5b5bd786ceb51c15d355e499c518feb1da675004fb40e3f20f653025a2ec2feb4c676d1e52cc2ed0fa40ae65e40cc972d60cd
+  languageName: node
+  linkType: hard
+
 "spdx-correct@npm:^3.0.0":
   version: 3.2.0
   resolution: "spdx-correct@npm:3.2.0"
@@ -13071,6 +13115,13 @@ __metadata:
     parse-headers: "npm:^2.0.0"
     xtend: "npm:^4.0.0"
   checksum: 10c0/b73b6413b678846c422559cbc0afb2acb34c3a75b4c3bbee1f258e984255a8b8d65c1749b51691278bbdc28781782950d77a759ef5a9adf7774bed2f5dabc954
+  languageName: node
+  linkType: hard
+
+"xml-escape@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "xml-escape@npm:1.1.0"
+  checksum: 10c0/973cef0e383c373d1ccbacbba33ac49e7f2afd60d2710ed1308e153d2aa3b3189477f79315eb10eed43b7221add040a5eab18107170b658559e4d29ce7653a76
   languageName: node
   linkType: hard
 

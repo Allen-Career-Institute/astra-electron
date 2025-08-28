@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, desktopCapturer, ipcRenderer } from 'electron';
 import { MainElectronAPI } from './types/preload';
 
 // Set process name for OS task manager visibility
@@ -72,6 +72,21 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Remove all listeners
   removeAllListeners: (channel: string): void => {
     ipcRenderer.removeAllListeners(channel);
+  },
+  // Logout event listener
+  logout: async (): Promise<any> => {
+    try {
+      return await ipcRenderer.invoke('app-logout');
+    } catch (error) {
+      return {
+        type: 'ERROR',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+  getDesktopSources: async (options: any) => {
+    const sources = await desktopCapturer.getSources(options);
+    return sources;
   },
 } as MainElectronAPI);
 
