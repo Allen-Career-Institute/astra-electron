@@ -52,7 +52,7 @@ function setupCleanupHandlers(): void {
 }
 
 /**
- * Clean up recording folders older than 5 days
+ * Clean up recording folders older than 3 days
  * Runs as a separate process and gets closed once done
  */
 function cleanupOldRecordings(): void {
@@ -179,7 +179,7 @@ const path = require('path');
 const os = require('os');
 
 /**
- * Clean up recording folders older than 5 days
+ * Clean up recording folders older than 3 days
  */
 function cleanupOldRecordings() {
   try {
@@ -200,7 +200,7 @@ function cleanupOldRecordings() {
     }
 
     const currentTime = Date.now();
-    const fiveDaysInMs = 5 * 24 * 60 * 60 * 1000; // 5 days in milliseconds
+    const fiveDaysInMs = 3 * 24 * 60 * 60 * 1000; // 3 days in milliseconds
     
     // Read all meeting folders in recordings directory
     const meetingFolders = fs.readdirSync(recordingsDir, { withFileTypes: true })
@@ -216,7 +216,7 @@ function cleanupOldRecordings() {
         const stats = fs.statSync(meetingPath);
         const folderAge = currentTime - stats.mtime.getTime();
         
-        // Check if folder is older than 5 days
+        // Check if folder is older than 3 days
         if (folderAge > fiveDaysInMs) {
           // Remove the entire meeting folder and all its contents
           fs.rmSync(meetingPath, { recursive: true, force: true });
