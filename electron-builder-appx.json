@@ -1,6 +1,6 @@
 {
-  "appId": "com.allendigital.astra",
-  "productName": "Astra",
+  "appId": "com.allencareerinstitute.astra-console",
+  "productName": "Astra Console",
   "directories": {
     "output": "dist-electron-builder",
     "buildResources": "assets"
@@ -42,12 +42,16 @@
       {
         "target": "appx",
         "arch": ["x64"]
+      },
+      {
+        "target": "dir",
+        "arch": ["x64"]
       }
     ],
     "requestedExecutionLevel": "asInvoker",
     "icon": "assets/icons/win/icon.ico",
     "artifactName": "${productName}-${version}-appx.${ext}",
-    "publisherName": "Allen Digital",
+    "publisherName": "ALLEN CAREER INSTITUTE PRIVATE LIMITED",
     "verifyUpdateCodeSignature": false,
     "certificateFile": null,
     "certificatePassword": null,
@@ -55,15 +59,14 @@
     "timeStampServer": null
   },
   "appx": {
-    "identityName": "AllenDigital.Astra",
-    "publisher": "CN=AllenDigital",
-    "displayName": "Astra",
-    "publisherDisplayName": "ALLEN Digital",
+    "identityName": "AllenCareerInstitute.AstraConsole",
+    "publisher": "CN=ALLEN CAREER INSTITUTE PRIVATE LIMITED",
+    "displayName": "Astra Console",
+    "publisherDisplayName": "ALLEN CAREER INSTITUTE PRIVATE LIMITED",
     "backgroundColor": "#ffffff",
     "languages": ["en-US"],
-    "applicationId": "AllenDigital.Astra",
-    "showNameOnTiles": true,
-    "makeappxArgs": ["--verbose"]
+    "applicationId": "AllenCareerInstitute.AstraConsole",
+    "showNameOnTiles": true
   },
   "mac": {
     "target": [
@@ -85,14 +88,14 @@
     "gatekeeperAssess": false,
     "notarize": false,
     "extendInfo": {
-      "CFBundleDisplayName": "Astra",
-      "CFBundleExecutable": "Astra",
-      "CFBundleIdentifier": "com.allendigital.astra",
+      "CFBundleDisplayName": "Astra Console",
+      "CFBundleExecutable": "Astra Console",
+      "CFBundleIdentifier": "com.allencareerinstitute.astra-console",
       "CFBundleInfoDictionaryVersion": "6.0",
-      "CFBundleName": "Astra",
+      "CFBundleName": "Astra Console",
       "CFBundlePackageType": "APPL",
-      "CFBundleShortVersionString": "0.0.4",
-      "CFBundleVersion": "0.0.4",
+      "CFBundleShortVersionString": "1.0.0",
+      "CFBundleVersion": "1.0.0",
       "LSMinimumSystemVersion": "10.15.0",
       "NSCameraUsageDescription": "This app requires camera access for streaming",
       "NSMicrophoneUsageDescription": "This app requires microphone access for streaming",

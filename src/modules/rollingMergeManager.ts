@@ -386,6 +386,7 @@ export class RollingMergeManager {
 
   /**
    * Add chunk to the list for a meeting
+   * Maintains proper ordering for timestamp-based filenames
    */
   addChunk(meetingId: string, chunkFileName: string): void {
     if (!this.chunkLists.has(meetingId)) {
@@ -394,6 +395,14 @@ export class RollingMergeManager {
 
     const chunkList = this.chunkLists.get(meetingId)!;
     chunkList.push(chunkFileName);
+
+    // Sort chunks by timestamp to ensure proper order for merging
+    // Format: ${timestamp}.webm
+    chunkList.sort((a, b) => {
+      const timestampA = parseInt(a.split('.')[0]);
+      const timestampB = parseInt(b.split('.')[0]);
+      return timestampA - timestampB;
+    });
   }
 
   /**

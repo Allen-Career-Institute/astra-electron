@@ -2,7 +2,7 @@
 # This script can be used for process management and cleanup
 
 param(
-    [string]$AppName = "Astra"
+    [string]$AppName = "Astra Console"
 )
 
 Write-Host "Attempting to close $AppName..."
@@ -68,12 +68,12 @@ function Close-ProcessByExecutable {
 }
 
 # Close specific process names
-Close-ProcessGracefully "Astra"
+Close-ProcessGracefully "Astra Console"
 Close-ProcessGracefully "astra-electron"
 
 # Close processes by executable name patterns
 Close-ProcessByExecutable "astra-electron"
-Close-ProcessByExecutable "Astra"
+Close-ProcessByExecutable "Astra Console"
 
 # Additional cleanup using WMI for stubborn processes
 try {
@@ -81,7 +81,7 @@ try {
     
     # Kill any remaining processes with similar names
     Get-WmiObject -Class Win32_Process | Where-Object { 
-        $_.Name -like "*Astra*" -or 
+        $_.Name -like "*Astra Console*" -or 
         $_.Name -like "*astra-electron*" 
     } | ForEach-Object {
         Write-Host "Terminating process: $($_.Name) (ID: $($_.ProcessId))"

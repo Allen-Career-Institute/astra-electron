@@ -49,7 +49,6 @@ jobs:
       !github.event.pull_request.head.repo.fork && 
       contains(fromJson('["write", "admin", "maintain"]'), needs.check-permissions.outputs.has-permissions)
     needs: check-permissions
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -87,7 +86,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
         timeout-minutes: 10
-    
+
       - name: Test environment variables
         run: yarn test:env
         timeout-minutes: 2
@@ -100,9 +99,17 @@ jobs:
           DEV_URL: ${{ env.DEV_URL }}
           ASTRA_ELECTRON_SENTRY_DSN: ${{ env.ASTRA_ELECTRON_SENTRY_DSN }}
 
-      - name: Build Windows
+      - name: Build Windows NSIS
         run: yarn build:win-nsis
         timeout-minutes: 10
+
+      # - name: Build Windows AppX
+      #   run: yarn build:win-appx
+      #   timeout-minutes: 20
+
+      # - name: Package MSIX
+      #   run: yarn package:msix
+      #   timeout-minutes: 10
 
       - name: Cleanup build artifacts
         run: Remove-Item -Recurse -Force "dist-electron-builder\win-unpacked" -ErrorAction SilentlyContinue
@@ -116,6 +123,7 @@ jobs:
           path: |
             dist-electron-builder/
             !dist-electron-builder/**/*.blockmap
+            !dist-electron-builder/msix_layout/
           retention-days: 1
 
       - name: Create build summary

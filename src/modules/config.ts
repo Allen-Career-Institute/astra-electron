@@ -9,6 +9,7 @@ let ASTRA_ELECTRON_SENTRY_DSN: string = '';
 let ASTRA_ELECTRON_SENTRY_ENDPOINT: string = '';
 let CURRENT_URL: string = '';
 let APP_VERSION: string = '';
+let UPDATE_AVAILABLE: boolean = false;
 
 // Rolling merge configuration
 import { isRollingMergeDisabled as getUserRollingMergeDisabled } from './user-config';
@@ -82,6 +83,14 @@ const setAppVersion = (version: string) => {
   APP_VERSION = version;
 };
 
+const isUpdateAvailable = () => {
+  return UPDATE_AVAILABLE;
+};
+
+const setUpdateAvailable = (available: boolean) => {
+  UPDATE_AVAILABLE = available;
+};
+
 export {
   isDev,
   getEnv,
@@ -97,6 +106,8 @@ export {
   getSentryEndpoint,
   getAppVersion,
   setAppVersion,
+  isUpdateAvailable,
+  setUpdateAvailable,
   getRollingMergeDisabled,
   setRollingMergeDisabled,
 };

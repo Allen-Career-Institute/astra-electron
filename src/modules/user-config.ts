@@ -9,9 +9,7 @@ export const USER_CONFIG = {
     disabled: true,
 
     // When disabled, chunks will be saved as individual files:
-    // - chunk_000001.webm
-    // - chunk_000002.webm
-    // - chunk_000003.webm
+    // - {timestamp}.webm
     // etc.
 
     // When enabled, chunks will be automatically merged into:
@@ -25,8 +23,8 @@ export const USER_CONFIG = {
     // This is relative to the user data directory
     recordingsPath: 'recordings',
 
-    // Chunk file naming pattern
-    chunkFileNamePattern: 'chunk_{index:06d}.webm',
+    // Chunk file naming pattern (timestamp-based to prevent conflicts on page reload)
+    chunkFileNamePattern: '{timestamp}.webm',
   },
 
   // Logging Settings

@@ -56,7 +56,11 @@ import {
   cleanupFFmpegProcesses,
 } from './modules/ipcHandlers';
 import { setupAutoUpdater } from './modules/autoUpdater';
-import { cleanup } from './modules/cleanup';
+import {
+  cleanup,
+  cleanupOldRecordings,
+  setupPeriodicCleanup,
+} from './modules/cleanup';
 import { createMainWindow } from './modules/windowManager';
 import { getStreamWindow } from './modules/streamWindow';
 import { getWhiteboardWindow } from './modules/whiteboard-window';
@@ -114,6 +118,22 @@ app.on('ready', () => {
     process.title = 'Astra-Main';
     // Set up automatic process naming for Electron processes
     // setupAutomaticProcessNaming();
+
+    // Clean up old recording folders on app start
+    try {
+      cleanupOldRecordings();
+    } catch (cleanupError) {
+      console.error('Failed to cleanup old recordings:', cleanupError);
+      // Continue with app initialization even if cleanup fails
+    }
+
+    // Set up periodic cleanup of old recordings
+    try {
+      setupPeriodicCleanup();
+    } catch (periodicCleanupError) {
+      console.error('Failed to setup periodic cleanup:', periodicCleanupError);
+      // Continue with app initialization even if periodic cleanup fails
+    }
 
     // Show error dialog if environment variables failed to load
     if (getLoadEnvError()) {
