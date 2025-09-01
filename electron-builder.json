@@ -41,7 +41,7 @@
     ],
     "requestedExecutionLevel": "asInvoker",
     "icon": "assets/icons/win/icon.ico",
-    "artifactName": "${productName}-${version}.${ext}",
+    "artifactName": "${productName}.${ext}",
     "publisherName": "ALLEN CAREER INSTITUTE PRIVATE LIMITED",
     "verifyUpdateCodeSignature": false
   },
@@ -57,7 +57,7 @@
     "installerIcon": "assets/icons/win/icon.ico",
     "uninstallerIcon": "assets/icons/win/icon.ico",
     "installerHeaderIcon": "assets/icons/win/icon.ico",
-    "artifactName": "${productName}-${version}-setup.${ext}",
+    "artifactName": "${productName}.${ext}",
     "uninstallDisplayName": "Astra Console",
     "runAfterFinish": true,
     "menuCategory": "Astra Console",
@@ -82,7 +82,7 @@
       }
     ],
     "icon": "assets/icons/mac/icon.icns",
-    "artifactName": "${productName}-${version}-mac.${ext}",
+    "artifactName": "${productName}.${ext}",
     "category": "public.app-category.productivity",
     "entitlements": "assets/entitlements.mac.plist",
     "entitlementsInherit": "assets/entitlements.mac.plist",
@@ -124,7 +124,7 @@
       }
     ],
     "icon": "assets/icons/png/512x512.png",
-    "artifactName": "${productName}-${version}-linux.${ext}",
+    "artifactName": "${productName}.${ext}",
     "category": "Utility"
   },
   "publish": {

@@ -50,7 +50,7 @@
     ],
     "requestedExecutionLevel": "asInvoker",
     "icon": "assets/icons/win/icon.ico",
-    "artifactName": "${productName}-${version}-appx.${ext}",
+    "artifactName": "${productName}.${ext}",
     "publisherName": "ALLEN CAREER INSTITUTE PRIVATE LIMITED",
     "verifyUpdateCodeSignature": false,
     "certificateFile": null,
@@ -80,7 +80,7 @@
       }
     ],
     "icon": "assets/icons/mac/icon.icns",
-    "artifactName": "${productName}-${version}-mac.${ext}",
+    "artifactName": "${productName}.${ext}",
     "category": "public.app-category.productivity",
     "entitlements": "assets/entitlements.mac.plist",
     "entitlementsInherit": "assets/entitlements.mac.plist",
@@ -122,7 +122,7 @@
       }
     ],
     "icon": "assets/icons/png/512x512.png",
-    "artifactName": "${productName}-${version}-linux.${ext}",
+    "artifactName": "${productName}.${ext}",
     "category": "Utility"
   },
   "publish": {

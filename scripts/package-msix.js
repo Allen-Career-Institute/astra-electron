@@ -71,7 +71,7 @@ async function packageMSIXApp() {
 
     // Additional validation for electron-windows-msix
     console.log('🔍 Validating app directory structure...');
-    const requiredFiles = ['Astra Console.exe', 'resources', 'locales'];
+    const requiredFiles = ['Astra-Console.exe', 'resources', 'locales'];
 
     for (const file of requiredFiles) {
       const filePath = path.join(appDir, file);
@@ -106,7 +106,7 @@ async function packageMSIXApp() {
     console.log('Assets directory:', assetsDir);
 
     // Check if the executable exists
-    const executablePath = path.join(appDir, 'Astra Console.exe');
+    const executablePath = path.join(appDir, 'Astra-Console.exe');
     if (!fs.existsSync(executablePath)) {
       console.error(`❌ Executable not found: ${executablePath}`);
       console.log('📁 Available files in app directory:');
@@ -137,7 +137,7 @@ async function packageMSIXApp() {
         packageDescription:
           'Astra Console Electron App with WebView and Video Streaming',
         packageBackgroundColor: '#ffffff',
-        appExecutable: 'Astra Console.exe',
+        appExecutable: 'Astra-Console.exe',
         appDisplayName: 'Astra Console',
         targetArch: 'x64',
         packageMinOSVersion: '10.0.19041.0',
