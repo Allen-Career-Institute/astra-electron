@@ -50,7 +50,6 @@
     ],
     "requestedExecutionLevel": "asInvoker",
     "icon": "assets/icons/win/icon.ico",
-    "artifactName": "${productName}.${ext}",
     "publisherName": "ALLEN CAREER INSTITUTE PRIVATE LIMITED",
     "verifyUpdateCodeSignature": false,
     "certificateFile": null,
@@ -62,6 +61,7 @@
     "identityName": "AllenCareerInstitute.AstraConsole",
     "publisher": "CN=ALLEN CAREER INSTITUTE PRIVATE LIMITED",
     "displayName": "Astra Console",
+    "artifactName": "${productName}-${version}-${os}.${ext}",
     "publisherDisplayName": "ALLEN CAREER INSTITUTE PRIVATE LIMITED",
     "backgroundColor": "#ffffff",
     "languages": ["en-US"],
@@ -80,7 +80,7 @@
       }
     ],
     "icon": "assets/icons/mac/icon.icns",
-    "artifactName": "${productName}.${ext}",
+    "artifactName": "${productName}-${version}-${os}.${ext}",
     "category": "public.app-category.productivity",
     "entitlements": "assets/entitlements.mac.plist",
     "entitlementsInherit": "assets/entitlements.mac.plist",
@@ -122,7 +122,7 @@
       }
     ],
     "icon": "assets/icons/png/512x512.png",
-    "artifactName": "${productName}.${ext}",
+    "artifactName": "${productName}-${version}-${os}.${ext}",
     "category": "Utility"
   },
   "publish": {
