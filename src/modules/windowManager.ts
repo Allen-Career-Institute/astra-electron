@@ -9,6 +9,7 @@ import { registerMainUI } from './processNaming';
 let mainWindow: BrowserWindow | null = null;
 let mainWindowHasLoaded: boolean = false;
 let sharedSession: Electron.Session | null = null;
+let mainWindowPid: number | null = null;
 
 // Lazy initialization of shared session
 function getSharedSession(): Electron.Session {
@@ -97,6 +98,7 @@ function createMainWindow(): BrowserWindow {
     if (mainWindow) {
       // Register with new process naming system
       registerMainUI(mainWindow);
+      mainWindowPid = mainWindow.webContents.getOSProcessId();
     }
     try {
       if (mainWindow) {
@@ -142,6 +144,10 @@ function setMainWindowLoaded(loaded: boolean): void {
   mainWindowHasLoaded = loaded;
 }
 
+function getMainWindowPid(): number | null {
+  return mainWindowPid;
+}
+
 // Export the shared session getter so other windows can use it
 export {
   createMainWindow,
@@ -150,4 +156,5 @@ export {
   setMainWindowLoaded,
   injectTokensToWindow,
   getSharedSession,
+  getMainWindowPid,
 };

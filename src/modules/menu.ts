@@ -21,6 +21,14 @@ function createMenu(): void {
       label: 'View',
       submenu: [
         {
+          label: 'Open Process Manager',
+          accelerator: 'CmdOrCtrl+Shift+P',
+          click: () => {
+            const { openProcessManager } = require('electron-process-manager');
+            openProcessManager();
+          },
+        },
+        {
           label: 'Reload',
           accelerator: 'CmdOrCtrl+R',
           click: () => {

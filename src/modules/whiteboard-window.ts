@@ -8,6 +8,7 @@ import { registerWhiteboardWindow } from './processNaming';
 let whiteboardWindow: BrowserWindow | null = null;
 let whiteboardWindowConfig: WhiteboardWindowConfig | null = null;
 let whiteboardWindowSettingUp: boolean = false;
+let whiteboardWindowPid: number | null = null;
 
 // Force close whiteboard window (for admin/emergency use)
 function forceClosewhiteboardWindow(): boolean {
@@ -222,6 +223,7 @@ function createWhiteboardWindow(config: WhiteboardWindowConfig): BrowserWindow {
       if (whiteboardWindow) {
         // Register with new process naming system
         registerWhiteboardWindow(whiteboardWindow);
+        whiteboardWindowPid = whiteboardWindow.webContents.getOSProcessId();
       }
     });
 
@@ -253,6 +255,10 @@ function getWhiteboardWindowConfig(): WhiteboardWindowConfig | null {
   return whiteboardWindowConfig;
 }
 
+function getWhiteboardWindowPid(): number | null {
+  return whiteboardWindowPid;
+}
+
 // Export all functions
 export {
   forceClosewhiteboardWindow,
@@ -261,4 +267,5 @@ export {
   createWhiteboardWindow,
   getWhiteboardWindow,
   getWhiteboardWindowConfig,
+  getWhiteboardWindowPid,
 };

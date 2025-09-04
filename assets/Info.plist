@@ -24,6 +24,10 @@
     <string>This app requires camera access for streaming</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>This app requires microphone access for streaming</string>
+    <key>NSCameraUseContinuityCameraDeviceType</key>
+    <true/>
+    <key>NSCameraUseExternalDeviceType</key>
+    <true/>
     <key>NSAppleEventsUsageDescription</key>
     <string>This app needs access to Apple events</string>
     <key>NSSystemAdministrationUsageDescription</key>
