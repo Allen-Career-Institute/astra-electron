@@ -8,7 +8,7 @@ import {
 } from 'electron';
 import * as Sentry from '@sentry/electron/main';
 import { loadEnv, getLoadEnvError } from './modules/loadEnv';
-import { getSentryDsn, getSentryEndpoint } from './modules/config';
+import { getSentryDsn, getSentryEndpoint, isDev } from './modules/config';
 
 loadEnv();
 
@@ -64,6 +64,7 @@ import {
 import { createMainWindow } from './modules/windowManager';
 import { getStreamWindow } from './modules/streamWindow';
 import { getWhiteboardWindow } from './modules/whiteboard-window';
+import { setupAutomaticProcessNaming } from './modules/processMonitor';
 
 // Enable hardware acceleration and WebRTC optimizations for better video quality
 app.commandLine.appendSwitch(
@@ -82,6 +83,8 @@ app.commandLine.appendSwitch('--enable-webrtc');
 app.commandLine.appendSwitch('--enable-usermedia-screen-capturing');
 app.commandLine.appendSwitch('--allow-running-insecure-content');
 app.commandLine.appendSwitch('--disable-web-security');
+app.commandLine.appendSwitch('--disable-renderer-backgrounding');
+app.commandLine.appendSwitch('--force_high_performance_gpu');
 app.commandLine.appendSwitch('--disable-features', 'VizDisplayCompositor');
 app.commandLine.appendSwitch('--enable-experimental-web-platform-features');
 app.commandLine.appendSwitch('--enable-features', 'GetDisplayMedia');
@@ -107,6 +110,14 @@ app.commandLine.appendSwitch(
 app.commandLine.appendSwitch('--webrtc-max-cpu-consumption-percentage', '100');
 app.commandLine.appendSwitch('--webrtc-cpu-overuse-detection', 'false');
 
+// Additional performance optimizations for streaming
+app.commandLine.appendSwitch('--disable-background-timer-throttling');
+app.commandLine.appendSwitch('--disable-backgrounding-occluded-windows');
+app.commandLine.appendSwitch('--disable-renderer-backgrounding');
+app.commandLine.appendSwitch('--disable-features', 'TranslateUI');
+app.commandLine.appendSwitch('--disable-ipc-flooding-protection');
+app.commandLine.appendSwitch('--max-active-webgl-contexts', '16');
+
 setupIpcHandlers(ipcMain);
 
 // App event handlers
@@ -117,7 +128,7 @@ app.on('ready', () => {
 
     process.title = 'Astra-Main';
     // Set up automatic process naming for Electron processes
-    // setupAutomaticProcessNaming();
+    setupAutomaticProcessNaming();
 
     // Clean up old recording folders on app start
     try {
@@ -161,8 +172,6 @@ app.on('ready', () => {
 
     // Start cleanup worker from main window
     // startCleanupWorker();
-
-    // Stream window will only open on CONFIG_UPDATE action, not automatically on startup
   } catch (error) {
     console.error('Error during app initialization:', error);
   }

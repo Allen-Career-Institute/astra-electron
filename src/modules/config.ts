@@ -64,7 +64,7 @@ const setUrlByEnv = (
 };
 
 const isDev = () => {
-  return getEnv() === 'development';
+  return true;
 };
 
 const setCurrentUrl = (url: string) => {

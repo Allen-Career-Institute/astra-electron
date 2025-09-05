@@ -17,6 +17,7 @@ export interface MainElectronAPI extends BaseElectronAPI {
   sendMessage: (message: any) => Promise<any>;
   logout: () => void;
   getDesktopSources: (options: any) => Promise<any>;
+  onMetrics: (callback: (event: any, metrics: any) => void) => void;
 }
 
 export interface StreamElectronAPI extends BaseElectronAPI {}

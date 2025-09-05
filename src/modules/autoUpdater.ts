@@ -28,16 +28,20 @@ function setupAutoUpdater(): void {
     autoUpdater.autoInstallOnAppQuit = true;
 
     // Check for updates
-    autoUpdater.checkForUpdatesAndNotify();
+    autoUpdater.checkForUpdatesAndNotify().catch(error => {
+      Sentry.captureException(error);
+    });
 
     setInterval(
       () => {
-        autoUpdater.checkForUpdatesAndNotify();
+        autoUpdater.checkForUpdatesAndNotify().catch(error => {
+          Sentry.captureException(error);
+        });
       },
-      1000 * 60 * 60 * 0.5
-    ); // 1 hours
+      1000 * 60 * 60 * 1 // 0.5 hours
+    );
   } catch (error) {
-    console.error('Failed to setup auto-updater:', error);
+    Sentry.captureException(error);
   }
 
   if (!autoUpdater) return;
@@ -56,7 +60,6 @@ function setupAutoUpdater(): void {
       });
     } catch (error) {
       Sentry.captureException(error);
-      console.error('Error showing update available dialog:', error);
     }
   });
 
@@ -81,7 +84,6 @@ function setupAutoUpdater(): void {
       });
     } catch (error) {
       Sentry.captureException(error);
-      console.error('Error showing update downloaded dialog:', error);
     }
   });
 
@@ -95,8 +97,12 @@ function setupAutoUpdater(): void {
     }
   });
 
-  autoUpdater.on('error', (error: any) => {
-    console.error('Auto-updater error:', error);
+  autoUpdater.on('error', (error: any, message?: string) => {
+    Sentry.captureException(error, {
+      extra: {
+        message,
+      },
+    });
   });
 }
 

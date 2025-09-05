@@ -8,6 +8,7 @@ import { registerStreamWindow } from './processNaming';
 let streamWindow: BrowserWindow | null = null;
 let streamWindowConfig: StreamWindowConfig | null = null;
 let streamWindowSettingUp: boolean = false;
+let streamWindowPid: number | null = null;
 
 // Enhanced cleanup function
 function cleanupStreamWindowResources(): void {
@@ -173,6 +174,17 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
       maxHeight: 270,
     });
 
+    // Apply performance optimizations for stream window
+    try {
+      // Optimize web contents for streaming
+      streamWindow.webContents.setBackgroundThrottling(false);
+      // Set high frame rate for smooth streaming
+      streamWindow.webContents.setFrameRate(60);
+      console.log('Stream window performance optimizations applied');
+    } catch (error) {
+      console.warn('Failed to apply some performance optimizations:', error);
+    }
+
     // Load the stream window content
     streamWindow.loadURL(streamWindowConfig.url);
 
@@ -181,6 +193,7 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
       if (streamWindow) {
         // Register with new process naming system
         registerStreamWindow(streamWindow);
+        streamWindowPid = streamWindow.webContents.getOSProcessId();
       }
 
       streamWindow?.webContents.executeJavaScript(`
@@ -336,6 +349,10 @@ function isStreamWindowSettingUp(): boolean {
   return streamWindowSettingUp;
 }
 
+function getStreamWindowPid(): number | null {
+  return streamWindowPid;
+}
+
 // Export all functions
 export {
   cleanupStreamWindowResources,
@@ -344,4 +361,5 @@ export {
   getStreamWindow,
   getStreamWindowConfig,
   isStreamWindowSettingUp,
+  getStreamWindowPid,
 };
