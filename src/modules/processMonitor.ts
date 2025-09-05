@@ -1,10 +1,11 @@
 const { exec } = require('child_process');
 import { ProcessMetric, app, BrowserWindow } from 'electron';
-import { getStreamWindowPid } from './streamWindow';
+import { getStreamWindow, getStreamWindowPid } from './streamWindow';
 import { getWhiteboardWindowPid } from './whiteboard-window';
 import { getMainWindowPid, getMainWindow } from './windowManager';
 import Sentry from '@sentry/electron/main';
 import { ipcMain } from 'electron/main';
+import { getCurrentUrl } from './config';
 
 // Interface for comprehensive app metrics
 interface AppMetrics {
@@ -29,8 +30,20 @@ interface AppMetrics {
 // Send metrics to main window
 const sendMetricsToMainWindow = (metrics: ProcessMetric[]): void => {
   const mainWindow = getMainWindow();
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('app-metrics', metrics);
+  if (
+    mainWindow &&
+    !mainWindow.isDestroyed() &&
+    getCurrentUrl()?.includes('teacher-liveclass')
+  ) {
+    const streamWindowPid = getStreamWindowPid();
+    const mainWindowPid = getMainWindowPid();
+    const whiteboardWindowPid = getWhiteboardWindowPid();
+    mainWindow.webContents.send('app-metrics', {
+      metrics,
+      streamWindowPid,
+      mainWindowPid,
+      whiteboardWindowPid,
+    });
   }
 };
 
@@ -91,7 +104,7 @@ const monitorProcesses = (initial: boolean = false) => {
 // Function to automatically detect and name Electron processes
 export function setupAutomaticProcessNaming(): void {
   // Monitor processes periodically
-  setInterval(monitorProcesses, 15000);
+  setInterval(monitorProcesses, 30000);
 
   // Initial check
   monitorProcesses(true);

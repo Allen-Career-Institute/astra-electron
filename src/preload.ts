@@ -89,7 +89,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return sources;
   },
   // Metrics event listener
-  onMetrics: (callback: (event: any, metrics: any) => void): void => {
+  onMetrics: (
+    callback: (
+      event: any,
+      data: {
+        metrics: any;
+        streamWindowPid: number;
+        whiteboardWindowPid: number;
+        mainWindowPid: number;
+      }
+    ) => void
+  ): void => {
     ipcRenderer.on('app-metrics', callback);
   },
 } as MainElectronAPI);
