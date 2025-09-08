@@ -1,10 +1,9 @@
 const { exec } = require('child_process');
-import { ProcessMetric, app, BrowserWindow, dialog } from 'electron';
-import { getStreamWindow, getStreamWindowPid } from './streamWindow';
+import { ProcessMetric, app, dialog } from 'electron';
+import { getStreamWindowPid } from './streamWindow';
 import { getWhiteboardWindowPid } from './whiteboard-window';
 import { getMainWindowPid, getMainWindow } from './windowManager';
 import Sentry from '@sentry/electron/main';
-import { ipcMain } from 'electron/main';
 import { getCurrentUrl } from './config';
 
 // Interface for comprehensive app metrics
@@ -57,42 +56,40 @@ const monitorProcesses = (initial: boolean = false) => {
 
     metrics.forEach((metric: ProcessMetric) => {
       const pid = metric.pid;
-      if (initial) {
-        if (pid === streamWindowPid) {
-          // Set high priority for stream window process
-          try {
-            if (process.platform === 'win32') {
-              dialog.showMessageBox({
-                type: 'info',
-                title: 'Stream Window',
-                message: `Stream window process priority set to HIGH - Windows ${streamWindowPid}`,
-              });
-              // Windows: Use wmic to set priority (256 = HIGH_PRIORITY_CLASS)
-              exec(
-                `wmic process where "ProcessId=${pid}" CALL setpriority 256`,
-                (error: any, stdout: any, stderr: any) => {
-                  if (error) {
-                    console.warn(
-                      'Failed to set Windows process priority:',
-                      error
-                    );
-                    Sentry.captureException(error);
-                  } else {
-                    dialog.showMessageBox({
-                      type: 'info',
-                      title: 'Stream Window',
-                      message: `Stream window process priority set to HIGH - Windows ${streamWindowPid}`,
-                    });
-                    Sentry.captureMessage(
-                      'Stream window process priority set to HIGH on Windows'
-                    );
-                  }
+      if (pid === streamWindowPid) {
+        // Set high priority for stream window process
+        try {
+          if (process.platform === 'win32') {
+            dialog.showMessageBox({
+              type: 'info',
+              title: 'Stream Window',
+              message: `Stream window process priority set to HIGH - Windows ${streamWindowPid}`,
+            });
+            // Windows: Use wmic to set priority (256 = HIGH_PRIORITY_CLASS)
+            exec(
+              `wmic process where "ProcessId=${pid}" CALL setpriority 256`,
+              (error: any, stdout: any, stderr: any) => {
+                if (error) {
+                  console.warn(
+                    'Failed to set Windows process priority:',
+                    error
+                  );
+                  Sentry.captureException(error);
+                } else {
+                  dialog.showMessageBox({
+                    type: 'info',
+                    title: 'Stream Window',
+                    message: `Stream window process priority set to HIGH - Windows ${streamWindowPid}`,
+                  });
+                  Sentry.captureMessage(
+                    'Stream window process priority set to HIGH on Windows'
+                  );
                 }
-              );
-            }
-          } catch (error) {
-            Sentry.captureException(error);
+              }
+            );
           }
+        } catch (error) {
+          Sentry.captureException(error);
         }
       }
     });

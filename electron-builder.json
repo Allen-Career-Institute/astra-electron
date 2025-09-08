@@ -142,6 +142,11 @@
     {
       "from": ".env.local",
       "to": ".env.local"
+    },
+    {
+      "from": "node_modules/electron-process-manager",
+      "to": "node_modules/electron-process-manager",
+      "filter": ["**/*"]
     }
   ],
   "nodeGypRebuild": false,
