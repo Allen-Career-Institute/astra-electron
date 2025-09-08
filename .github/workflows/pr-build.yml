@@ -8,8 +8,8 @@ on:
 env:
   NODE_VERSION: '18'
   YARN_VERSION: '4.9.2'
-  NODE_ENV: production
-  ENV: production
+  NODE_ENV: stage
+  ENV: stage
   STAGE_URL: ${{ secrets.STAGE_CONSOLE_URL }}
   PROD_URL: ${{ secrets.PROD_CONSOLE_URL }}
   CUSTOM_URL: ${{ secrets.CUSTOM_CONSOLE_URL }}
