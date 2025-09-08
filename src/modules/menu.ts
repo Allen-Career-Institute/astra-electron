@@ -1,8 +1,7 @@
 import { Menu, dialog, app } from 'electron';
-import { getAppVersion, getCurrentUrl, getEnv, getUrlByEnv } from './config';
+import { getAppVersion, getCurrentUrl, getEnv, isDev } from './config';
 import { getMainWindow } from './windowManager';
 import { reloadMainWindow } from './reloadUtils';
-const { openProcessManager } = require('electron-process-manager');
 
 function createMenu(): void {
   const template = [
@@ -21,14 +20,21 @@ function createMenu(): void {
     {
       label: 'View',
       submenu: [
-        {
-          label: 'Open Process Manager',
-          accelerator: 'CmdOrCtrl+Shift+P',
-          click: () => {
-            openProcessManager();
-          },
-        },
-        { type: 'separator' as const },
+        ...(isDev()
+          ? [
+              {
+                label: 'Open Process Manager',
+                accelerator: 'CmdOrCtrl+Shift+P',
+                click: () => {
+                  const {
+                    openProcessManager,
+                  } = require('electron-process-manager');
+                  openProcessManager();
+                },
+              },
+              { type: 'separator' as const },
+            ]
+          : []),
         {
           label: 'Reload',
           accelerator: 'CmdOrCtrl+R',

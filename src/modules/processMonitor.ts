@@ -3,7 +3,7 @@ import { ProcessMetric, app, dialog } from 'electron';
 import { getStreamWindowPid } from './streamWindow';
 import { getWhiteboardWindowPid } from './whiteboard-window';
 import { getMainWindowPid, getMainWindow } from './windowManager';
-import Sentry from '@sentry/electron/main';
+import * as Sentry from '@sentry/electron/main';
 import { getCurrentUrl } from './config';
 
 // Interface for comprehensive app metrics
@@ -70,17 +70,8 @@ const monitorProcesses = (initial: boolean = false) => {
               `wmic process where "ProcessId=${pid}" CALL setpriority 256`,
               (error: any, stdout: any, stderr: any) => {
                 if (error) {
-                  console.warn(
-                    'Failed to set Windows process priority:',
-                    error
-                  );
                   Sentry.captureException(error);
                 } else {
-                  dialog.showMessageBox({
-                    type: 'info',
-                    title: 'Stream Window',
-                    message: `Stream window process priority set to HIGH - Windows ${streamWindowPid}`,
-                  });
                   Sentry.captureMessage(
                     'Stream window process priority set to HIGH on Windows'
                   );

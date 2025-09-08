@@ -9,7 +9,6 @@ import {
 import * as Sentry from '@sentry/electron/main';
 import { loadEnv, getLoadEnvError } from './modules/loadEnv';
 import { getSentryDsn, getSentryEndpoint, isDev } from './modules/config';
-const { openProcessManager } = require('electron-process-manager');
 
 loadEnv();
 
