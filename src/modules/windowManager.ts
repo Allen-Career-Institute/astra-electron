@@ -95,7 +95,7 @@ function createMainWindow(): BrowserWindow {
   // Ensure window is properly set after content loads
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindowHasLoaded = true;
-    if (mainWindow) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
       // Register with new process naming system
       registerMainUI(mainWindow);
       mainWindowPid = mainWindow.webContents.getOSProcessId();
