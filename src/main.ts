@@ -9,6 +9,26 @@ import {
 import * as Sentry from '@sentry/electron/main';
 import { loadEnv, getLoadEnvError } from './modules/loadEnv';
 import { getSentryDsn, getSentryEndpoint, isDev } from './modules/config';
+import { createMainWindow, getMainWindow } from './modules/windowManager';
+
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (event, path) => {
+    const mainWindow = getMainWindow();
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      if (mainWindow.isMinimized()) {
+        mainWindow.restore();
+      }
+      mainWindow.show();
+      mainWindow.focus();
+    } else {
+      createMainWindow();
+    }
+  });
+}
 
 loadEnv();
 
@@ -61,7 +81,6 @@ import {
   cleanupOldRecordings,
   setupPeriodicCleanup,
 } from './modules/cleanup';
-import { createMainWindow } from './modules/windowManager';
 import { getStreamWindow } from './modules/streamWindow';
 import { getWhiteboardWindow } from './modules/whiteboard-window';
 import { setupAutomaticProcessNaming } from './modules/processMonitor';
