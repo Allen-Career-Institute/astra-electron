@@ -172,10 +172,6 @@ app.on('ready', () => {
 
     // Start cleanup worker from main window
     // startCleanupWorker();
-
-    if (isDev()) {
-      openProcessManager();
-    }
   } catch (error) {
     console.error('Error during app initialization:', error);
   }
