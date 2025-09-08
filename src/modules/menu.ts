@@ -28,6 +28,7 @@ function createMenu(): void {
             openProcessManager();
           },
         },
+        { type: 'separator' as const },
         {
           label: 'Reload',
           accelerator: 'CmdOrCtrl+R',

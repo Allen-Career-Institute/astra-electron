@@ -47,7 +47,6 @@ const commonjsConfig = {
     'agora-electron-sdk': 'commonjs2 agora-electron-sdk',
     'koffi': 'commonjs2 koffi',
     'ref-napi': 'commonjs2 ref-napi',
-    'electron-process-manager': 'commonjs2 electron-process-manager',
   },
 }
 module.exports = [

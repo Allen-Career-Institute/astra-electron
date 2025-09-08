@@ -9,6 +9,7 @@ import {
 import * as Sentry from '@sentry/electron/main';
 import { loadEnv, getLoadEnvError } from './modules/loadEnv';
 import { getSentryDsn, getSentryEndpoint, isDev } from './modules/config';
+const { openProcessManager } = require('electron-process-manager');
 
 loadEnv();
 
@@ -172,6 +173,10 @@ app.on('ready', () => {
 
     // Start cleanup worker from main window
     // startCleanupWorker();
+
+    if (isDev()) {
+      openProcessManager();
+    }
   } catch (error) {
     console.error('Error during app initialization:', error);
   }
