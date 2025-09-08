@@ -6,26 +6,6 @@ import { getMainWindowPid, getMainWindow } from './windowManager';
 import * as Sentry from '@sentry/electron/main';
 import { getCurrentUrl } from './config';
 
-// Interface for comprehensive app metrics
-interface AppMetrics {
-  timestamp: number;
-  processes: ProcessMetric[];
-  memory: {
-    used: number;
-    total: number;
-    percentage: number;
-  };
-  cpu: {
-    usage: number;
-  };
-  windows: {
-    main: boolean;
-    stream: boolean;
-    whiteboard: boolean;
-  };
-  uptime: number;
-}
-
 // Send metrics to main window
 const sendMetricsToMainWindow = (metrics: ProcessMetric[]): void => {
   const mainWindow = getMainWindow();
@@ -46,56 +26,80 @@ const sendMetricsToMainWindow = (metrics: ProcessMetric[]): void => {
   }
 };
 
+// Process priority levels for Windows
+const PROCESS_PRIORITY = {
+  REALTIME: 256,
+  HIGH: 128,
+} as const;
+
+// Set process priority on Windows
+const setProcessPriority = (
+  pid: number,
+  priority: number,
+  processType: string
+): void => {
+  if (process.platform !== 'win32') {
+    return;
+  }
+  exec(
+    `wmic process where "ProcessId=${pid}" CALL setpriority ${priority}`,
+    (error: any, stdout: any, stderr: any) => {
+      if (error) {
+        Sentry.captureException(error);
+      } else {
+        Sentry.captureMessage(
+          `${processType} process priority set to ${priority} on Windows`
+        );
+      }
+    }
+  );
+};
+
 // Get all app metrics to identify Electron processes
-const monitorProcesses = (initial: boolean = false) => {
+const monitorProcesses = () => {
   try {
     const metrics = app.getAppMetrics();
     const streamWindowPid = getStreamWindowPid();
     const whiteboardWindowPid = getWhiteboardWindowPid();
     const mainWindowPid = getMainWindowPid();
 
+    // Early return if no metrics available
+    if (!metrics || metrics.length === 0) {
+      console.warn('No process metrics available');
+      return;
+    }
+
+    // Process priority setting with reduced duplication
+    const processPidMap = new Map([
+      [
+        streamWindowPid,
+        { priority: PROCESS_PRIORITY.REALTIME, type: 'Stream window' },
+      ],
+      [mainWindowPid, { priority: PROCESS_PRIORITY.HIGH, type: 'Main window' }],
+      [
+        whiteboardWindowPid,
+        { priority: PROCESS_PRIORITY.HIGH, type: 'Whiteboard window' },
+      ],
+    ]);
+
+    // Set priorities for tracked processes
     metrics.forEach((metric: ProcessMetric) => {
       const pid = metric.pid;
-      if (pid === streamWindowPid) {
-        // Set high priority for stream window process
-        try {
-          if (process.platform === 'win32') {
-            dialog.showMessageBox({
-              type: 'info',
-              title: 'Stream Window',
-              message: `Stream window process priority set to HIGH - Windows ${streamWindowPid}`,
-            });
-            // Windows: Use wmic to set priority (256 = HIGH_PRIORITY_CLASS)
-            exec(
-              `wmic process where "ProcessId=${pid}" CALL setpriority 256`,
-              (error: any, stdout: any, stderr: any) => {
-                if (error) {
-                  Sentry.captureException(error);
-                } else {
-                  Sentry.captureMessage(
-                    'Stream window process priority set to HIGH on Windows'
-                  );
-                }
-              }
-            );
-          }
-        } catch (error) {
-          Sentry.captureException(error);
-        }
+      const processConfig = processPidMap.get(pid);
+
+      if (processConfig) {
+        setProcessPriority(pid, processConfig.priority, processConfig.type);
       }
     });
 
-    try {
-      sendMetricsToMainWindow(metrics);
-    } catch (error) {
-      console.error('Error collecting or sending metrics:', error);
-      Sentry.captureException(error);
-    }
+    // Send metrics to main window
+    sendMetricsToMainWindow(metrics);
 
     // Set main process name for OS task manager visibility
     process.title = 'Astra-Main';
   } catch (error) {
-    console.log('Error monitoring processes:', error);
+    console.error('Error monitoring processes:', error);
+    Sentry.captureException(error);
   }
 };
 
@@ -105,5 +109,5 @@ export function setupAutomaticProcessNaming(): void {
   setInterval(monitorProcesses, 30000);
 
   // Initial check
-  monitorProcesses(true);
+  monitorProcesses();
 }

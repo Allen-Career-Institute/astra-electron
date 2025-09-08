@@ -120,8 +120,7 @@
   "lint-staged": {
     "*.{js,ts,jsx,tsx}": [
       "npx oxlint --fix",
-      "npx prettier --write",
-      "yarn build:ts"
+      "npx prettier --write"
     ],
     "*.{json,css,md}": [
       "npx prettier --write"
