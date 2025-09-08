@@ -2,7 +2,7 @@ import { Menu, dialog, app } from 'electron';
 import { getAppVersion, getCurrentUrl, getEnv, getUrlByEnv } from './config';
 import { getMainWindow } from './windowManager';
 import { reloadMainWindow } from './reloadUtils';
-import { openProcessManager } from 'electron-process-manager';
+const { openProcessManager } = require('electron-process-manager');
 
 function createMenu(): void {
   const template = [
