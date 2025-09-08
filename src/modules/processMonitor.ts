@@ -5,7 +5,7 @@ import { getWhiteboardWindowPid } from './whiteboard-window';
 import { getMainWindowPid, getMainWindow } from './windowManager';
 import * as Sentry from '@sentry/electron/main';
 import { getCurrentUrl } from './config';
-
+let monitorInterval: NodeJS.Timeout;
 // Send metrics to main window
 const sendMetricsToMainWindow = (metrics: ProcessMetric[]): void => {
   const mainWindow = getMainWindow();
@@ -106,8 +106,14 @@ const monitorProcesses = () => {
 // Function to automatically detect and name Electron processes
 export function setupAutomaticProcessNaming(): void {
   // Monitor processes periodically
-  setInterval(monitorProcesses, 30000);
+  monitorInterval = setInterval(monitorProcesses, 30000);
 
   // Initial check
   monitorProcesses();
+}
+
+export function stopProcessMonitoring(): void {
+  if (monitorInterval) {
+    clearInterval(monitorInterval);
+  }
 }
