@@ -1,7 +1,57 @@
-# Allen UI Console Electron App
+# Astra Electron Console
 
-A powerful Electron application for web content display, video streaming, and advanced recording
-capabilities with Agora integration.
+A modern Electron application for Allen Digital's Astra console with webview integration and video streaming capabilities.
+
+## Build Migration: NSIS → APPX + MSIX
+
+This project has been migrated from NSIS installer builds to APPX package builds for Windows, with additional MSIX packaging support. This change provides several benefits:
+
+### Benefits of APPX over NSIS:
+
+- **Windows Store Ready**: APPX packages can be directly submitted to the Microsoft Store
+- **Enterprise Distribution**: Better support for enterprise deployment and management
+- **Modern Windows Integration**: Enhanced integration with Windows 10/11 features
+- **Automatic Updates**: Better support for automatic updates through Windows Store
+- **Security**: Improved security model with Windows Store signing
+
+### Benefits of MSIX:
+
+- **Modern Packaging**: Latest Windows packaging format with better security
+- **App Isolation**: Enhanced security through containerization
+- **Enterprise Deployment**: Better support for enterprise distribution
+- **Automatic Updates**: Native Windows update mechanism
+- **Windows 10/11 Compatibility**: Full support for modern Windows features
+
+### Build Artifacts:
+
+- **Before**: Windows installer (.exe) using NSIS
+- **After**:
+  - Windows APPX package (.appx) ready for store submission
+  - Windows MSIX package (.msix) for modern deployment
+
+### Build Commands:
+
+```bash
+# Build all platforms
+yarn build:all
+
+# Build only Windows Appx
+yarn build:win-appx
+
+# Build only Windows NSIS
+yarn build:win-nsis
+
+# Package MSIX only (requires AppX build first)
+yarn package:msix
+```
+
+### Migration Notes:
+
+- **Removed**: NSIS installer configuration and scripts
+- **Kept**: PowerShell and batch scripts in `assets/installer/` for process management
+- **New**: Enhanced APPX configuration with proper tile assets and capabilities
+- **New**: MSIX packaging using electron-windows-msix library
+- **Output**: APPX and MSIX packages are generated in `dist-electron-builder/` directory
 
 ## 🚀 **Features**
 
@@ -110,13 +160,10 @@ CUSTOM_URL=http://localhost:3000
 
 # Sentry Configuration
 SENTRY_DSN=your-sentry-dsn
-SENTRY_DSN_DEV=your-sentry-dev-dsn
 
 # GitHub Secrets (for CI/CD)
 GITHUB_TOKEN=your-github-token
-SENTRY_AUTH_TOKEN=your-sentry-auth-token
-SENTRY_ORG=your-sentry-org
-SENTRY_PROJECT=your-sentry-project
+
 ```
 
 ## 🚀 **GitHub Actions & CI/CD**
@@ -291,8 +338,13 @@ yarn dev:full        # Full-stack development (renderer + main process)
 # 🏗️ Building Commands
 yarn build:ts        # Compile TypeScript to JavaScript
 yarn build           # Build TypeScript and create distributables
-yarn make            # Create distributables using Electron Forge
-yarn package         # Package the application for distribution
+yarn dist:all        # Build for all platforms (macOS, Windows, Linux)
+yarn dist:win-only   # Build for Windows only
+yarn dist:mac-only   # Build for macOS only
+yarn dist:linux-only # Build for Linux only
+yarn dist:win        # Build Windows package (requires previous build steps)
+yarn dist:mac        # Build macOS package (requires previous build steps)
+yarn dist:linux      # Build Linux package (requires previous build steps)
 
 # 🧹 Cleanup Commands
 yarn clean           # Remove all build artifacts and dependencies

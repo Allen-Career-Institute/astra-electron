@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Icon setup script for Allen Console Electron App
+# Icon setup script for Astra Electron App
 # This script helps manage icons for different environments
 
 set -e

@@ -1,6 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import './styles/global.css';
+
+const App: React.FC = () => {
+  return (
+    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}></div>
+  );
+};
 
 // @ts-ignore
 const root = ReactDOM.createRoot(
@@ -9,6 +15,6 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <React.StrictMode>
-    <div>Hello World</div>
+    <App />
   </React.StrictMode>
 );

@@ -1,11 +1,14 @@
-import { BrowserWindow, screen } from 'electron';
+import { BrowserWindow, screen, app } from 'electron';
 import path from 'path';
-import { DEFAULT_URL, ENV } from './config';
 import { WhiteboardWindowConfig } from '@/types/electron';
+import { getSharedSession } from './windowManager';
+import { isDev } from './config';
+import { registerWhiteboardWindow } from './processNaming';
 
 let whiteboardWindow: BrowserWindow | null = null;
 let whiteboardWindowConfig: WhiteboardWindowConfig | null = null;
 let whiteboardWindowSettingUp: boolean = false;
+let whiteboardWindowPid: number | null = null;
 
 // Force close whiteboard window (for admin/emergency use)
 function forceClosewhiteboardWindow(): boolean {
@@ -165,12 +168,16 @@ function createWhiteboardWindow(config: WhiteboardWindowConfig): BrowserWindow {
       height: windowHeight,
       x,
       y,
-      title: 'Allen Whiteboard',
+      title: 'Whiteboard',
       show: false,
       webPreferences: {
-        nodeIntegration: false,
+        nodeIntegration: true,
         contextIsolation: true,
-        preload: path.join(__dirname, '../whiteboard-preload.js'),
+        preload: path.join(
+          app.isPackaged ? app.getAppPath() : process.cwd(),
+          'dist',
+          'whiteboard-preload.js'
+        ),
         webSecurity: false, // Disable for screen sharing to work
         allowRunningInsecureContent: true,
         // Enable experimental features for better screen sharing
@@ -178,11 +185,13 @@ function createWhiteboardWindow(config: WhiteboardWindowConfig): BrowserWindow {
         // Enable WebRTC features
         enableBlinkFeatures:
           'WebCodecs,WebRTC,GetDisplayMedia,ScreenCaptureKit,DesktopCaptureKit,WebRTCPipeWireCapturer',
+        // Use shared session for localStorage/cookies persistence
+        session: getSharedSession(),
       },
       resizable: true,
       minimizable: true,
       maximizable: true,
-      closable: true,
+      closable: false,
       alwaysOnTop: false,
       skipTaskbar: false,
       autoHideMenuBar: true,
@@ -195,9 +204,9 @@ function createWhiteboardWindow(config: WhiteboardWindowConfig): BrowserWindow {
 
     // Load the whiteboard window content
     // whiteboardWindow.loadFile(path.join(__dirname, '../renderer/recording-window.html'));
-    whiteboardWindow.loadURL(whiteboardWindowConfig.url || DEFAULT_URL);
+    whiteboardWindow.loadURL(whiteboardWindowConfig.url);
 
-    if (ENV === 'development') {
+    if (isDev()) {
       whiteboardWindow.webContents.openDevTools();
     }
     // Handle window events
@@ -205,8 +214,16 @@ function createWhiteboardWindow(config: WhiteboardWindowConfig): BrowserWindow {
       if (whiteboardWindow && !whiteboardWindow.isDestroyed()) {
         whiteboardWindow.show();
         whiteboardWindow.focus();
-        whiteboardWindow.maximize;
+        whiteboardWindow.maximize();
         whiteboardWindowSettingUp = false;
+      }
+    });
+
+    whiteboardWindow.webContents.on('did-finish-load', () => {
+      if (whiteboardWindow) {
+        // Register with new process naming system
+        registerWhiteboardWindow(whiteboardWindow);
+        whiteboardWindowPid = whiteboardWindow.webContents.getOSProcessId();
       }
     });
 
@@ -238,6 +255,10 @@ function getWhiteboardWindowConfig(): WhiteboardWindowConfig | null {
   return whiteboardWindowConfig;
 }
 
+function getWhiteboardWindowPid(): number | null {
+  return whiteboardWindowPid;
+}
+
 // Export all functions
 export {
   forceClosewhiteboardWindow,
@@ -246,4 +267,5 @@ export {
   createWhiteboardWindow,
   getWhiteboardWindow,
   getWhiteboardWindowConfig,
+  getWhiteboardWindowPid,
 };

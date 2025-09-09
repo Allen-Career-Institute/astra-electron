@@ -1,5 +1,12 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, desktopCapturer, ipcRenderer } from 'electron';
 import { MainElectronAPI } from './types/preload';
+
+// Set process name for OS task manager visibility
+try {
+  if (typeof process !== 'undefined') {
+    process.title = 'Astra-Main';
+  }
+} catch (error) {}
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
@@ -65,6 +72,35 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Remove all listeners
   removeAllListeners: (channel: string): void => {
     ipcRenderer.removeAllListeners(channel);
+  },
+  // Logout event listener
+  logout: async (): Promise<any> => {
+    try {
+      return await ipcRenderer.invoke('app-logout');
+    } catch (error) {
+      return {
+        type: 'ERROR',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+  getDesktopSources: async (options: any) => {
+    const sources = await desktopCapturer.getSources(options);
+    return sources;
+  },
+  // Metrics event listener
+  onMetrics: (
+    callback: (
+      event: any,
+      data: {
+        metrics: any;
+        streamWindowPid: number;
+        whiteboardWindowPid: number;
+        mainWindowPid: number;
+      }
+    ) => void
+  ): void => {
+    ipcRenderer.on('app-metrics', callback);
   },
 } as MainElectronAPI);
 

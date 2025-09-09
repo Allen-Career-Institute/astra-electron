@@ -67,9 +67,7 @@ PROD_URL=https://astra.allen.in
 CUSTOM_URL=http://localhost:3000
 
 # Sentry Configuration (optional)
-# SENTRY_DSN=your-sentry-dsn
-# SENTRY_DSN_DEV=your-sentry-dev-dsn
-
+ASTRA_ELECTRON_SENTRY_DSN=dsdd
 # GitHub Secrets (for CI/CD)
 # GITHUB_TOKEN=your-github-token
 # SENTRY_AUTH_TOKEN=your-sentry-auth-token

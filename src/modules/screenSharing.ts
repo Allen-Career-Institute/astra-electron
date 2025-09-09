@@ -109,7 +109,7 @@ class ScreenSharingManager {
         // Find the source details
         const sources = await desktopCapturer.getSources({
           types: ['screen', 'window'],
-          thumbnailSize: { width: 300, height: 200 },
+          thumbnailSize: { width: 150, height: 150 },
           fetchWindowIcons: true,
         });
 
@@ -153,7 +153,7 @@ class ScreenSharingManager {
         // Get available sources
         const sources = await desktopCapturer.getSources({
           types: ['screen', 'window'],
-          thumbnailSize: { width: 300, height: 200 },
+          thumbnailSize: { width: 150, height: 150 },
           fetchWindowIcons: true,
         });
 
@@ -287,7 +287,7 @@ class ScreenSharingManager {
     try {
       const sources = await desktopCapturer.getSources({
         types: ['screen', 'window'],
-        thumbnailSize: { width: 300, height: 200 },
+        thumbnailSize: { width: 150, height: 150 },
         fetchWindowIcons: true,
       });
 

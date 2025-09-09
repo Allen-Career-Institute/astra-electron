@@ -2,6 +2,13 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { StreamElectronAPI } from './types/preload';
 
+// Set process name for OS task manager visibility
+try {
+  if (typeof process !== 'undefined') {
+    process.title = 'Astra-Stream';
+  }
+} catch (error) {}
+
 // Prevent any reload attempts from the renderer process
 window.addEventListener('beforeunload', (event: BeforeUnloadEvent) => {
   event.preventDefault();
@@ -147,6 +154,8 @@ window.setInterval = function (fn: any, delay?: number, ...args: any[]) {
 // the ipcRenderer without exposing the entire object
 try {
   contextBridge.exposeInMainWorld('electronAPI', {
+    isElectron: true,
+    isStreamWindow: true,
     requestStreamConfig: (): Promise<any> =>
       ipcRenderer.invoke('request-stream-config'),
     onStreamControl: (callback: (event: any, ...args: any[]) => void): void => {

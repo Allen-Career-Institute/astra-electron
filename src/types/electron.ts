@@ -24,6 +24,8 @@ export interface StreamWindowConfig {
     videoDeviceId?: string;
     speakerDeviceId?: string;
   };
+  isAudioEnabled: boolean;
+  isVideoEnabled: boolean;
   title?: string;
   width?: number;
   height?: number;

@@ -1,12 +1,42 @@
-import { BrowserWindow, session } from 'electron';
+import { BrowserWindow, session, app } from 'electron';
 import path from 'path';
-import { ENV, DEFAULT_URL } from './config';
+import { getUrlByEnv, isDev, setCurrentUrl } from './config';
+import { safeCloseStreamWindow } from './streamWindow';
+import { safeClosewhiteboardWindow } from './whiteboard-window';
+import { createMenu } from './menu';
+import { registerMainUI } from './processNaming';
 
 let mainWindow: BrowserWindow | null = null;
 let mainWindowHasLoaded: boolean = false;
+let sharedSession: Electron.Session | null = null;
+let mainWindowPid: number | null = null;
+
+// Lazy initialization of shared session
+function getSharedSession(): Electron.Session {
+  if (!sharedSession) {
+    // Create a shared session for all windows to ensure localStorage/cookies persistence
+    sharedSession = session.fromPartition('persist:shared');
+
+    // Debug: Log session information
+    console.log('Shared session created with partition: persist:shared');
+    console.log('Shared session storage path:', sharedSession.getStoragePath());
+
+    // Configure permission handler
+    sharedSession.setPermissionRequestHandler(
+      (webContents, permission, callback) => {
+        if (permission === 'media' || permission === 'display-capture') {
+          callback(true); // Allow screen capture
+        } else {
+          callback(false);
+        }
+      }
+    );
+  }
+  return sharedSession;
+}
 
 function injectTokensToWindow(window: BrowserWindow): void {
-  if (ENV === 'development') {
+  if (isDev()) {
     const tokens = JSON.parse(process.env.AUTH_TOKEN || '{}');
 
     if (tokens && Object.keys(tokens).length > 0) {
@@ -25,18 +55,23 @@ function injectTokensToWindow(window: BrowserWindow): void {
 }
 
 function createMainWindow(): BrowserWindow {
+  // Use app.getAppPath() for packaged app, process.cwd() for development
+  const appPath = app.isPackaged ? app.getAppPath() : process.cwd();
+  const preloadPath = path.join(appPath, 'dist', 'preload.js');
+
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
-    fullscreen: true,
+    fullscreen: process.platform === 'darwin' ? true : false,
     frame: true,
     maximizable: true,
     resizable: true,
     minimizable: true,
+    autoHideMenuBar: false,
     webPreferences: {
-      nodeIntegration: false,
+      nodeIntegration: true,
       contextIsolation: true,
-      preload: path.join(__dirname, '../preload.js'),
+      preload: preloadPath,
       webSecurity: false, // only if you trust the content
       sandbox: false,
       allowRunningInsecureContent: true, // only if HTTP content
@@ -44,12 +79,13 @@ function createMainWindow(): BrowserWindow {
       webviewTag: false,
       experimentalFeatures: true,
       enableBlinkFeatures: 'MediaCapture,ScreenCapture',
+      // Use shared session for localStorage/cookies persistence
+      session: getSharedSession(),
     },
-    title: 'Allen Console',
+    title: 'Astra',
   });
 
-  mainWindow.loadURL(DEFAULT_URL);
-  mainWindow.setFullScreen(true);
+  mainWindow.loadURL(getUrlByEnv());
   mainWindow.maximize();
 
   session
@@ -62,17 +98,24 @@ function createMainWindow(): BrowserWindow {
       }
     });
 
-  if (ENV === 'development') {
+  if (isDev()) {
     mainWindow.webContents.openDevTools();
   }
 
-  // Ensure fullscreen is properly set after content loads
+  // Ensure window is properly set after content loads
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindowHasLoaded = true;
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      // Register with new process naming system
+      registerMainUI(mainWindow);
+      mainWindowPid = mainWindow.webContents.getOSProcessId();
+    }
     try {
       if (mainWindow) {
-        mainWindow.setFullScreen(true);
         mainWindow.maximize();
+        if (process.platform === 'darwin') {
+          mainWindow.setFullScreen(true);
+        }
         injectTokensToWindow(mainWindow);
       }
     } catch (error) {
@@ -82,6 +125,15 @@ function createMainWindow(): BrowserWindow {
 
   mainWindow.webContents.on('did-start-loading', () => {
     mainWindowHasLoaded = false;
+  });
+  mainWindow.on('close', () => {
+    safeCloseStreamWindow();
+    safeClosewhiteboardWindow();
+  });
+
+  mainWindow.webContents.on('did-navigate', (event, url) => {
+    setCurrentUrl(url);
+    createMenu();
   });
 
   // Stream window is now floating and independent - no need to update its position
@@ -102,10 +154,17 @@ function setMainWindowLoaded(loaded: boolean): void {
   mainWindowHasLoaded = loaded;
 }
 
+function getMainWindowPid(): number | null {
+  return mainWindowPid;
+}
+
+// Export the shared session getter so other windows can use it
 export {
   createMainWindow,
   getMainWindow,
   isMainWindowLoaded,
   setMainWindowLoaded,
   injectTokensToWindow,
+  getSharedSession,
+  getMainWindowPid,
 };

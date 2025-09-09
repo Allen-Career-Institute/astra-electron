@@ -9,6 +9,10 @@
     "dist/**/*",
     "assets/**/*",
     "assets/installer/**/*",
+    "node_modules/electron-store/**/*",
+    "node_modules/electron-updater/**/*",
+    "node_modules/uuid/**/*",
+    "node_modules/date-fns/**/*",
     "!**/*.d.ts",
     "!**/*.map",
     "!**/*.ts",
@@ -29,45 +33,40 @@
     "!**/scripts/**",
     "!**/build/**",
     "!**/out/**",
-    "!**/node_modules/**",
+    "!**/*.node_modules/**",
     "!**/src/**"
   ],
   "win": {
+    "publish": ["github"],
     "target": [
       {
-        "target": "nsis",
+        "target": "appx",
+        "arch": ["x64"]
+      },
+      {
+        "target": "dir",
         "arch": ["x64"]
       }
     ],
     "requestedExecutionLevel": "requireAdministrator",
     "icon": "assets/icons/win/icon.ico",
     "publisherName": "ALLEN CAREER INSTITUTE PRIVATE LIMITED",
-    "verifyUpdateCodeSignature": false
+    "verifyUpdateCodeSignature": false,
+    "certificateFile": null,
+    "certificatePassword": null,
+    "rfc3161TimeStampServer": null,
+    "timeStampServer": null
   },
-  "nsis": {
-    "oneClick": false,
-    "allowToChangeInstallationDirectory": true,
-    "createDesktopShortcut": true,
-    "createStartMenuShortcut": true,
-    "shortcutName": "Astra Console",
-    "perMachine": false,
-    "deleteAppDataOnUninstall": true,
-    "include": "assets/installer/installer.nsh",
-    "installerIcon": "assets/icons/win/icon.ico",
-    "uninstallerIcon": "assets/icons/win/icon.ico",
-    "installerHeaderIcon": "assets/icons/win/icon.ico",
+  "appx": {
+    "identityName": "AllenCareerInstitute.AstraConsole",
+    "publisher": "CN=ALLEN CAREER INSTITUTE PRIVATE LIMITED",
+    "displayName": "Astra Console",
     "artifactName": "${productName}-${version}-${os}.${ext}",
-    "uninstallDisplayName": "Astra Console",
-    "runAfterFinish": true,
-    "menuCategory": "Astra Console",
-    "allowElevation": true,
-    "installerSidebar": "assets/icons/win/icon.ico",
-    "uninstallerSidebar": "assets/icons/win/icon.ico",
-    "installerHeader": "assets/icons/win/icon.ico",
-    "installerLanguages": ["en"],
-    "warningsAsErrors": false,
-    "multiLanguageInstaller": false,
-    "displayLanguageSelector": false
+    "publisherDisplayName": "ALLEN CAREER INSTITUTE PRIVATE LIMITED",
+    "backgroundColor": "#ffffff",
+    "languages": ["en-US"],
+    "applicationId": "AllenCareerInstitute.AstraConsole",
+    "showNameOnTiles": true
   },
   "mac": {
     "target": [
@@ -131,15 +130,32 @@
     "owner": "Allen-Career-Institute",
     "repo": "astra-electron",
     "private": false,
-    "releaseType": "release"
+    "token": "${grep GH_TOKEN' .env.local }",
+    "releaseType": "release",
+    "username": "dinesh-kumar-allen"
   },
   "forceCodeSigning": false,
-  "asar": true,
-  "asarUnpack": ["node_modules/agora-electron-sdk"],
+  "asar": false,
   "compression": "maximum",
   "removePackageScripts": true,
   "removePackageKeywords": true,
   "extraResources": [
+    {
+      "from": "node_modules/electron-updater",
+      "to": "electron-updater"
+    },
+    {
+      "from": "node_modules/uuid",
+      "to": "uuid"
+    },
+    {
+      "from": "node_modules/date-fns",
+      "to": "date-fns"
+    },
+    {
+      "from": "node_modules/electron-store",
+      "to": "electron-store"
+    },
     {
       "from": ".env.local",
       "to": ".env.local"

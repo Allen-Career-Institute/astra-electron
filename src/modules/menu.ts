@@ -1,5 +1,5 @@
 import { Menu, dialog, app } from 'electron';
-import { ENV } from './config';
+import { getAppVersion, getCurrentUrl, getEnv, isDev } from './config';
 import { getMainWindow } from './windowManager';
 import { reloadMainWindow } from './reloadUtils';
 
@@ -20,6 +20,21 @@ function createMenu(): void {
     {
       label: 'View',
       submenu: [
+        ...(isDev()
+          ? [
+              {
+                label: 'Open Process Manager',
+                accelerator: 'CmdOrCtrl+Shift+P',
+                click: () => {
+                  const {
+                    openProcessManager,
+                  } = require('electron-process-manager');
+                  openProcessManager();
+                },
+              },
+              { type: 'separator' as const },
+            ]
+          : []),
         {
           label: 'Reload',
           accelerator: 'CmdOrCtrl+R',
@@ -33,6 +48,17 @@ function createMenu(): void {
           accelerator: 'CmdOrCtrl+Shift+R',
           click: () => {
             reloadMainWindow(true);
+          },
+        },
+        { type: 'separator' as const },
+        {
+          label: 'Toggle Fullscreen',
+          accelerator: 'F11',
+          click: () => {
+            const mainWindow = getMainWindow();
+            if (mainWindow && !mainWindow.isDestroyed()) {
+              mainWindow.setFullScreen(!mainWindow.isFullScreen());
+            }
           },
         },
         { type: 'separator' as const },
@@ -60,9 +86,15 @@ function createMenu(): void {
           click: () => {
             dialog.showMessageBox({
               type: 'info',
-              title: 'About Allen Console',
-              message: 'Allen Console',
-              detail: 'Version: ' + app.getVersion() + '\nEnvironment: ' + ENV,
+              title: 'About Application',
+              message: 'Astra Console',
+              detail:
+                'Environment: ' +
+                getEnv() +
+                '\nURL: ' +
+                getCurrentUrl() +
+                '\nApp Version: ' +
+                getAppVersion(),
             });
           },
         },

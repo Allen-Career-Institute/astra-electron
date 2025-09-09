@@ -3,15 +3,15 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleDisplayName</key>
-    <string>Allen Console</string>
+    <string>Astra</string>
     <key>CFBundleExecutable</key>
-    <string>Allen Console</string>
+    <string>Astra Console</string>
     <key>CFBundleIdentifier</key>
-    <string>com.allendigital.allen-ui-console</string>
+    <string>com.allencareerinstitute.astra-console</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>Allen Console</string>
+    <string>Astra Console</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
@@ -24,6 +24,10 @@
     <string>This app requires camera access for streaming</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>This app requires microphone access for streaming</string>
+    <key>NSCameraUseContinuityCameraDeviceType</key>
+    <true/>
+    <key>NSCameraUseExternalDeviceType</key>
+    <true/>
     <key>NSAppleEventsUsageDescription</key>
     <string>This app needs access to Apple events</string>
     <key>NSSystemAdministrationUsageDescription</key>

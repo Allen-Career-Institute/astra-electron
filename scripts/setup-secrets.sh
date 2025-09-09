@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# GitHub Actions Secrets Setup Script for Allen Console Electron
+# GitHub Actions Secrets Setup Script for Allen UI Console Electron
 # This script helps you prepare the necessary secrets for GitHub Actions
 
 set -e
 
-echo "🔐 GitHub Actions Secrets Setup for Allen Console Electron"
+echo "🔐 GitHub Actions Secrets Setup for Allen UI Console Electron"
 echo "=============================================================="
 echo ""
 

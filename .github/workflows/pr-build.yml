@@ -8,6 +8,13 @@ on:
 env:
   NODE_VERSION: '18'
   YARN_VERSION: '4.9.2'
+  NODE_ENV: stage
+  ENV: stage
+  STAGE_URL: ${{ secrets.STAGE_CONSOLE_URL }}
+  PROD_URL: ${{ secrets.PROD_CONSOLE_URL }}
+  CUSTOM_URL: ${{ secrets.CUSTOM_CONSOLE_URL }}
+  ASTRA_ELECTRON_SENTRY_DSN: ${{ secrets.ASTRA_ELECTRON_SENTRY_DSN }}
+  ASTRA_ELECTRON_SENTRY_ENDPOINT: ${{ secrets.ASTRA_ELECTRON_SENTRY_ENDPOINT }}
 
 # Cancel in-progress jobs when new commits are pushed
 concurrency:
@@ -42,10 +49,25 @@ jobs:
       !github.event.pull_request.head.repo.fork && 
       contains(fromJson('["write", "admin", "maintain"]'), needs.check-permissions.outputs.has-permissions)
     needs: check-permissions
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Create .env.local file
+        run: |
+          # Read version from package.json and create APP_VERSION
+          $APP_VERSION = (Get-Content package.json | ConvertFrom-Json).version
+          echo "ENV=${{ env.ENV }}" > .env.local
+          echo "NODE_ENV=${{ env.NODE_ENV }}" >> .env.local
+          echo "STAGE_URL=${{ env.STAGE_URL }}" >> .env.local
+          echo "PROD_URL=${{ env.PROD_URL }}" >> .env.local
+          echo "CUSTOM_URL=${{ env.CUSTOM_URL }}" >> .env.local
+          echo "DEV_URL=${{ env.DEV_URL }}" >> .env.local
+          echo "APP_VERSION=$APP_VERSION" >> .env.local
+          echo "ASTRA_ELECTRON_SENTRY_DSN=${{ env.ASTRA_ELECTRON_SENTRY_DSN }}" >> .env.local
+          echo "ASTRA_ELECTRON_SENTRY_ENDPOINT=${{ env.ASTRA_ELECTRON_SENTRY_ENDPOINT }}" >> .env.local
+          echo "Created .env.local file with environment variables:"
+          cat .env.local
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -65,39 +87,51 @@ jobs:
         run: yarn install --immutable
         timeout-minutes: 10
 
-      - name: Build TypeScript
-        run: yarn build:ts
-        timeout-minutes: 5
-
-      - name: Build renderer
-        run: yarn renderer:build
-        timeout-minutes: 5
-
-      - name: Build Electron app (Installer)
-        run: yarn dist:win-installer
-        timeout-minutes: 25
+      - name: Test environment variables
+        run: yarn test:env
+        timeout-minutes: 2
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_ENV: stage
-          STAGE_URL: ${{ secrets.STAGE_CONSOLE_URL }}
-          PROD_URL: ${{ secrets.PROD_CONSOLE_URL }}
-          CUSTOM_URL: "https://allen-ic-stage-ui-live-web-pr-709-allen-frontend-team.vercel.app"
+          NODE_ENV: ${{ env.NODE_ENV }}
+          ENV: ${{ env.ENV }}
+          STAGE_URL: ${{ env.STAGE_URL }}
+          PROD_URL: ${{ env.PROD_URL }}
+          CUSTOM_URL: ${{ env.CUSTOM_URL }}
+          DEV_URL: ${{ env.DEV_URL }}
+          ASTRA_ELECTRON_SENTRY_DSN: ${{ env.ASTRA_ELECTRON_SENTRY_DSN }}
+
+      - name: Build Windows NSIS
+        run: yarn build:win-nsis
+        timeout-minutes: 10
+
+      # - name: Build Windows AppX
+      #   run: yarn build:win-appx
+      #   timeout-minutes: 20
+
+      # - name: Package MSIX
+      #   run: yarn package:msix
+      #   timeout-minutes: 10
+
+      - name: Cleanup build artifacts
+        run: Remove-Item -Recurse -Force "dist-electron-builder\win-unpacked" -ErrorAction SilentlyContinue
+        timeout-minutes: 5
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         timeout-minutes: 5
         with:
-          name: allen-ui-console-win32-x64-pr-${{ github.event.number }}
+          name: astra-win32-x64-pr-${{ github.event.number }}
           path: |
             dist-electron-builder/
             !dist-electron-builder/**/*.blockmap
-          retention-days: 30
+            !dist-electron-builder/msix_layout/
+          retention-days: 1
 
       - name: Create build summary
         run: |
           echo "## Build Summary for PR #${{ github.event.number }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Platforms:** Windows (x64 only)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platforms:** Windows (x64 only) - NSIS Installer" >> $GITHUB_STEP_SUMMARY
           echo "- **Build Status:** ✅ Success" >> $GITHUB_STEP_SUMMARY
           echo "- **Build Tool:** Electron Builder" >> $GITHUB_STEP_SUMMARY
+          echo "- **Package Type:** NSIS (Windows Installer)" >> $GITHUB_STEP_SUMMARY
           echo "- **Artifacts:** Available for download above" >> $GITHUB_STEP_SUMMARY
-          echo "- **Retention:** 30 days" >> $GITHUB_STEP_SUMMARY
+          echo "- **Retention:** 1 day" >> $GITHUB_STEP_SUMMARY

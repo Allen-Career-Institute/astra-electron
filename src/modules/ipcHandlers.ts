@@ -1,42 +1,59 @@
-import { IpcMain, app } from 'electron';
+import { IpcMain, app, BrowserWindow, session } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
 import { spawn } from 'child_process';
+
 import {
   getStreamWindow,
   getStreamWindowConfig,
   createStreamWindow,
-  safeCloseStreamWindow,
 } from './streamWindow';
 import {
   createWhiteboardWindow,
   safeClosewhiteboardWindow,
-  getWhiteboardWindow,
 } from './whiteboard-window';
-import { getMainWindow } from './windowManager';
-import { ENV, DEFAULT_URL } from './config';
 import { screenSharingManager } from './screenSharing';
 import { rollingMergeManager } from './rollingMergeManager';
+import {
+  getRollingMergeDisabled,
+  isUpdateAvailable,
+  setUpdateAvailable,
+} from './config';
+import { isChunkLoggingEnabled } from './user-config';
+import { reloadMainWindow } from './reloadUtils';
+import { getAutoUpdater } from './autoUpdater';
 
 // Global variables for FFmpeg processing
 let ffmpegProcesses = new Map<string, any>(); // Map to store FFmpeg processes by meetingId
 
+// Helper function to check if stream window is ready
+function isStreamWindowReady(): boolean {
+  const streamWindow = getStreamWindow();
+  return !!(
+    streamWindow &&
+    !streamWindow.isDestroyed() &&
+    !isStreamWindowSettingUp()
+  );
+}
+
+// Helper function to wait for stream window to be ready
+async function waitForStreamWindowReady(
+  maxWaitMs: number = 5000
+): Promise<boolean> {
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < maxWaitMs) {
+    if (isStreamWindowReady()) {
+      return true;
+    }
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+
+  return false;
+}
+
 // IPC Handlers
 function setupIpcHandlers(ipcMain: IpcMain): void {
-  ipcMain.handle('get-environment', () => {
-    return ENV;
-  });
-
-  ipcMain.handle('get-default-url', () => {
-    return DEFAULT_URL;
-  });
-
-  ipcMain.handle('get-window-status', async () => {
-    return {
-      mainWindow: !!getMainWindow(),
-    };
-  });
-
   // Centralized IPC Communication handler for allen-ui-live web app
   ipcMain.handle('sendMessage', async (event, message) => {
     try {
@@ -54,6 +71,8 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
             uid: parseInt(message.payload.uid),
             meetingId: message.payload.meetingId,
             deviceIds: message.payload.deviceIds,
+            isAudioEnabled: message.payload.isAudioEnabled,
+            isVideoEnabled: message.payload.isVideoEnabled,
             hosts: message.payload.hosts,
             url: message.payload.url,
             configuration: message.payload.configuration,
@@ -63,31 +82,93 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
           return { type: 'SUCCESS', payload: 'Stream window created' };
 
         case 'AUDIO_TOGGLE':
+          console.log(
+            'Audio toggle request received:',
+            message.payload.enabled
+          );
+
+          // Wait for stream window to be ready
+          const audioWindowReady = await waitForStreamWindowReady();
+          if (!audioWindowReady) {
+            console.warn(
+              'Stream window not ready for audio toggle, request ignored'
+            );
+            return { type: 'ERROR', error: 'Stream window not ready' };
+          }
+
           const streamWindowForAudio = getStreamWindow();
           if (streamWindowForAudio && !streamWindowForAudio.isDestroyed()) {
             const action = message.payload.enabled
               ? 'unmute-audio'
               : 'mute-audio';
-            streamWindowForAudio.webContents.send(
-              'stream-control',
+            console.log(
+              'Sending audio toggle to stream window:',
               action,
               message.payload.enabled
             );
+            try {
+              streamWindowForAudio.webContents.send(
+                'stream-control',
+                action,
+                message.payload.enabled
+              );
+              console.log('Audio toggle sent successfully to stream window');
+            } catch (error) {
+              console.error(
+                'Failed to send audio toggle to stream window:',
+                error
+              );
+              return {
+                type: 'ERROR',
+                error: 'Failed to send audio toggle to stream window',
+              };
+            }
+          } else {
+            console.warn('Stream window not available for audio toggle');
+            return { type: 'ERROR', error: 'Stream window not available' };
           }
           return { type: 'SUCCESS', payload: 'Audio toggle sent' };
 
         case 'VIDEO_TOGGLE':
+          console.log(
+            'Video toggle request received:',
+            message.payload.enabled
+          );
+
+          // Wait for stream window to be ready
+          const videoWindowReady = await waitForStreamWindowReady();
+          if (!videoWindowReady) {
+            console.warn(
+              'Stream window not ready for video toggle, request ignored'
+            );
+            return { type: 'ERROR', error: 'Stream window not ready' };
+          }
+
           const streamWindowForVideo = getStreamWindow();
           if (streamWindowForVideo && !streamWindowForVideo.isDestroyed()) {
             const action = message.payload.enabled
               ? 'unmute-video'
               : 'mute-video';
-            streamWindowForVideo.webContents.send('stream-control', action);
+            try {
+              streamWindowForVideo.webContents.send('stream-control', action);
+              console.log('Video toggle sent successfully to stream window');
+            } catch (error) {
+              console.error(
+                'Failed to send video toggle to stream window:',
+                error
+              );
+              return {
+                type: 'ERROR',
+                error: 'Failed to send video toggle to stream window',
+              };
+            }
+          } else {
+            console.warn('Stream window not available for video toggle');
+            return { type: 'ERROR', error: 'Stream window not available' };
           }
           return { type: 'SUCCESS', payload: 'Video toggle sent' };
 
         case 'LEAVE_MEETING':
-          console.log('LEAVE_MEETING', message.payload);
           safeCloseStreamWindow('LEAVE_MEETING');
           safeClosewhiteboardWindow('LEAVE_MEETING');
 
@@ -106,6 +187,13 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
 
             // Stop rolling merge process and cleanup
             rollingMergeManager.cleanupMeeting(meetingId);
+
+            if (isUpdateAvailable()) {
+              setTimeout(() => {
+                setUpdateAvailable(false);
+                getAutoUpdater()?.quitAndInstall();
+              }, 5000);
+            }
           }
 
           return {
@@ -194,39 +282,58 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
               fs.mkdirSync(recordingsDir, { recursive: true });
             }
 
-            // Store chunks as webm files
-            const chunkFileName = `chunk_${chunkIndex.toString().padStart(6, '0')}.webm`;
+            // Store chunks as webm files using timestamp for unique naming
+            // This prevents conflicts when page is reloaded and chunkIndex resets
+            const chunkFileName = `${timestamp}.webm`;
             const chunkFilePath = path.join(recordingsDir, chunkFileName);
 
             // Write chunk data to file
             fs.writeFileSync(chunkFilePath, chunkData);
 
-            // Add chunk to rolling merge manager
+            // Add chunk to rolling merge manager (for tracking purposes)
             rollingMergeManager.addChunk(meetingId, chunkFileName);
 
             // Get current chunk list
             const chunkList = rollingMergeManager.getChunkList(meetingId);
 
-            // Perform rolling merge when we have multiple chunks
-            if (chunkList.length > 1) {
-              await rollingMergeManager.performRollingMerge(
-                meetingId,
-                recordingsDir,
-                chunkList
-              );
-            }
+            // Check if rolling merge is disabled
+            if (!getRollingMergeDisabled()) {
+              // Perform rolling merge when we have multiple chunks
+              if (chunkList.length > 1) {
+                await rollingMergeManager.performRollingMerge(
+                  meetingId,
+                  recordingsDir,
+                  chunkList
+                );
+              }
 
-            // Handle final merge when recording stops
-            if (isLastChunk && chunkList.length > 0) {
-              await rollingMergeManager.performFinalMerge(
-                meetingId,
-                recordingsDir,
-                chunkList
+              // Handle final merge when recording stops
+              if (isLastChunk && chunkList.length > 0) {
+                await rollingMergeManager.performFinalMerge(
+                  meetingId,
+                  recordingsDir,
+                  chunkList
+                );
+              }
+            } else {
+              console.log(
+                `Rolling merge disabled - keeping ${chunkList.length} chunks as individual files for meeting ${meetingId}`
               );
+
+              // Log chunk details when rolling merge is disabled
+              if (isLastChunk && isChunkLoggingEnabled()) {
+                console.log(
+                  `Recording completed for meeting ${meetingId}. Total chunks saved: ${chunkList.length}`
+                );
+                console.log(`Chunks saved in: ${recordingsDir}`);
+                chunkList.forEach((chunk, index) => {
+                  console.log(`  - ${chunk}`);
+                });
+              }
             }
 
             console.log(
-              `Processed media chunk ${chunkIndex} - saved to ${chunkFilePath}`
+              `Processed media chunk ${chunkIndex} (timestamp: ${timestamp}) - saved to ${chunkFilePath}`
             );
             return {
               type: 'SUCCESS',
@@ -244,6 +351,32 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
               error: error instanceof Error ? error.message : 'Unknown error',
             };
           }
+        case 'CHANGE_AUDIO_DEVICE':
+          const streamWindowForChangeAudioDevice = getStreamWindow();
+          if (
+            streamWindowForChangeAudioDevice &&
+            !streamWindowForChangeAudioDevice.isDestroyed()
+          ) {
+            streamWindowForChangeAudioDevice.webContents.send(
+              'stream-control',
+              'change-audio-device',
+              message.payload.deviceId
+            );
+          }
+          return { type: 'SUCCESS', payload: 'Audio device changed' };
+        case 'CHANGE_VIDEO_DEVICE':
+          const streamWindowForChangeVideoDevice = getStreamWindow();
+          if (
+            streamWindowForChangeVideoDevice &&
+            !streamWindowForChangeVideoDevice.isDestroyed()
+          ) {
+            streamWindowForChangeVideoDevice.webContents.send(
+              'stream-control',
+              'change-video-device',
+              message.payload.deviceId
+            );
+          }
+          return { type: 'SUCCESS', payload: 'Video device changed' };
         default:
           return { type: 'ERROR', error: 'Unknown message type' };
       }
@@ -271,7 +404,7 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
   });
 
   // Stream control handler
-  ipcMain.handle('stream-control', async (event, action, enabled) => {
+  ipcMain.handle('stream-control', async (event, action, deviceId) => {
     try {
       const streamWindow = getStreamWindow();
       if (streamWindow && !streamWindow.isDestroyed()) {
@@ -282,7 +415,7 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
           streamWindow.focus();
           streamWindow.show();
         }
-        streamWindow.webContents.send('stream-control', action, enabled);
+        streamWindow.webContents.send('stream-control', action, deviceId);
       }
       return {
         success: true,
@@ -406,32 +539,110 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
     }
   });
 
-  // Cleanup function for FFmpeg processes
-  const cleanupFFmpegProcesses = () => {
-    console.log('Cleaning up FFmpeg processes...');
-    ffmpegProcesses.forEach((process, meetingId) => {
-      if (process && !process.killed) {
-        try {
-          process.stdin.end();
-          process.kill('SIGTERM');
-          console.log(`FFmpeg process killed for meeting ${meetingId}`);
-        } catch (error) {
-          console.error(
-            `Error killing FFmpeg process for meeting ${meetingId}:`,
-            error
-          );
+  // Listen for logout events and clear storage
+  ipcMain.handle('app-logout', async () => {
+    try {
+      console.log('Logout request received, clearing all app data...');
+
+      // Get all browser windows to clear their data
+      const allWindows = BrowserWindow.getAllWindows();
+
+      // Clear cookies and storage data for all sessions
+      const sessions = [
+        session.defaultSession,
+        session.fromPartition('persist:shared'),
+        ...allWindows.map(win => win.webContents.session),
+      ];
+
+      // Clear cookies and storage data for each session
+      for (const sessionInstance of sessions) {
+        if (sessionInstance) {
+          try {
+            // Clear all cookies and storage data
+            await sessionInstance.clearStorageData({
+              storages: [
+                'cookies',
+                'localstorage',
+                'websql',
+                'indexdb',
+                'shadercache',
+                'serviceworkers',
+                'cachestorage',
+              ],
+            });
+
+            await sessionInstance.clearAuthCache();
+            await sessionInstance.clearCache();
+            await sessionInstance.clearData({
+              dataTypes: [
+                'backgroundFetch',
+                'cache',
+                'cookies',
+                'downloads',
+                'indexedDB',
+                'localStorage',
+                'serviceWorkers',
+                'webSQL',
+              ],
+            });
+
+            // Clear host resolver cache
+            await sessionInstance.clearHostResolverCache();
+
+            console.log(`Cleared storage data for session: default`);
+          } catch (error) {
+            console.error(`Error clearing session:`, error);
+          }
         }
       }
-    });
-    ffmpegProcesses.clear();
 
-    // Cleanup rolling merge processes using the manager
-    rollingMergeManager.cleanup();
-  };
+      // Clear FFmpeg processes
+      cleanupFFmpegProcesses();
 
-  // Register cleanup on app exit
-  app.on('before-quit', cleanupFFmpegProcesses);
-  app.on('window-all-closed', cleanupFFmpegProcesses);
+      // Clear rolling merge processes
+      rollingMergeManager.cleanup();
+
+      reloadMainWindow(true);
+
+      console.log('Logout completed successfully - all app data cleared');
+      return {
+        type: 'SUCCESS',
+        payload: 'Logout completed - all app data cleared',
+      };
+    } catch (error) {
+      console.error('Error during logout:', error);
+      return {
+        type: 'ERROR',
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Unknown error during logout',
+      };
+    }
+  });
 }
 
-export { setupIpcHandlers };
+// Cleanup function for FFmpeg processes
+const cleanupFFmpegProcesses = () => {
+  console.log('Cleaning up FFmpeg processes...');
+  ffmpegProcesses.forEach((process, meetingId) => {
+    if (process && !process.killed) {
+      try {
+        process.stdin.end();
+        process.kill('SIGTERM');
+        console.log(`FFmpeg process killed for meeting ${meetingId}`);
+      } catch (error) {
+        console.error(
+          `Error killing FFmpeg process for meeting ${meetingId}:`,
+          error
+        );
+      }
+    }
+  });
+  ffmpegProcesses.clear();
+
+  // Cleanup rolling merge processes using the manager
+  rollingMergeManager.cleanup();
+};
+
+export { setupIpcHandlers, cleanupFFmpegProcesses };
