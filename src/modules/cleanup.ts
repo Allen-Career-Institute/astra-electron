@@ -6,6 +6,7 @@ import { isDev } from './config';
 import * as fs from 'fs';
 import * as path from 'path';
 import { spawn } from 'child_process';
+import { stopProcessMonitoring } from './processMonitor';
 
 // Track if cleanup is currently running
 let isCleanupRunning = false;
@@ -15,6 +16,7 @@ function cleanup(): void {
 
   safeCloseStreamWindow();
   safeClosewhiteboardWindow();
+  stopProcessMonitoring();
 
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.close();

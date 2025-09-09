@@ -88,6 +88,20 @@ contextBridge.exposeInMainWorld('electronAPI', {
     const sources = await desktopCapturer.getSources(options);
     return sources;
   },
+  // Metrics event listener
+  onMetrics: (
+    callback: (
+      event: any,
+      data: {
+        metrics: any;
+        streamWindowPid: number;
+        whiteboardWindowPid: number;
+        mainWindowPid: number;
+      }
+    ) => void
+  ): void => {
+    ipcRenderer.on('app-metrics', callback);
+  },
 } as MainElectronAPI);
 
 // Extend the global Window interface
