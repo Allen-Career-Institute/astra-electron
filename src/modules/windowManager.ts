@@ -89,7 +89,7 @@ function createMainWindow(): BrowserWindow {
   mainWindow.maximize();
 
   if (isDev()) {
-    mainWindow.webContents.openDevTools();
+    // mainWindow.webContents.openDevTools();
   }
 
   // Ensure window is properly set after content loads

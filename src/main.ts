@@ -51,19 +51,15 @@ if (getSentryDsn()) {
 
 // Import modules
 import { createMenu } from './modules/menu';
-import {
-  setupIpcHandlers,
-  cleanupFFmpegProcesses,
-} from './modules/ipcHandlers';
+import { setupIpcHandlers } from './utils/ipcHandlers';
 import { setupAutoUpdater } from './modules/autoUpdater';
 import {
   cleanup,
+  cleanupNonMainWindow,
   cleanupOldRecordings,
   setupPeriodicCleanup,
 } from './modules/cleanup';
 import { createMainWindow } from './modules/windowManager';
-import { getStreamWindow } from './modules/streamWindow';
-import { getWhiteboardWindow } from './modules/whiteboard-window';
 import { setupAutomaticProcessNaming } from './modules/processMonitor';
 
 // Enable hardware acceleration and WebRTC optimizations for better video quality
@@ -117,6 +113,8 @@ app.commandLine.appendSwitch('--disable-renderer-backgrounding');
 app.commandLine.appendSwitch('--disable-features', 'TranslateUI');
 app.commandLine.appendSwitch('--disable-ipc-flooding-protection');
 app.commandLine.appendSwitch('--max-active-webgl-contexts', '16');
+
+import 'agora-electron-sdk/js/Private/ipc/main.js';
 
 setupIpcHandlers(ipcMain);
 
@@ -181,16 +179,7 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   } else {
-    console.log('window-all-closed');
-    cleanupFFmpegProcesses();
-    const streamWindow = getStreamWindow();
-    if (streamWindow && !streamWindow.isDestroyed()) {
-      streamWindow.close();
-    }
-    const whiteboardWindow = getWhiteboardWindow();
-    if (whiteboardWindow && !whiteboardWindow.isDestroyed()) {
-      whiteboardWindow.close();
-    }
+    cleanupNonMainWindow();
   }
 });
 
@@ -201,6 +190,5 @@ app.on('activate', () => {
 });
 
 app.on('before-quit', () => {
-  cleanupFFmpegProcesses();
   cleanup();
 });

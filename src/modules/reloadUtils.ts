@@ -2,6 +2,8 @@ import { BrowserWindow, dialog } from 'electron';
 import path from 'path';
 import { getMainWindow } from './windowManager';
 import { getStreamWindow, safeCloseStreamWindow } from './streamWindow';
+import { safeCloseScreenShareWindow } from './screenShareWindow';
+import { safeClosewhiteboardWindow } from './whiteboard-window';
 
 const reloadMainWindow = (force: boolean = false): void => {
   const mainWindow: BrowserWindow | null = getMainWindow();
@@ -24,6 +26,7 @@ const reloadMainWindow = (force: boolean = false): void => {
             // User clicked "Reload"
             // Close stream window before reloading main window
             safeCloseStreamWindow('main-window-reload');
+            safeCloseScreenShareWindow('main-window-reload');
 
             if (force) {
               mainWindow.webContents.reloadIgnoringCache();
@@ -41,6 +44,8 @@ const reloadMainWindow = (force: boolean = false): void => {
       } else {
         mainWindow.reload();
       }
+      safeCloseScreenShareWindow('main-window-reload');
+      safeClosewhiteboardWindow('main-window-reload');
     }
   } else {
     console.log('Main window is destroyed');

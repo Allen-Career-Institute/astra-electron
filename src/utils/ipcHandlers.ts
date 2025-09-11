@@ -1,4 +1,11 @@
-import { IpcMain, app, BrowserWindow, session } from 'electron';
+import {
+  IpcMain,
+  app,
+  BrowserWindow,
+  session,
+  desktopCapturer,
+  systemPreferences,
+} from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -8,24 +15,26 @@ import {
   createStreamWindow,
   safeCloseStreamWindow,
   isStreamWindowSettingUp,
-} from './streamWindow';
+} from '../modules/streamWindow';
 import {
   createWhiteboardWindow,
   safeClosewhiteboardWindow,
-} from './whiteboard-window';
-import { screenSharingManager } from './screenSharing';
-import { rollingMergeManager } from './rollingMergeManager';
+} from '../modules/whiteboard-window';
+import { rollingMergeManager } from '../modules/rollingMergeManager';
 import {
   getRollingMergeDisabled,
   isUpdateAvailable,
   setUpdateAvailable,
-} from './config';
-import { isChunkLoggingEnabled } from './user-config';
-import { reloadMainWindow } from './reloadUtils';
-import { getAutoUpdater } from './autoUpdater';
-
-// Global variables for FFmpeg processing
-let ffmpegProcesses = new Map<string, any>(); // Map to store FFmpeg processes by meetingId
+} from '../modules/config';
+import { isChunkLoggingEnabled } from '../modules/user-config';
+import { reloadMainWindow } from '../modules/reloadUtils';
+import { getAutoUpdater } from '../modules/autoUpdater';
+import {
+  createScreenShareWindow,
+  getScreenShareWindow,
+  getScreenShareWindowConfig,
+  safeCloseScreenShareWindow,
+} from '../modules/screenShareWindow';
 
 // Helper function to check if stream window is ready
 function isStreamWindowReady(): boolean {
@@ -42,19 +51,17 @@ async function waitForStreamWindowReady(
   maxWaitMs: number = 5000
 ): Promise<boolean> {
   const startTime = Date.now();
-
   while (Date.now() - startTime < maxWaitMs) {
     if (isStreamWindowReady()) {
       return true;
     }
     await new Promise(resolve => setTimeout(resolve, 100));
   }
-
   return false;
 }
 
-// IPC Handlers
-function setupIpcHandlers(ipcMain: IpcMain): void {
+// Main IPC Handlers
+export function setupIpcHandlers(ipcMain: IpcMain): void {
   // Centralized IPC Communication handler for allen-ui-live web app
   ipcMain.handle('sendMessage', async (event, message) => {
     try {
@@ -172,20 +179,11 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
         case 'LEAVE_MEETING':
           safeCloseStreamWindow('LEAVE_MEETING');
           safeClosewhiteboardWindow('LEAVE_MEETING');
+          safeCloseScreenShareWindow('LEAVE_MEETING');
 
           // Stop FFmpeg process for this meeting
           const meetingId = message.payload?.meetingId;
           if (meetingId) {
-            const ffmpegProcess = ffmpegProcesses.get(meetingId);
-            if (ffmpegProcess && !ffmpegProcess.killed) {
-              ffmpegProcess.stdin.end();
-              ffmpegProcess.kill('SIGTERM');
-              ffmpegProcesses.delete(meetingId);
-              console.log(
-                `FFmpeg process stopped for meeting ${meetingId} on leave`
-              );
-            }
-
             // Stop rolling merge process and cleanup
             rollingMergeManager.cleanupMeeting(meetingId);
 
@@ -201,65 +199,6 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
             type: 'SUCCESS',
             payload: 'Stream window closed and processes stopped',
           };
-
-        case 'SCREEN_SHARING_TOGGLE':
-          const streamWindowForScreenSharingToggle = getStreamWindow();
-          if (
-            streamWindowForScreenSharingToggle &&
-            !streamWindowForScreenSharingToggle.isDestroyed()
-          ) {
-            // Focus the stream window when screen sharing is toggled
-            streamWindowForScreenSharingToggle.focus();
-            streamWindowForScreenSharingToggle.show();
-
-            if (message.payload.enabled) {
-              // Start screen sharing - show desktop capturer dialog
-              try {
-                console.log('About to show desktop capturer dialog');
-
-                if (
-                  !screenSharingManager ||
-                  typeof screenSharingManager.showDesktopCapturer !== 'function'
-                ) {
-                  console.error(
-                    'screenSharingManager is not properly initialized'
-                  );
-                  return {
-                    type: 'ERROR',
-                    error: 'Screen sharing manager not initialized',
-                  };
-                }
-
-                // Show the desktop capturer dialog
-                await screenSharingManager.showDesktopCapturer();
-                console.log('Desktop capturer dialog shown');
-              } catch (error) {
-                console.error('Error showing desktop capturer:', error);
-                return {
-                  type: 'ERROR',
-                  error: 'Failed to show desktop capturer',
-                };
-              }
-            } else {
-              // Stop screen sharing
-              try {
-                await screenSharingManager.stopScreenSharing();
-                const action = 'mute-screen-sharing';
-                streamWindowForScreenSharingToggle.webContents.send(
-                  'stream-control',
-                  action,
-                  message.payload.enabled
-                );
-              } catch (error) {
-                console.error('Error stopping screen sharing:', error);
-                return {
-                  type: 'ERROR',
-                  error: 'Failed to stop screen sharing',
-                };
-              }
-            }
-          }
-          return { type: 'SUCCESS', payload: 'Screen sharing toggle sent' };
         case 'OPEN_WHITEBOARD':
           createWhiteboardWindow(message.payload);
           return { type: 'SUCCESS', payload: 'Whiteboard window created' };
@@ -352,6 +291,26 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
               error: error instanceof Error ? error.message : 'Unknown error',
             };
           }
+        case 'START_SCREEN_SHARE':
+          const screenShareWindow = getScreenShareWindow();
+          if (screenShareWindow && !screenShareWindow.isDestroyed()) {
+            screenShareWindow.close();
+          }
+
+          const screenShareConfig = {
+            ...message.payload,
+          };
+
+          try {
+            await createScreenShareWindow(screenShareConfig);
+          } catch (error) {
+            console.error('Error creating screen share window:', error);
+            return {
+              type: 'ERROR',
+              error: 'Failed to create screen share window',
+            };
+          }
+          return { type: 'SUCCESS', payload: 'Screen share window created' };
         case 'CHANGE_AUDIO_DEVICE':
           const streamWindowForChangeAudioDevice = getStreamWindow();
           if (
@@ -398,6 +357,22 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
         return config;
       } else {
         throw new Error('No stream config available');
+      }
+    } catch (error) {
+      throw error instanceof Error ? error : new Error('Unknown error');
+    }
+  });
+
+  ipcMain.handle('get-screen-share-config', async event => {
+    try {
+      const config = getScreenShareWindowConfig();
+      if (config) {
+        return {
+          type: 'SUCCESS',
+          payload: config,
+        };
+      } else {
+        throw new Error('No screen share config available');
       }
     } catch (error) {
       throw error instanceof Error ? error : new Error('Unknown error');
@@ -597,9 +572,6 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
         }
       }
 
-      // Clear FFmpeg processes
-      cleanupFFmpegProcesses();
-
       // Clear rolling merge processes
       rollingMergeManager.cleanup();
 
@@ -621,29 +593,67 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
       };
     }
   });
-}
 
-// Cleanup function for FFmpeg processes
-const cleanupFFmpegProcesses = () => {
-  console.log('Cleaning up FFmpeg processes...');
-  ffmpegProcesses.forEach((process, meetingId) => {
-    if (process && !process.killed) {
-      try {
-        process.stdin.end();
-        process.kill('SIGTERM');
-        console.log(`FFmpeg process killed for meeting ${meetingId}`);
-      } catch (error) {
-        console.error(
-          `Error killing FFmpeg process for meeting ${meetingId}:`,
-          error
-        );
-      }
+  ipcMain.handle('get-stream-window-config', () => {
+    try {
+      const config = getStreamWindowConfig();
+      return { success: true, config };
+    } catch (error) {
+      console.error('Error getting stream window config:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
     }
   });
-  ffmpegProcesses.clear();
 
-  // Cleanup rolling merge processes using the manager
-  rollingMergeManager.cleanup();
-};
+  // App information handlers
+  ipcMain.handle('get-app-version', () => {
+    try {
+      const version = app.getVersion();
+      return { success: true, version };
+    } catch (error) {
+      console.error('Error getting app version:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  });
 
-export { setupIpcHandlers, cleanupFFmpegProcesses };
+  ipcMain.handle('get-app-name', () => {
+    try {
+      const name = app.getName();
+      return { success: true, name };
+    } catch (error) {
+      console.error('Error getting app name:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  });
+
+  ipcMain.handle('get-app-path', () => {
+    try {
+      const appPath = app.getAppPath();
+      return { success: true, appPath };
+    } catch (error) {
+      console.error('Error getting app path:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  });
+
+  ipcMain.handle('IPC_REQUEST_PERMISSION_HANDLER', async (event, arg) => {
+    if (systemPreferences.getMediaAccessStatus(arg.type) === 'not-determined') {
+      console.log('main process request handler:' + JSON.stringify(arg));
+      return await systemPreferences.askForMediaAccess(arg.type);
+    }
+  });
+
+  // Note: Agora Screen Share handlers have been moved to renderer process
+  // The screen share window now handles Agora SDK initialization directly
+}

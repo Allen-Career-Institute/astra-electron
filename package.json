@@ -109,6 +109,7 @@
   "dependencies": {
     "@electron/remote": "^2.0.12",
     "@sentry/electron": "^6.11.0",
+    "agora-electron-sdk": "^4.0.0",
     "cross-env": "^10.0.0",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.1",
@@ -125,5 +126,8 @@
     "*.{json,css,md}": [
       "npx prettier --write"
     ]
+  },
+  "agora_electron": {
+    "prebuilt": true
   }
 }

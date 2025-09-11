@@ -48,7 +48,8 @@ const setProcessPriority = (
         Sentry.captureException(error);
       } else {
         Sentry.captureMessage(
-          `${processType} process priority set to ${priority} on Windows`
+          `${processType} process priority set to ${priority} on Windows`,
+          'info'
         );
       }
     }

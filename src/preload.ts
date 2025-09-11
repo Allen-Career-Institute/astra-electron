@@ -102,6 +102,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   ): void => {
     ipcRenderer.on('app-metrics', callback);
   },
+  onElectronLogEvent: (
+    callback: (event: any, eventName: string, eventData: any) => void
+  ): void => {
+    ipcRenderer.on('electron-log-event', callback);
+  },
 } as MainElectronAPI);
 
 // Extend the global Window interface

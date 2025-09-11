@@ -7,20 +7,27 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { spawn } from 'child_process';
 import { stopProcessMonitoring } from './processMonitor';
+import { rollingMergeManager } from './rollingMergeManager';
+import { safeCloseScreenShareWindow } from './screenShareWindow';
 
 // Track if cleanup is currently running
 let isCleanupRunning = false;
 
 function cleanup(): void {
   const mainWindow = getMainWindow();
-
-  safeCloseStreamWindow();
-  safeClosewhiteboardWindow();
-  stopProcessMonitoring();
+  cleanupNonMainWindow();
 
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.close();
   }
+}
+
+function cleanupNonMainWindow(): void {
+  safeCloseStreamWindow();
+  safeClosewhiteboardWindow();
+  safeCloseScreenShareWindow();
+  stopProcessMonitoring();
+  rollingMergeManager.cleanup();
 }
 
 function handleUncaughtException(error: Error): void {
@@ -308,4 +315,5 @@ export {
   setupPeriodicCleanup,
   isCleanupInProgress,
   triggerManualCleanup,
+  cleanupNonMainWindow,
 };

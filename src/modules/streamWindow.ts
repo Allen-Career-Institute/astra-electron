@@ -237,7 +237,7 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
 
     // Initialize native screen capture immediately after window creation
     if (isDev()) {
-      streamWindow.webContents.openDevTools();
+      // streamWindow.webContents.openDevTools();
     }
 
     // Handle window events
