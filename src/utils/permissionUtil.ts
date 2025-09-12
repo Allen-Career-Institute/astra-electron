@@ -1,4 +1,4 @@
-import { ipcMain, ipcRenderer } from 'electron';
+import { ipcMain, systemPreferences } from 'electron';
 
 export type mediaType = 'microphone' | 'camera' | 'screen';
 export interface AskMediaAccessReturn {
@@ -21,22 +21,26 @@ export const askMediaAccess = async (
   if (process.platform === 'darwin') {
     for (const mediaType of mediaTypes) {
       let result: boolean = false;
-      await ipcRenderer
-        .invoke('IPC_REQUEST_PERMISSION_HANDLER', {
-          type: mediaType,
-        })
-        .then((res: boolean) => {
-          result = res;
-        })
-        .catch(error => {
-          result = error;
-        })
-        .finally(() => {
+
+      if (
+        systemPreferences.getMediaAccessStatus(mediaType) === 'not-determined'
+      ) {
+        console.log(
+          'main process request handler:' + JSON.stringify(mediaType)
+        );
+        try {
+          result = await systemPreferences.askForMediaAccess(
+            mediaType as 'microphone' | 'camera'
+          );
+        } catch (error) {
+          result = false;
+        } finally {
           results.push({
             mediaType,
             result,
           });
-        });
+        }
+      }
     }
   }
   return results;

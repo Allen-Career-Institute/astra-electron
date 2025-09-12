@@ -102,6 +102,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   ): void => {
     ipcRenderer.on('app-metrics', callback);
   },
+  onElectronScreenShareWindowClosed: (
+    callback: (event: any, ...args: any[]) => void
+  ): void => {
+    ipcRenderer.on('screen-share-window-closed', callback);
+  },
   onElectronLogEvent: (
     callback: (event: any, eventName: string, eventData: any) => void
   ): void => {

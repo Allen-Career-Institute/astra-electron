@@ -1,10 +1,20 @@
 import createAgoraRtcEngine, {
   ChannelProfileType,
+  ClientRoleType,
   IRtcEngineEx,
+  IRtcEngineEventHandler,
+  RtcConnection,
+  ConnectionStateType,
+  ConnectionChangedReasonType,
   ScreenCaptureSourceInfo,
   ScreenCaptureSourceType,
+  VideoSourceType,
+  VideoStreamType,
+  RenderModeType,
+  VideoMirrorModeType,
 } from 'agora-electron-sdk';
-import { ScreenShareWindowConfig } from '../../modules/screenShareWindow';
+import { ScreenShareWindowConfig } from './screenShareWindow';
+import { getThumbImageBufferToBase64 } from '../utils/agoraThumbnailUtil';
 
 export interface AgoraConfig {
   config: {
@@ -22,7 +32,7 @@ export interface ScreenSource {
   title: string;
   type: ScreenCaptureSourceType;
   thumbnail: string; // Data URL string
-  displayId: string;
+  displayId?: string;
   appIcon?: string; // Data URL string
 }
 
@@ -44,6 +54,7 @@ export interface AgoraScreenShareState {
   isInitialized: boolean;
   isJoined: boolean;
   isPublishing: boolean;
+  isPreviewing: boolean;
   selectedSourceId: number | null;
   selectedSourceType: ScreenCaptureSourceType | null;
   selectedSourceName: string | null;
@@ -51,11 +62,12 @@ export interface AgoraScreenShareState {
   rtcStats: RTCStats | null;
 }
 
-class AgoraScreenShareService {
+class AgoraScreenShareService implements IRtcEngineEventHandler {
   private state: AgoraScreenShareState = {
     isInitialized: false,
     isJoined: false,
     isPublishing: false,
+    isPreviewing: false,
     selectedSourceId: null,
     selectedSourceType: null,
     selectedSourceName: null,
@@ -68,6 +80,30 @@ class AgoraScreenShareService {
 
   constructor() {}
 
+  // IRtcEngineEventHandler implementation
+  onConnectionStateChanged(
+    connection: RtcConnection,
+    state: ConnectionStateType,
+    reason: ConnectionChangedReasonType
+  ): void {
+    console.log('Agora connection state changed:', state, reason);
+    if (state === ConnectionStateType.ConnectionStateConnected) {
+      console.log('Successfully connected to Agora channel');
+    } else if (state === ConnectionStateType.ConnectionStateDisconnected) {
+      console.log('Disconnected from Agora channel');
+      this.state.isJoined = false;
+      this.state.isPublishing = false;
+    }
+  }
+
+  onError(err: number, msg: string): void {
+    console.error('Agora error:', err, msg);
+  }
+
+  onWarning(warn: number, msg: string): void {
+    console.warn('Agora warning:', warn, msg);
+  }
+
   private async initializeAgoraEngine(
     config: ScreenShareWindowConfig
   ): Promise<void> {
@@ -75,70 +111,21 @@ class AgoraScreenShareService {
       if (this.agoraEngine) {
         return;
       }
-
       this.agoraEngine = createAgoraRtcEngine();
-
-      console.log('createAgoraRtcEngine', this.agoraEngine);
-
       // Initialize with default settings
       const ret = this.agoraEngine.initialize({
         appId: config.app_id,
         channelProfile: ChannelProfileType.ChannelProfileLiveBroadcasting,
       });
-      console.log('initialize', ret);
-
       if (ret !== 0) {
         throw new Error(`Failed to initialize Agora engine: ${ret}`);
       }
-
-      // Set up event listeners
-      this.setupEventListeners();
-
       this.state.isInitialized = true;
     } catch (error) {
       console.error('Error initializing Agora engine:', error);
       throw error;
     }
   }
-
-  private setupEventListeners(): void {
-    if (!this.agoraEngine) return;
-
-    // Connection state change
-  }
-
-  private updateRTCStats(type: 'video' | 'audio', stats: any): void {
-    if (!this.state.rtcStats) {
-      this.state.rtcStats = {
-        timestamp: Date.now(),
-        audioLevel: 0,
-        videoBitrate: 0,
-        audioBitrate: 0,
-        videoResolution: { width: 0, height: 0 },
-        frameRate: 0,
-        packetLossRate: 0,
-        rtt: 0,
-        jitter: 0,
-        cpuUsage: 0,
-        memoryUsage: 0,
-      };
-    }
-
-    if (type === 'video') {
-      this.state.rtcStats.videoBitrate = stats.sentBitrate || 0;
-      this.state.rtcStats.videoResolution = {
-        width: stats.encodedFrameWidth || 0,
-        height: stats.encodedFrameHeight || 0,
-      };
-      this.state.rtcStats.frameRate = stats.sentFrameRate || 0;
-    } else if (type === 'audio') {
-      this.state.rtcStats.audioBitrate = stats.sentBitrate || 0;
-      this.state.rtcStats.audioLevel = stats.audioLevel || 0;
-    }
-
-    this.state.rtcStats.timestamp = Date.now();
-  }
-
   public async initialize(config: ScreenShareWindowConfig): Promise<void> {
     try {
       await this.initializeAgoraEngine(config);
@@ -155,21 +142,33 @@ class AgoraScreenShareService {
         throw new Error('Agora engine not initialized or config not set');
       }
 
-      const ret = this.agoraEngine.joinChannel(
+      // Join channel with screen sharing configuration
+      const joinChannelRet = this.agoraEngine.joinChannelEx(
         this.state.config.user_token || '',
-        this.state.config.meetingId,
-        parseInt(this.state.config.user_id),
         {
-          autoSubscribeAudio: true,
-          autoSubscribeVideo: true,
+          channelId: this.state.config.meetingId,
+          localUid: parseInt(this.state.config.user_id),
+        },
+        {
+          autoSubscribeAudio: false,
+          autoSubscribeVideo: false,
+          publishMicrophoneTrack: false,
+          publishCameraTrack: false,
+          clientRoleType: ClientRoleType.ClientRoleBroadcaster,
+          publishScreenTrack: true,
+          publishCustomVideoTrack: false,
+          publishEncodedVideoTrack: false,
+          defaultVideoStreamType: VideoStreamType.VideoStreamHigh,
         }
       );
+      console.log('joinChannelEx result:', joinChannelRet);
 
-      if (ret !== 0) {
-        throw new Error(`Failed to join channel: ${ret}`);
+      if (joinChannelRet !== 0) {
+        throw new Error(`Failed to join channel: ${joinChannelRet}`);
       }
 
       this.state.isJoined = true;
+      console.log('Successfully joined Agora channel for screen sharing');
     } catch (error) {
       console.error('Error joining channel:', error);
       throw error;
@@ -182,14 +181,26 @@ class AgoraScreenShareService {
         return;
       }
 
+      console.log('Leaving Agora channel...');
+
+      // Stop screen sharing if currently publishing
+      if (this.state.isPublishing) {
+        await this.unpublishScreenShare();
+      }
+
+      // Leave the channel
       const ret = this.agoraEngine.leaveChannel();
+      console.log('Leave channel result:', ret);
+
       if (ret !== 0) {
-        throw new Error(`Failed to leave channel: ${ret}`);
+        console.warn(`Warning: Failed to leave channel: ${ret}`);
       }
 
       this.state.isJoined = false;
       this.state.isPublishing = false;
       this.stopStatsMonitoring();
+
+      console.log('Successfully left Agora channel');
     } catch (error) {
       console.error('Error leaving channel:', error);
       throw error;
@@ -198,7 +209,6 @@ class AgoraScreenShareService {
 
   public async getScreenSources(): Promise<ScreenSource[]> {
     try {
-      console.log('getScreenSources', this.agoraEngine);
       const agoraSources = this.agoraEngine?.getScreenCaptureSources(
         {
           width: 800,
@@ -216,48 +226,18 @@ class AgoraScreenShareService {
 
       // Convert Agora ScreenCaptureSourceInfo to ScreenSource format
       const convertedSources: ScreenSource[] = agoraSources.map(source => {
-        let thumbnailDataUrl = '';
-
-        // Convert thumbnail from ThumbImageBuffer to data URL
-        if (
-          source.thumbImage?.buffer &&
-          source.thumbImage?.width &&
-          source.thumbImage?.height
-        ) {
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-
-          if (ctx) {
-            // Set canvas dimensions to match the thumbnail
-            canvas.width = source.thumbImage.width;
-            canvas.height = source.thumbImage.height;
-
-            // Convert Uint8Array to ImageData
-            // The buffer is in ARGB format according to Agora docs
-            const imageData = new ImageData(
-              new Uint8ClampedArray(source.thumbImage.buffer),
-              source.thumbImage.width,
-              source.thumbImage.height
-            );
-            ctx.putImageData(imageData, 0, 0);
-            thumbnailDataUrl = canvas.toDataURL();
-          }
-        }
-
         return {
           id: source.sourceId?.toString() || '',
           type:
-            source.type ||
+            source.type ??
             ScreenCaptureSourceType.ScreencapturesourcetypeUnknown,
           name: source.sourceName || 'Unknown Source',
           title: source.sourceTitle || '',
-          thumbnail: thumbnailDataUrl,
-          displayId: source.sourceDisplayId?.toString() || '', // Using sourceId as display_id
+          thumbnail: getThumbImageBufferToBase64(source.thumbImage),
+          displayId: source.sourceDisplayId?.toString() || '',
           appIcon: undefined, // Agora doesn't provide app icons
         };
       });
-
-      console.log('getScreenSources converted', convertedSources);
       return convertedSources;
     } catch (error) {
       console.error('Error getting screen sources:', error);
@@ -311,40 +291,91 @@ class AgoraScreenShareService {
     }
   }
 
+  public async stopPreview(): Promise<void> {
+    try {
+      if (!this.agoraEngine) {
+        return;
+      }
+
+      console.log('Stopping screen share preview...');
+
+      // Stop preview
+      const stopPreviewRet = this.agoraEngine.stopPreview(
+        VideoSourceType.VideoSourceScreen
+      );
+      console.log('Stop preview result:', stopPreviewRet);
+
+      if (stopPreviewRet !== 0) {
+        console.warn(`Warning: Failed to stop preview: ${stopPreviewRet}`);
+      }
+
+      // Stop screen capture
+      const stopCaptureRet = this.agoraEngine.stopScreenCapture();
+      console.log('Stop screen capture result:', stopCaptureRet);
+
+      if (stopCaptureRet !== 0) {
+        console.warn(
+          `Warning: Failed to stop screen capture: ${stopCaptureRet}`
+        );
+      }
+
+      // Disable local video
+      const disableVideoRet = this.agoraEngine.enableLocalVideo(false);
+      console.log('Disable local video result:', disableVideoRet);
+
+      if (disableVideoRet !== 0) {
+        console.warn(
+          `Warning: Failed to disable local video: ${disableVideoRet}`
+        );
+      }
+
+      this.state.isPreviewing = false;
+      console.log('Screen share preview stopped successfully');
+    } catch (error) {
+      console.error('Error stopping screen share preview:', error);
+      throw error;
+    }
+  }
+
   public async publishScreenShare(): Promise<void> {
     try {
-      if (
-        !this.agoraEngine ||
-        !this.state.isJoined ||
-        !this.state.selectedSourceId
-      ) {
-        throw new Error('Agora engine not ready or screen source not selected');
+      console.log('publishScreenShare - State:', {
+        isJoined: this.state.isJoined,
+        selectedSourceId: this.state.selectedSourceId,
+        selectedSourceType: this.state.selectedSourceType,
+      });
+
+      if (!this.agoraEngine) {
+        throw new Error('Agora engine not ready');
       }
 
-      // Enable local video for screen sharing
-      const enableVideoRet = this.agoraEngine.enableLocalVideo(true);
-      if (enableVideoRet !== 0) {
-        throw new Error(`Failed to enable local video: ${enableVideoRet}`);
+      if (!this.state.selectedSourceId) {
+        throw new Error('Screen source not selected');
       }
 
-      // Start screen capture
+      // Start screen capture based on source type
       let startCaptureRet = 0;
+
       if (
         this.state.selectedSourceType ===
         ScreenCaptureSourceType.ScreencapturesourcetypeWindow
       ) {
+        console.log(
+          'Starting window capture for source ID:',
+          this.state.selectedSourceId
+        );
         startCaptureRet = this.agoraEngine.startScreenCaptureByWindowId(
-          this.state.selectedSourceId!,
+          this.state.selectedSourceId,
           {},
           {
-            dimensions: { width: 800, height: 800 },
+            dimensions: { width: 1920, height: 1080 },
             frameRate: 30,
-            bitrate: 1000000,
-            captureMouseCursor: false,
+            bitrate: 2000000,
+            captureMouseCursor: true,
             excludeWindowList: [],
             excludeWindowCount: 0,
             highLightWidth: 2,
-            highLightColor: 0x000000,
+            highLightColor: 0x00ff00,
             enableHighLight: true,
           }
         );
@@ -352,23 +383,53 @@ class AgoraScreenShareService {
         this.state.selectedSourceType ===
         ScreenCaptureSourceType.ScreencapturesourcetypeScreen
       ) {
-        startCaptureRet = this.agoraEngine.startScreenCaptureByWindowId(
-          this.state.selectedSourceId!,
+        console.log(
+          'Starting screen capture for display ID:',
+          this.state.selectedSourceId
+        );
+        startCaptureRet = this.agoraEngine.startScreenCaptureByDisplayId(
+          this.state.selectedSourceId,
           {},
           {
-            dimensions: { width: 800, height: 800 },
+            dimensions: { width: 1920, height: 1080 },
             frameRate: 30,
-            bitrate: 1000000,
+            bitrate: 2000000,
             windowFocus: false,
             highLightWidth: 2,
-            highLightColor: 0x000000,
+            highLightColor: 0x00ff00,
             enableHighLight: true,
           }
         );
+      } else {
+        throw new Error(
+          `Unsupported screen source type: ${this.state.selectedSourceType}`
+        );
       }
+
+      console.log('Screen capture start result:', startCaptureRet);
 
       if (startCaptureRet !== 0) {
         throw new Error(`Failed to start screen capture: ${startCaptureRet}`);
+      }
+
+      const enableVideoRet = this.agoraEngine.enableLocalVideo(true);
+      console.log('Enable local video for preview result:', enableVideoRet);
+
+      if (enableVideoRet !== 0) {
+        console.warn(
+          `Warning: Failed to enable local video for preview: ${enableVideoRet}`
+        );
+      }
+
+      // Start preview
+      const startPreviewRet = this.agoraEngine.startPreview(
+        VideoSourceType.VideoSourceScreen
+      );
+      console.log('Start preview result:', startPreviewRet);
+
+      if (startPreviewRet !== 0) {
+        this.agoraEngine.stopScreenCapture();
+        throw new Error(`Failed to start preview: ${startPreviewRet}`);
       }
 
       this.state.isPublishing = true;
@@ -387,23 +448,67 @@ class AgoraScreenShareService {
         return;
       }
 
+      console.log('Unpublishing screen share...');
+
       // Stop screen capture
       const stopCaptureRet = this.agoraEngine.stopScreenCapture();
+      console.log('Stop screen capture result:', stopCaptureRet);
+
       if (stopCaptureRet !== 0) {
-        throw new Error(`Failed to stop screen capture: ${stopCaptureRet}`);
+        console.warn(
+          `Warning: Failed to stop screen capture: ${stopCaptureRet}`
+        );
       }
 
       // Disable local video
       const disableVideoRet = this.agoraEngine.enableLocalVideo(false);
+      console.log('Disable local video result:', disableVideoRet);
+
       if (disableVideoRet !== 0) {
-        console.warn(`Failed to disable local video: ${disableVideoRet}`);
+        console.warn(
+          `Warning: Failed to disable local video: ${disableVideoRet}`
+        );
       }
+
+      // Stop preview
+      const stopPreviewRet = this.agoraEngine.stopPreview(
+        VideoSourceType.VideoSourceScreen
+      );
+      console.log('Stop preview result:', stopPreviewRet);
 
       this.state.isPublishing = false;
       this.stopStatsMonitoring();
+
+      console.log('Screen share unpublished successfully');
     } catch (error) {
       console.error('Error unpublishing screen share:', error);
       throw error;
+    }
+  }
+
+  public setupLocalVideoView(element: HTMLElement): void {
+    try {
+      if (!this.agoraEngine) {
+        console.warn('Agora engine not ready for video setup');
+        return;
+      }
+
+      // Setup local video view for screen sharing
+      const setupRet = this.agoraEngine.setupLocalVideo({
+        uid: 0,
+        sourceType: VideoSourceType.VideoSourceScreen,
+        view: element,
+        renderMode: RenderModeType.RenderModeFit,
+        mirrorMode: VideoMirrorModeType.VideoMirrorModeDisabled,
+      });
+
+      console.log('Setup local video view result:', setupRet);
+
+      if (setupRet !== 0) {
+        console.warn(`Warning: Failed to setup local video view: ${setupRet}`);
+      }
+    } catch (error) {
+      console.error('Error setting up local video view:', error);
     }
   }
 
@@ -464,6 +569,10 @@ class AgoraScreenShareService {
     return this.state.isPublishing;
   }
 
+  public isPreviewing(): boolean {
+    return this.state.isPreviewing;
+  }
+
   public async cleanup(): Promise<void> {
     try {
       this.stopStatsMonitoring();
@@ -472,11 +581,17 @@ class AgoraScreenShareService {
         await this.unpublishScreenShare();
       }
 
+      if (this.state.isPreviewing) {
+        await this.stopPreview();
+      }
+
       if (this.state.isJoined) {
         await this.leaveChannel();
       }
 
       if (this.agoraEngine) {
+        // Unregister event handler before releasing
+        this.agoraEngine.unregisterEventHandler(this);
         this.agoraEngine.release();
         this.agoraEngine = null;
       }
@@ -485,6 +600,7 @@ class AgoraScreenShareService {
         isInitialized: false,
         isJoined: false,
         isPublishing: false,
+        isPreviewing: false,
         selectedSourceId: null,
         selectedSourceType: null,
         selectedSourceName: null,

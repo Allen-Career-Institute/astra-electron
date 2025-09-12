@@ -2,6 +2,17 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { ScreenSource } from '../../types/electron';
 import { ScreenShareElectronAPI } from '../../types/preload';
 import { ScreenShareWindowConfig } from '../../modules/screenShareWindow';
+import RtcSurfaceView from './RtcSurfaceView';
+import { agoraScreenShareService } from '../../modules/agoraScreenShareService';
+
+// Define the necessary types locally since we can't import from agora-electron-sdk in renderer
+const VideoSourceType = {
+  VideoSourceScreen: 1,
+} as const;
+
+const RenderModeType = {
+  RenderModeFit: 1,
+} as const;
 interface ScreenShareWindowProps {
   config: ScreenShareWindowConfig;
 }
@@ -16,6 +27,7 @@ interface ScreenShareWindowState {
     isInitialized: boolean;
     isJoined: boolean;
     isPublishing: boolean;
+    isPreviewing: boolean;
   };
   rtcStats: any | null;
 }
@@ -40,6 +52,7 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
       isInitialized: false,
       isJoined: false,
       isPublishing: false,
+      isPreviewing: false,
     },
     rtcStats: null,
   });
@@ -51,18 +64,55 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
     []
   );
 
+  const getFilteredSources = (sources: ScreenSource[]) => {
+    if (!config.isWhiteboard) {
+      return sources.filter(
+        source =>
+          !source.name.includes('Electron') && !source?.title?.includes('Astra')
+      );
+    }
+    return sources.filter(source =>
+      source?.title?.includes('Astra - Whiteboard')
+    );
+  };
+
+  const refreshSources = async () => {
+    let sources = getFilteredSources(
+      await agoraScreenShareService.getScreenSources()
+    );
+
+    if (sources) {
+      updateState({ sources, loading: false });
+    } else {
+      updateState({
+        error: 'Failed to load sources',
+        loading: false,
+      });
+    }
+  };
+
   const loadSources = async () => {
     try {
       updateState({ loading: true, error: null });
 
-      // Use Agora sources if available, otherwise fallback to regular sources
-      await window.screenShareElectronAPI.agoraInitialize(config);
-      const result =
-        await window.screenShareElectronAPI.agoraGetScreenSources();
-      const sources = result.success ? result.sources : [];
+      // Use Agora service directly since contextIsolation is false
+      await agoraScreenShareService.initialize(config);
+      let sources = getFilteredSources(
+        await agoraScreenShareService.getScreenSources()
+      );
+
+      while (config.isWhiteboard && sources.length < 1) {
+        sources = getFilteredSources(
+          await agoraScreenShareService.getScreenSources()
+        );
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
 
       if (sources) {
-        updateState({ sources: sources, loading: false });
+        updateState({ sources, loading: false });
+        if (config.isWhiteboard) {
+          await selectAgoraSource(sources[0]?.id || '');
+        }
       } else {
         updateState({
           error: 'Failed to load sources',
@@ -78,108 +128,122 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
     }
   };
 
-  const joinAgoraChannel = useCallback(async () => {
+  const joinAgoraChannel = async () => {
     try {
       updateState({ status: 'Joining Agora channel...' });
-      const result = await window.screenShareElectronAPI.agoraJoinChannel();
+      await agoraScreenShareService.joinChannel();
 
-      if (result.success) {
-        updateState({
-          agoraState: { ...state.agoraState, isJoined: true },
-          status: 'Joined Agora channel successfully',
-        });
-      } else {
-        throw new Error(result.error || 'Failed to join Agora channel');
-      }
+      updateState({
+        agoraState: { ...state.agoraState, isJoined: true },
+        status: 'Joined Agora channel successfully',
+      });
     } catch (err) {
       updateState({
         error: 'Failed to join Agora channel: ' + (err as Error).message,
         status: null,
       });
     }
-  }, [updateState]);
+  };
 
-  const selectAgoraSource = useCallback(
-    async (sourceId: string) => {
-      try {
-        const result =
-          await window.screenShareElectronAPI.agoraSelectSource(sourceId);
-
-        if (result.success) {
-          updateState({ selectedSourceId: sourceId });
-        } else {
-          throw new Error(result.error || 'Failed to select source');
-        }
-      } catch (err) {
-        updateState({
-          error: 'Failed to select source: ' + (err as Error).message,
-        });
-      }
-    },
-    [updateState]
-  );
-
-  const publishAgoraScreenShare = useCallback(async () => {
+  const selectAgoraSource = async (sourceId: string) => {
     try {
-      updateState({ status: 'Publishing screen share...' });
-      const result = await window.screenShareElectronAPI.agoraPublish();
+      await agoraScreenShareService.selectScreenSource(sourceId);
+      console.log('selectAgoraSource', sourceId);
+      updateState({ selectedSourceId: sourceId });
+    } catch (err) {
+      updateState({
+        error: 'Failed to select source: ' + (err as Error).message,
+      });
+    }
+  };
 
-      if (result.success) {
+  const publishAgoraScreenShare = async () => {
+    try {
+      updateState({ status: 'Publishing screen share...', sources: [] });
+      await agoraScreenShareService.publishScreenShare();
+      updateState({
+        agoraState: { ...state.agoraState, isPublishing: true },
+        status: 'Screen share published successfully!',
+      });
+      setTimeout(() => {
         updateState({
-          agoraState: { ...state.agoraState, isPublishing: true },
-          status: 'Screen share published successfully!',
+          status: '',
         });
-      } else {
-        throw new Error(result.error || 'Failed to publish screen share');
-      }
+      }, 2000);
     } catch (err) {
       updateState({
         error: 'Failed to publish screen share: ' + (err as Error).message,
         status: null,
       });
     }
-  }, [updateState]);
+  };
 
-  const startScreenSharing = useCallback(async () => {
+  const startScreenSharing = async () => {
+    console.log('startScreenSharing', state);
     if (!state.selectedSourceId) return;
 
     try {
-      // Agora flow
-
-      if (!state.agoraState.isJoined) {
-        await joinAgoraChannel();
+      // Agora flow - correct order: select source -> join channel -> publish
+      if (state.agoraState.isJoined) {
         return;
       }
 
+      updateState({
+        agoraState: { ...state.agoraState, isPublishing: true },
+        status: 'Screen share publishing ...',
+      });
+
+      // Step 1: Select the screen source first
       await selectAgoraSource(state.selectedSourceId);
-      await joinAgoraChannel;
+
+      // Step 2: Publish screen share after joining
       await publishAgoraScreenShare();
+      // Step 3: Join the channel
+      await joinAgoraChannel();
+
+      updateState({
+        agoraState: {
+          ...state.agoraState,
+          isPublishing: false,
+          isPreviewing: true,
+        },
+        status: 'Screen share published successfully!',
+      });
     } catch (err) {
       updateState({
         error: 'Failed to start screen sharing: ' + (err as Error).message,
         status: null,
       });
     }
-  }, [
-    state.selectedSourceId,
-    state.agoraState,
-    config,
-    joinAgoraChannel,
-    selectAgoraSource,
-    publishAgoraScreenShare,
-    updateState,
-  ]);
+  };
 
   const handleCancel = useCallback(() => {
-    window.screenShareElectronAPI.agoraCleanup();
-    (window as any).electronAPI.invoke('close-screen-share-window');
+    agoraScreenShareService.cleanup();
+    (window as any).screenShareElectronAPI.closeScreenShareWindow();
   }, []);
 
   const handleSourceSelect = useCallback(
-    (sourceId: string) => {
-      updateState({ selectedSourceId: sourceId });
+    async (sourceId: string) => {
+      try {
+        updateState({
+          selectedSourceId: sourceId,
+          status: 'Starting preview...',
+        });
+
+        // Automatically start preview after source selection
+        if (!state.agoraState.isPreviewing) {
+          // First select the source in Agora
+          await selectAgoraSource(sourceId);
+          // Then start the preview
+        }
+      } catch (err) {
+        updateState({
+          error: 'Failed to start preview: ' + (err as Error).message,
+          status: null,
+        });
+      }
     },
-    [updateState]
+    [updateState, state.agoraState.isPreviewing, selectAgoraSource]
   );
 
   // RTC Stats monitoring
@@ -188,9 +252,9 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
 
     const interval = setInterval(async () => {
       try {
-        const result = await window.screenShareElectronAPI.agoraGetStats();
-        if (result.success && result.stats) {
-          updateState({ rtcStats: result.stats });
+        const stats = agoraScreenShareService.getRTCStats();
+        if (stats) {
+          updateState({ rtcStats: stats });
         }
       } catch (err) {
         console.error('Failed to get RTC stats:', err);
@@ -202,17 +266,26 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
 
   const getModeDescription = () => {
     if (config.isWhiteboard) {
-      return 'Select a window to screen share. The whiteboard will continue streaming camera video and audio.';
+      return 'Select a window to screen share. Preview will start automatically. The whiteboard will continue streaming camera video and audio.';
     }
-    return 'Select a window to screen share. Only camera audio will be streamed.';
+    return 'Select a window to screen share. Preview will start automatically. Only selected screen will be streamed.';
   };
 
   useEffect(() => {
     loadSources();
     return () => {
-      window.screenShareElectronAPI.agoraCleanup();
+      agoraScreenShareService.cleanup();
     };
   }, []);
+
+  useEffect(() => {
+    const startScreenSharingAsync = async () => {
+      if (state.selectedSourceId && config.isWhiteboard) {
+        await startScreenSharing();
+      }
+    };
+    startScreenSharingAsync();
+  }, [state.selectedSourceId]);
 
   // Start RTC stats monitoring when publishing
   useEffect(() => {
@@ -224,27 +297,20 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
 
   return (
     <div className="screen-share-window">
-      <div className="header">
-        <h1>Select Window to Share</h1>
-        {config && (
-          <div className="agora-status">
-            <div
-              className={`status-dot ${state.agoraState.isInitialized ? 'connected' : 'disconnected'}`}
-            ></div>
-            <span>
-              Agora{' '}
-              {state.agoraState.isInitialized ? 'Connected' : 'Disconnected'}
-            </span>
-          </div>
-        )}
-      </div>
-
       <div className="content">
-        <div className="description">{getModeDescription()}</div>
+        {!state.agoraState.isPreviewing && (
+          <div className="description">{getModeDescription()}</div>
+        )}
 
         {state.status && <div className="status show">{state.status}</div>}
 
         {state.error && <div className="error">{state.error}</div>}
+
+        {!state.agoraState.isPreviewing && (
+          <button className="btn btn-secondary" onClick={refreshSources}>
+            Refresh Sources
+          </button>
+        )}
 
         {config && state.rtcStats && (
           <div className="rtc-stats">
@@ -289,6 +355,25 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
           </div>
         )}
 
+        {/* Preview Section */}
+        {state.agoraState.isPreviewing && (
+          <div className="preview-section">
+            <h3>Screen Share Preview</h3>
+            <div className="preview-container">
+              <RtcSurfaceView
+                canvas={{
+                  uid: 0,
+                  sourceType: VideoSourceType.VideoSourceScreen,
+                  renderMode: RenderModeType.RenderModeFit,
+                  mirrorMode: 0,
+                }}
+                containerClass="preview-video-container"
+                videoClass="preview-video-element"
+              />
+            </div>
+          </div>
+        )}
+
         {state.loading && (
           <div className="loading">Loading available sources...</div>
         )}
@@ -318,26 +403,30 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
         )}
       </div>
 
-      <div className="footer">
-        <button className="btn btn-secondary" onClick={handleCancel}>
-          Cancel
-        </button>
-        <button
-          className="btn btn-primary"
-          onClick={startScreenSharing}
-          disabled={!state.selectedSourceId || state.status?.includes('...')}
-        >
-          {config
-            ? !state.agoraState.isInitialized
-              ? 'Initialize Agora'
-              : !state.agoraState.isJoined
-                ? 'Join Channel'
-                : !state.selectedSourceId
-                  ? 'Select Source'
-                  : 'Publish Screen Share'
-            : 'Start Sharing'}
-        </button>
-      </div>
+      {!state.agoraState.isPreviewing && (
+        <div className="footer">
+          <button className="btn btn-secondary" onClick={handleCancel}>
+            Cancel
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={startScreenSharing}
+            disabled={!state.selectedSourceId}
+          >
+            {config
+              ? !state.agoraState.isInitialized
+                ? 'Start Publishing'
+                : !state.agoraState.isJoined
+                  ? 'Join Channel'
+                  : !state.selectedSourceId
+                    ? 'Select Source'
+                    : state.agoraState.isPublishing
+                      ? 'Publishing...'
+                      : 'Publish Screen Share'
+              : 'Start Sharing'}
+          </button>
+        </div>
+      )}
 
       <style>{`
         .screen-share-window {
@@ -412,7 +501,7 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
 
         .sources-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
           gap: 16px;
           margin: 0 20px 20px 20px;
         }
@@ -505,6 +594,23 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
           cursor: not-allowed;
         }
 
+        .btn-outline {
+          background: transparent;
+          color: #1976d2;
+          border: 1px solid #1976d2;
+        }
+
+        .btn-outline:hover {
+          background: #e3f2fd;
+        }
+
+        .btn-outline:disabled {
+          background: transparent;
+          color: #ccc;
+          border-color: #ccc;
+          cursor: not-allowed;
+        }
+
         .loading {
           display: flex;
           justify-content: center;
@@ -582,6 +688,66 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
           color: #333;
           font-weight: 600;
           font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+
+        .preview-section {
+          background: #f8f9fa;
+          border: 1px solid #e9ecef;
+          border-radius: 8px;
+          padding: 16px;
+          margin: 0 20px 20px 20px;
+        }
+
+        .preview-section h3 {
+          margin: 0 0 12px 0;
+          font-size: 14px;
+          font-weight: 600;
+          color: #333;
+        }
+
+        .preview-container {
+          width: 100%;
+          height: 300px;
+          background: #000;
+          border-radius: 8px;
+          overflow: hidden;
+          margin-bottom: 12px;
+        }
+
+        .preview-video-container {
+          width: 100%;
+          height: 100%;
+        }
+
+        .preview-video-element {
+          width: 100%;
+          height: 100%;
+        }
+
+        .preview-controls {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+
+        .preview-info {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+          font-size: 12px;
+        }
+
+        .preview-status {
+          color: #4caf50;
+          font-weight: 600;
+        }
+
+        .preview-source {
+          color: #666;
+          font-style: italic;
         }
       `}</style>
     </div>

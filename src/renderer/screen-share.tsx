@@ -30,7 +30,7 @@ const ScreenShareApp: React.FC = () => {
           error?: string;
           payload?: ScreenShareWindowConfig;
         };
-      if (config.type === 'SUCCESS') {
+      if (config?.type === 'SUCCESS') {
         setConfig(config.payload as ScreenShareWindowConfig);
       } else {
         setConfig(null);

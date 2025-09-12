@@ -38,7 +38,7 @@ export interface ScreenSource {
   name: string;
   title: string;
   thumbnail: string; // Data URL string
-  display_id: string;
+  display_id?: string;
   appIcon?: string; // Data URL string
 }
 

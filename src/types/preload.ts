@@ -32,19 +32,6 @@ export interface ScreenShareElectronAPI extends BaseElectronAPI {
     error?: string;
     payload?: ScreenShareWindowConfig;
   }>;
-
-  // Agora Screen Share methods
-  agoraInitialize: (config: ScreenShareWindowConfig) => Promise<any>;
-  agoraJoinChannel: () => Promise<any>;
-  agoraLeaveChannel: () => Promise<any>;
-  agoraGetScreenSources: () => Promise<any>;
-  agoraSelectSource: (sourceId: string, autoSelect?: boolean) => Promise<any>;
-  agoraAutoSelectSource: () => Promise<any>;
-  agoraPublish: () => Promise<any>;
-  agoraUnpublish: () => Promise<any>;
-  agoraGetState: () => Promise<any>;
-  agoraGetStats: () => Promise<any>;
-  agoraCleanup: () => Promise<any>;
 }
 
 // Unified interface for all preload scripts

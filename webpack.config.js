@@ -61,7 +61,7 @@ module.exports = [
       chunkFilename: 'chunk-[name].js',
     },
     resolve: {
-      extensions: ['.ts', '.js', '.json'],
+      extensions: ['.ts', '.js', '.json', '.node'],
       alias: {
         '@': path.resolve(__dirname, 'src'),
         'agora_node_ext': path.resolve(__dirname, 'node_modules/agora-electron-sdk/build/Release/agora_node_ext.node')
@@ -78,7 +78,7 @@ module.exports = [
           }
         },
         {
-          test: /agora_node_ext$/,
+          test: /agora_node_ext(\.node)?$/,
           use: {
             loader: 'node-loader',
             options: { name: '[name].[ext]' }
@@ -172,16 +172,26 @@ module.exports = [
     output: {
       path: path.resolve(__dirname, 'dist'),
       filename: '[name].js',
+      publicPath: './',
     },
     resolve: {
-      extensions: ['.ts', '.js', '.json'],
+      extensions: ['.ts', '.js', '.json', '.node'],
       alias: {
-        '@': path.resolve(__dirname, 'src')
+        '@': path.resolve(__dirname, 'src'),
+        'agora_node_ext': path.resolve(__dirname, 'node_modules/agora-electron-sdk/build/Release/agora_node_ext.node'),
+        '../../../build/Release/agora_node_ext': path.resolve(__dirname, 'node_modules/agora-electron-sdk/build/Release/agora_node_ext.node')
       }
     },
   
     module: {
       rules: [
+        {
+          test: /agora_node_ext(\.node)?$/,
+          use: {
+            loader: 'node-loader',
+            options: { name: '[name].[ext]' }
+          }
+        },
         {
           test: /\.ts$/,
           exclude: /node_modules/,
@@ -245,7 +255,10 @@ module.exports = [
       maxEntrypointSize: 512000,
       maxAssetSize: 512000,
     },
-    externals: commonjsConfig.externals,
+    externals: {
+      ...commonjsConfig.externals,
+      'agora-electron-sdk': 'commonjs2 agora-electron-sdk',
+    },
   },
 
   // Renderer Process Configuration
@@ -262,18 +275,30 @@ module.exports = [
       publicPath: './'
     },
     resolve: {
-      extensions: ['.tsx', '.ts', '.js', '.jsx'],
+      extensions: ['.tsx', '.ts', '.js', '.jsx', '.node'],
       alias: {
-        '@': path.resolve(__dirname, 'src/renderer')
+        '@': path.resolve(__dirname, 'src/renderer'),
+        'agora_node_ext': path.resolve(__dirname, 'node_modules/agora-electron-sdk/build/Release/agora_node_ext.node'),
+        '../../../build/Release/agora_node_ext': path.resolve(__dirname, 'node_modules/agora-electron-sdk/build/Release/agora_node_ext.node')
       },
       fallback: {
         global: false,
+        fs: false,
+        path: false,
+        crypto: false,
       }
     },
     module: {
       rules: [
         {
           test: /\.node$/,
+          use: {
+            loader: 'node-loader',
+            options: { name: '[name].[ext]' }
+          }
+        },
+        {
+          test: /agora_node_ext(\.node)?$/,
           use: {
             loader: 'node-loader',
             options: { name: '[name].[ext]' }
@@ -417,6 +442,7 @@ module.exports = [
     externals: {
       'koffi': 'commonjs2 koffi',
       'ref-napi': 'commonjs2 ref-napi',
+      'agora-electron-sdk': 'commonjs2 agora-electron-sdk',
     }
   }
 ];

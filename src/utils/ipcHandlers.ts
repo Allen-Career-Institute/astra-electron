@@ -35,6 +35,8 @@ import {
   getScreenShareWindowConfig,
   safeCloseScreenShareWindow,
 } from '../modules/screenShareWindow';
+import { askMediaAccess } from './permissionUtil';
+import { getMainWindow } from '../modules/windowManager';
 
 // Helper function to check if stream window is ready
 function isStreamWindowReady(): boolean {
@@ -302,6 +304,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
           };
 
           try {
+            await askMediaAccess(['screen']);
             await createScreenShareWindow(screenShareConfig);
           } catch (error) {
             console.error('Error creating screen share window:', error);
@@ -311,6 +314,10 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
             };
           }
           return { type: 'SUCCESS', payload: 'Screen share window created' };
+
+        case 'STOP_SCREEN_SHARE':
+          safeCloseScreenShareWindow('STOP_SCREEN_SHARE');
+          return { type: 'SUCCESS', payload: 'Screen share window closed' };
         case 'CHANGE_AUDIO_DEVICE':
           const streamWindowForChangeAudioDevice = getStreamWindow();
           if (
@@ -376,6 +383,14 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
       }
     } catch (error) {
       throw error instanceof Error ? error : new Error('Unknown error');
+    }
+  });
+
+  ipcMain.handle('close-screen-share-window', async event => {
+    safeCloseScreenShareWindow('manual close');
+    const mainWindow = getMainWindow();
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('screen-share-window-closed');
     }
   });
 
@@ -646,14 +661,4 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
       };
     }
   });
-
-  ipcMain.handle('IPC_REQUEST_PERMISSION_HANDLER', async (event, arg) => {
-    if (systemPreferences.getMediaAccessStatus(arg.type) === 'not-determined') {
-      console.log('main process request handler:' + JSON.stringify(arg));
-      return await systemPreferences.askForMediaAccess(arg.type);
-    }
-  });
-
-  // Note: Agora Screen Share handlers have been moved to renderer process
-  // The screen share window now handles Agora SDK initialization directly
 }

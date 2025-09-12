@@ -138,12 +138,12 @@ async function createScreenShareWindow(
       height: windowHeight,
       x,
       y,
-      title: 'Screen Share Selection',
+      title: 'Astra - Screen Share',
       show: false,
       fullscreen: false, // Explicitly prevent fullscreen
       webPreferences: {
         nodeIntegration: true,
-        contextIsolation: true,
+        contextIsolation: false,
         sandbox: false,
         preload: path.join(
           app.isPackaged ? app.getAppPath() : process.cwd(),
@@ -163,7 +163,7 @@ async function createScreenShareWindow(
       resizable: true,
       minimizable: true,
       maximizable: true,
-      closable: true,
+      closable: false,
       alwaysOnTop: true, // Keep on top
       skipTaskbar: false,
       autoHideMenuBar: true,
@@ -175,10 +175,10 @@ async function createScreenShareWindow(
       movable: true,
       focusable: true,
       parent: mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined,
-      minWidth: 800,
-      minHeight: 450,
-      maxWidth: 1600,
-      maxHeight: 900,
+      minWidth: 450,
+      minHeight: 250,
+      maxWidth: 800,
+      maxHeight: 450,
     });
 
     // Apply performance optimizations for screen share window
