@@ -29,6 +29,7 @@ export interface MainElectronAPI extends BaseElectronAPI {
     autoHideMenuBar?: boolean;
     movable?: boolean;
     focusable?: boolean;
+    fullscreen?: boolean;
   }) => Promise<any>;
 }
 

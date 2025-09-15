@@ -653,6 +653,7 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
         resizable: config.resizable ?? true,
         minimizable: config.minimizable ?? true,
         autoHideMenuBar: config.autoHideMenuBar ?? false,
+        fullscreen: config.fullscreen ?? true,
         frame: true,
         movable: config.movable ?? true,
         focusable: config.focusable ?? true,
