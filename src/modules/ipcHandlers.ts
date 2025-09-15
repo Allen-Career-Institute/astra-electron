@@ -1,7 +1,7 @@
 import { IpcMain, app, BrowserWindow, session } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
-
+import * as Sentry from '@sentry/electron/main';
 import {
   getStreamWindow,
   getStreamWindowConfig,
@@ -23,6 +23,7 @@ import {
 import { isChunkLoggingEnabled } from './user-config';
 import { reloadMainWindow } from './reloadUtils';
 import { getAutoUpdater } from './autoUpdater';
+import { getSharedSession } from './windowManager';
 
 // Global variables for FFmpeg processing
 let ffmpegProcesses = new Map<string, any>(); // Map to store FFmpeg processes by meetingId
@@ -618,6 +619,54 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
           error instanceof Error
             ? error.message
             : 'Unknown error during logout',
+      };
+    }
+  });
+
+  ipcMain.handle('open-external-url', async (event, url) => {
+    try {
+      const { shell } = require('electron');
+      await shell.openExternal(url);
+    } catch (error) {
+      console.error('Failed to open external window:', error);
+    }
+  });
+
+  ipcMain.handle('open-new-window', async (event, config) => {
+    try {
+      const newWindow = new BrowserWindow({
+        width: 1200,
+        height: 800,
+        title: config.title || 'CustomWindow',
+        webPreferences: {
+          nodeIntegration: true,
+          contextIsolation: true,
+          preload: path.join(
+            app.isPackaged ? app.getAppPath() : process.cwd(),
+            'dist',
+            'preload.js'
+          ),
+          session: getSharedSession(),
+        },
+        closable: config.closable ?? true,
+        maximizable: config.maximizable ?? true,
+        resizable: config.resizable ?? true,
+        minimizable: config.minimizable ?? true,
+        autoHideMenuBar: config.autoHideMenuBar ?? false,
+        frame: true,
+        movable: config.movable ?? true,
+        focusable: config.focusable ?? true,
+      });
+      newWindow.loadURL(config.url);
+      newWindow.show();
+      return {
+        success: true,
+      };
+    } catch (error) {
+      Sentry.captureException(error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   });

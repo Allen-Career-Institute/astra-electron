@@ -102,6 +102,26 @@ contextBridge.exposeInMainWorld('electronAPI', {
   ): void => {
     ipcRenderer.on('app-metrics', callback);
   },
+  openExternalWindow: async (url: string): Promise<any> => {
+    try {
+      return await ipcRenderer.invoke('open-external-url', url);
+    } catch (error) {
+      return {
+        type: 'ERROR',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+  openNewWindow: async (config: any): Promise<any> => {
+    try {
+      return await ipcRenderer.invoke('open-new-window', config);
+    } catch (error) {
+      return {
+        type: 'ERROR',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
 } as MainElectronAPI);
 
 // Extend the global Window interface

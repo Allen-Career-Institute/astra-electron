@@ -18,6 +18,18 @@ export interface MainElectronAPI extends BaseElectronAPI {
   logout: () => void;
   getDesktopSources: (options: any) => Promise<any>;
   onMetrics: (callback: (event: any, metrics: any) => void) => void;
+  openExternalWindow: (url: string) => Promise<any>;
+  openNewWindow: (config: {
+    title?: string;
+    url: string;
+    closable?: boolean;
+    maximizable?: boolean;
+    resizable?: boolean;
+    minimizable?: boolean;
+    autoHideMenuBar?: boolean;
+    movable?: boolean;
+    focusable?: boolean;
+  }) => Promise<any>;
 }
 
 export interface StreamElectronAPI extends BaseElectronAPI {}
