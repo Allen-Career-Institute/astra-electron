@@ -341,16 +341,17 @@ class AgoraScreenShareService implements IRtcEngineEventHandler {
         );
         startCaptureRet = this.agoraEngine.startScreenCaptureByWindowId(
           this.state.selectedSourceId,
-          {},
           {
-            dimensions: { width: 1080, height: 540 },
-            frameRate: 25,
+            width: 1080,
+            height: 540,
+          },
+          {
+            dimensions: { width: 1920, height: 1080 },
+            frameRate: 30,
             windowFocus: true,
             captureMouseCursor: true,
             highLightWidth: 2,
-            excludeWindowList: [],
-            excludeWindowCount: 0,
-            highLightColor: 0xff8cbf26,
+            highLightColor: 4287414054,
             enableHighLight: true,
           }
         );
@@ -366,14 +367,14 @@ class AgoraScreenShareService implements IRtcEngineEventHandler {
           this.state.selectedSourceId,
           {},
           {
-            dimensions: { width: 1080, height: 540 },
-            frameRate: 25,
+            dimensions: { width: 1920, height: 1080 },
+            frameRate: 30,
             windowFocus: true,
             captureMouseCursor: true,
             highLightWidth: 2,
             excludeWindowList: [],
             excludeWindowCount: 0,
-            highLightColor: 0xff8cbf26,
+            highLightColor: 4287414054,
             enableHighLight: true,
           }
         );
