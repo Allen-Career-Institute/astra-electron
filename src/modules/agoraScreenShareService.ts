@@ -266,31 +266,6 @@ class AgoraScreenShareService implements IRtcEngineEventHandler {
     }
   }
 
-  public async autoSelectScreenSource(): Promise<string | null> {
-    try {
-      const sources = (await this.getScreenSources()) ?? [];
-
-      // Prefer screen sources over window sources
-      const screenSources = sources.filter(s => s?.name?.includes('Screen'));
-      const windowSources = sources.filter(s => !s?.name?.includes('Screen'));
-
-      const preferredSources = [...screenSources, ...windowSources];
-
-      if (preferredSources.length === 0) {
-        throw new Error('No screen sources available');
-      }
-
-      const selectedSource = preferredSources[0];
-      await this.selectScreenSource(selectedSource.id || '', true);
-
-      console.log('Auto-selected screen source:', selectedSource.name);
-      return selectedSource.id || null;
-    } catch (error) {
-      console.error('Error auto-selecting screen source:', error);
-      return null;
-    }
-  }
-
   public async stopPreview(): Promise<void> {
     try {
       if (!this.agoraEngine) {
@@ -368,14 +343,14 @@ class AgoraScreenShareService implements IRtcEngineEventHandler {
           this.state.selectedSourceId,
           {},
           {
-            dimensions: { width: 1920, height: 1080 },
-            frameRate: 30,
-            bitrate: 2000000,
+            dimensions: { width: 1080, height: 540 },
+            frameRate: 25,
+            windowFocus: true,
             captureMouseCursor: true,
+            highLightWidth: 2,
             excludeWindowList: [],
             excludeWindowCount: 0,
-            highLightWidth: 2,
-            highLightColor: 0x00ff00,
+            highLightColor: 0xff8cbf26,
             enableHighLight: true,
           }
         );
@@ -391,12 +366,14 @@ class AgoraScreenShareService implements IRtcEngineEventHandler {
           this.state.selectedSourceId,
           {},
           {
-            dimensions: { width: 1920, height: 1080 },
-            frameRate: 30,
-            bitrate: 2000000,
-            windowFocus: false,
+            dimensions: { width: 1080, height: 540 },
+            frameRate: 25,
+            windowFocus: true,
+            captureMouseCursor: true,
             highLightWidth: 2,
-            highLightColor: 0x00ff00,
+            excludeWindowList: [],
+            excludeWindowCount: 0,
+            highLightColor: 0xff8cbf26,
             enableHighLight: true,
           }
         );

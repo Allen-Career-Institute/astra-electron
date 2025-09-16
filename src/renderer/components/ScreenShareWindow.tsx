@@ -24,10 +24,13 @@ interface ScreenShareWindowState {
   error: string | null;
   status: string | null;
   agoraState: {
-    isInitialized: boolean;
-    isJoined: boolean;
-    isPublishing: boolean;
-    isPreviewing: boolean;
+    status:
+      | 'inprogress'
+      | 'initialized'
+      | 'joined'
+      | 'publishing'
+      | 'published'
+      | 'error';
   };
   rtcStats: any | null;
 }
@@ -49,10 +52,7 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
     error: null,
     status: null,
     agoraState: {
-      isInitialized: false,
-      isJoined: false,
-      isPublishing: false,
-      isPreviewing: false,
+      status: 'inprogress',
     },
     rtcStats: null,
   });
@@ -131,10 +131,11 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
   const joinAgoraChannel = async () => {
     try {
       updateState({ status: 'Joining Agora channel...' });
+
       await agoraScreenShareService.joinChannel();
 
       updateState({
-        agoraState: { ...state.agoraState, isJoined: true },
+        agoraState: { ...state.agoraState, status: 'joined' },
         status: 'Joined Agora channel successfully',
       });
     } catch (err) {
@@ -148,7 +149,6 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
   const selectAgoraSource = async (sourceId: string) => {
     try {
       await agoraScreenShareService.selectScreenSource(sourceId);
-      console.log('selectAgoraSource', sourceId);
       updateState({ selectedSourceId: sourceId });
     } catch (err) {
       updateState({
@@ -162,7 +162,7 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
       updateState({ status: 'Publishing screen share...', sources: [] });
       await agoraScreenShareService.publishScreenShare();
       updateState({
-        agoraState: { ...state.agoraState, isPublishing: true },
+        agoraState: { ...state.agoraState, status: 'published' },
         status: 'Screen share published successfully!',
       });
       setTimeout(() => {
@@ -183,17 +183,15 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
     if (!state.selectedSourceId) return;
 
     try {
-      // Agora flow - correct order: select source -> join channel -> publish
-      if (state.agoraState.isJoined) {
+      if (state.agoraState.status === 'published') {
         return;
       }
 
       updateState({
-        agoraState: { ...state.agoraState, isPublishing: true },
+        agoraState: { ...state.agoraState },
         status: 'Screen share publishing ...',
       });
 
-      // Step 1: Select the screen source first
       await selectAgoraSource(state.selectedSourceId);
 
       // Step 2: Publish screen share after joining
@@ -204,8 +202,7 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
       updateState({
         agoraState: {
           ...state.agoraState,
-          isPublishing: false,
-          isPreviewing: true,
+          status: 'published',
         },
         status: 'Screen share published successfully!',
       });
@@ -231,7 +228,7 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
         });
 
         // Automatically start preview after source selection
-        if (!state.agoraState.isPreviewing) {
+        if (state.agoraState.status !== 'published') {
           // First select the source in Agora
           await selectAgoraSource(sourceId);
           // Then start the preview
@@ -243,7 +240,7 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
         });
       }
     },
-    [updateState, state.agoraState.isPreviewing, selectAgoraSource]
+    [updateState, state.agoraState.status, selectAgoraSource]
   );
 
   // RTC Stats monitoring
@@ -289,16 +286,16 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
 
   // Start RTC stats monitoring when publishing
   useEffect(() => {
-    if (state.agoraState.isPublishing) {
+    if (state.agoraState.status === 'published') {
       const cleanup = startRTCStatsMonitoring();
       return cleanup;
     }
-  }, [state.agoraState.isPublishing, startRTCStatsMonitoring]);
+  }, [state.agoraState.status, startRTCStatsMonitoring]);
 
   return (
     <div className="screen-share-window">
       <div className="content">
-        {!state.agoraState.isPreviewing && (
+        {state.agoraState.status !== 'published' && (
           <div className="description">{getModeDescription()}</div>
         )}
 
@@ -306,7 +303,7 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
 
         {state.error && <div className="error">{state.error}</div>}
 
-        {!state.agoraState.isPreviewing && (
+        {state.agoraState.status !== 'published' && (
           <button className="btn btn-secondary" onClick={refreshSources}>
             Refresh Sources
           </button>
@@ -356,7 +353,7 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
         )}
 
         {/* Preview Section */}
-        {state.agoraState.isPreviewing && (
+        {state.agoraState.status === 'published' && (
           <div className="preview-section">
             <h3>Screen Share Preview</h3>
             <div className="preview-container">
@@ -378,32 +375,34 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
           <div className="loading">Loading available sources...</div>
         )}
 
-        {!state.loading && state.sources.length > 0 && (
-          <div className="sources-grid">
-            {state.sources.map(source => (
-              <div
-                key={source.id}
-                className={`source-card ${
-                  state.selectedSourceId === source.id ? 'selected' : ''
-                }`}
-                onClick={() => handleSourceSelect(source.id)}
-              >
-                <img
-                  src={source.thumbnail}
-                  alt={source.name}
-                  className="source-thumbnail"
-                />
-                <div className="source-name">{source.name}</div>
-                <div className="source-type">
-                  {`${source.title} - ${source.name.includes('Screen') ? 'Screen' : 'Window'}`}
+        {!state.loading &&
+          state.agoraState.status !== 'published' &&
+          state.sources.length > 0 && (
+            <div className="sources-grid">
+              {state.sources.map(source => (
+                <div
+                  key={source.id}
+                  className={`source-card ${
+                    state.selectedSourceId === source.id ? 'selected' : ''
+                  }`}
+                  onClick={() => handleSourceSelect(source.id)}
+                >
+                  <img
+                    src={source.thumbnail}
+                    alt={source.name}
+                    className="source-thumbnail"
+                  />
+                  <div className="source-name">{source.name}</div>
+                  <div className="source-type">
+                    {`${source.title} - ${source.name.includes('Screen') ? 'Screen' : 'Window'}`}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
       </div>
 
-      {!state.agoraState.isPreviewing && (
+      {state.agoraState.status !== 'published' && (
         <div className="footer">
           <button className="btn btn-secondary" onClick={handleCancel}>
             Cancel
@@ -413,17 +412,7 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
             onClick={startScreenSharing}
             disabled={!state.selectedSourceId}
           >
-            {config
-              ? !state.agoraState.isInitialized
-                ? 'Start Publishing'
-                : !state.agoraState.isJoined
-                  ? 'Join Channel'
-                  : !state.selectedSourceId
-                    ? 'Select Source'
-                    : state.agoraState.isPublishing
-                      ? 'Publishing...'
-                      : 'Publish Screen Share'
-              : 'Start Sharing'}
+            {'Start Sharing'}
           </button>
         </div>
       )}
