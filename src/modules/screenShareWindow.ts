@@ -166,21 +166,27 @@ async function createScreenShareWindow(
       minimizable: true,
       maximizable: true,
       closable: false,
-      alwaysOnTop: true, // Keep on top
+      alwaysOnTop: true, // Keep on top of main window
       skipTaskbar: false,
       autoHideMenuBar: true,
       frame: true,
       transparent: false,
       hasShadow: true,
-      thickFrame: false,
+      thickFrame: process.platform === 'win32' ? true : false, // Enable thickFrame on Windows for proper resizing
       titleBarStyle: 'default',
       movable: true,
       focusable: true,
-      parent: mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined,
-      minWidth: 450,
-      minHeight: 250,
-      maxWidth: 800,
-      maxHeight: 450,
+      // Remove parent window relationship on Windows to allow proper resizing
+      parent:
+        process.platform === 'win32'
+          ? undefined
+          : mainWindow && !mainWindow.isDestroyed()
+            ? mainWindow
+            : undefined,
+      minWidth: 600,
+      minHeight: 338,
+      maxWidth: 1200,
+      maxHeight: 720,
     });
 
     // Apply performance optimizations for screen share window
@@ -278,24 +284,40 @@ async function createScreenShareWindow(
       }
     });
 
-    // Handle window resize to maintain 16:9 aspect ratio and keep it on top
-    screenShareWindow.on('resize', () => {
+    // Handle window resize start to ensure proper resizing
+    screenShareWindow.on('will-resize', (event, newBounds) => {
+      // Allow the resize to proceed
+      event.preventDefault = () => {}; // Don't prevent the resize
+    });
+
+    // Handle window resize end to maintain proper state
+    screenShareWindow.on('resized', () => {
       if (screenShareWindow && !screenShareWindow.isDestroyed()) {
-        // Ensure it stays on top
+        // Ensure window stays on top after resize
         screenShareWindow.setAlwaysOnTop(true);
-
-        // Maintain 16:9 aspect ratio
-        const [width, height] = screenShareWindow.getSize();
-        const targetAspectRatio = 16 / 9;
-        const currentAspectRatio = width / height;
-
-        if (Math.abs(currentAspectRatio - targetAspectRatio) > 0.1) {
-          // If aspect ratio is significantly off, adjust height based on width
-          const newHeight = Math.round(width / targetAspectRatio);
-          screenShareWindow.setSize(width, newHeight);
-        }
+        // Ensure window is properly focused and visible
+        screenShareWindow.show();
       }
     });
+
+    // // Handle window resize to maintain 16:9 aspect ratio and keep it on top
+    // screenShareWindow.on('resize', () => {
+    //   if (screenShareWindow && !screenShareWindow.isDestroyed()) {
+    //     // Ensure it stays on top
+    //     screenShareWindow.setAlwaysOnTop(true);
+
+    //     // Maintain 16:9 aspect ratio
+    //     const [width, height] = screenShareWindow.getSize();
+    //     const targetAspectRatio = 16 / 9;
+    //     const currentAspectRatio = width / height;
+
+    //     if (Math.abs(currentAspectRatio - targetAspectRatio) > 0.1) {
+    //       // If aspect ratio is significantly off, adjust height based on width
+    //       const newHeight = Math.round(width / targetAspectRatio);
+    //       screenShareWindow.setSize(width, newHeight);
+    //     }
+    //   }
+    // });
 
     console.log('Screen share window created');
     return screenShareWindow;
