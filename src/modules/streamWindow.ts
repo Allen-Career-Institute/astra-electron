@@ -163,15 +163,21 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
       frame: true,
       transparent: false,
       hasShadow: true,
-      thickFrame: false,
+      thickFrame: process.platform === 'win32' ? true : false, // Enable thickFrame on Windows for proper resizing
       titleBarStyle: 'default',
       movable: true,
       focusable: true,
-      parent: mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined,
+      // Remove parent window relationship on Windows to allow proper resizing
+      parent:
+        process.platform === 'win32'
+          ? undefined
+          : mainWindow && !mainWindow.isDestroyed()
+            ? mainWindow
+            : undefined,
       minWidth: 320,
       minHeight: 180,
-      maxWidth: 480,
-      maxHeight: 270,
+      maxWidth: 1200,
+      maxHeight: 720,
     });
 
     // Apply performance optimizations for stream window
@@ -267,38 +273,35 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
       }
     });
 
-    // Handle main window resize to reposition stream window in bottom right
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.on('resize', () => {
-        if (streamWindow && !streamWindow.isDestroyed()) {
-          const mainBounds = mainWindow.getBounds();
-          const [streamWidth, streamHeight] = streamWindow.getSize();
-          const margin = 20;
-          const newX = mainBounds.x + mainBounds.width - streamWidth - margin;
-          const newY = mainBounds.y + mainBounds.height - streamHeight - margin;
-          streamWindow.setPosition(newX, newY);
-        }
-      });
-    }
+    // Handle window resize start to ensure proper resizing
+    streamWindow.on('will-resize', (event, newBounds) => {
+      // Allow the resize to proceed
+      event.preventDefault = () => {}; // Don't prevent the resize
+    });
 
-    // Handle window resize to maintain 16:9 aspect ratio and keep it on top
-    streamWindow.on('resize', () => {
+    // Handle window resize end to maintain proper state
+    streamWindow.on('resized', () => {
       if (streamWindow && !streamWindow.isDestroyed()) {
-        // Ensure it stays on top
+        // Ensure window stays on top after resize
         streamWindow.setAlwaysOnTop(true);
-
-        // Maintain 16:9 aspect ratio
-        const [width, height] = streamWindow.getSize();
-        const targetAspectRatio = 16 / 9;
-        const currentAspectRatio = width / height;
-
-        if (Math.abs(currentAspectRatio - targetAspectRatio) > 0.1) {
-          // If aspect ratio is significantly off, adjust height based on width
-          const newHeight = Math.round(width / targetAspectRatio);
-          streamWindow.setSize(width, newHeight);
-        }
+        // Ensure window is properly focused and visible
+        streamWindow.show();
       }
     });
+
+    // Handle main window resize to reposition stream window in bottom right
+    // if (mainWindow && !mainWindow.isDestroyed()) {
+    //   mainWindow.on('resize', () => {
+    //     if (streamWindow && !streamWindow.isDestroyed()) {
+    //       const mainBounds = mainWindow.getBounds();
+    //       const [streamWidth, streamHeight] = streamWindow.getSize();
+    //       const margin = 20;
+    //       const newX = mainBounds.x + mainBounds.width - streamWidth - margin;
+    //       const newY = mainBounds.y + mainBounds.height - streamHeight - margin;
+    //       streamWindow.setPosition(newX, newY);
+    //     }
+    //   });
+    // }
 
     // Prevent fullscreen attempts
     streamWindow.on('enter-full-screen', () => {
