@@ -110,11 +110,6 @@ export class RtcSurfaceView extends Component<Props, State> {
     return (
       <div
         className={containerClass || 'rtc-surface-container'}
-        onClick={() => {
-          this.setState(prevState => {
-            return { isMirror: !prevState.isMirror };
-          }, this.updateRenderer);
-        }}
         style={{
           position: 'relative',
           width: '100%',
@@ -134,21 +129,6 @@ export class RtcSurfaceView extends Component<Props, State> {
             backgroundColor: '#000',
           }}
         />
-        <div
-          style={{
-            position: 'absolute',
-            top: '8px',
-            right: '8px',
-            background: 'rgba(0, 0, 0, 0.7)',
-            color: 'white',
-            padding: '4px 8px',
-            borderRadius: '4px',
-            fontSize: '12px',
-            pointerEvents: 'none',
-          }}
-        >
-          {this.state.isMirror ? 'Mirrored' : 'Normal'}
-        </div>
       </div>
     );
   }
