@@ -12,7 +12,7 @@ env:
   ENV: stage
   STAGE_URL: ${{ secrets.STAGE_CONSOLE_URL }}
   PROD_URL: ${{ secrets.PROD_CONSOLE_URL }}
-  CUSTOM_URL: ${{ secrets.CUSTOM_CONSOLE_URL }}
+  CUSTOM_URL: 'https://allen-ic-stage-ui-live-web-pr-759-allen-frontend-team.vercel.app' # ${{ secrets.CUSTOM_CONSOLE_URL }}
   ASTRA_ELECTRON_SENTRY_DSN: ${{ secrets.ASTRA_ELECTRON_SENTRY_DSN }}
   ASTRA_ELECTRON_SENTRY_ENDPOINT: ${{ secrets.ASTRA_ELECTRON_SENTRY_ENDPOINT }}
 
