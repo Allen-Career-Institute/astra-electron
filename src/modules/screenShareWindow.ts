@@ -14,6 +14,7 @@ export interface ScreenShareWindowConfig {
 let screenShareWindow: BrowserWindow | null = null;
 let screenShareWindowConfig: ScreenShareWindowConfig | null = null;
 let screenShareWindowSettingUp: boolean = false;
+let screenShareWindowPid: number | null = null;
 
 // Enhanced cleanup function
 function cleanupScreenShareWindowResources(): void {
@@ -84,6 +85,7 @@ function safeCloseScreenShareWindow(reason: string = 'unknown'): boolean {
             screenShareWindow = null;
             screenShareWindowSettingUp = false;
             screenShareWindowConfig = null;
+            screenShareWindowPid = null;
           }, 100);
           return true;
         } catch (error) {
@@ -262,6 +264,7 @@ async function createScreenShareWindow(
           mainWindow.show();
           mainWindow.focus();
         }
+        screenShareWindowPid = screenShareWindow.webContents.getOSProcessId();
         screenShareWindowSettingUp = false;
         console.log('Screen share window ready and shown as floating window');
       }
@@ -321,6 +324,9 @@ function closeScreenShareWindow(): void {
     safeCloseScreenShareWindow('manual close');
   }
 }
+function getScreenShareWindowPid(): number | null {
+  return screenShareWindowPid;
+}
 
 // Export all functions
 export {
@@ -331,4 +337,5 @@ export {
   getScreenShareWindowConfig,
   isScreenShareWindowSettingUp,
   closeScreenShareWindow,
+  getScreenShareWindowPid,
 };

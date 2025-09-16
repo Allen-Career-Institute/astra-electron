@@ -5,6 +5,7 @@ import { getWhiteboardWindowPid } from './whiteboard-window';
 import { getMainWindowPid, getMainWindow } from './windowManager';
 import * as Sentry from '@sentry/electron/main';
 import { getCurrentUrl } from './config';
+import { getScreenShareWindowPid } from './screenShareWindow';
 let monitorInterval: NodeJS.Timeout;
 // Send metrics to main window
 const sendMetricsToMainWindow = (metrics: ProcessMetric[]): void => {
@@ -17,11 +18,13 @@ const sendMetricsToMainWindow = (metrics: ProcessMetric[]): void => {
     const streamWindowPid = getStreamWindowPid();
     const mainWindowPid = getMainWindowPid();
     const whiteboardWindowPid = getWhiteboardWindowPid();
+    const screenShareWindowPid = getScreenShareWindowPid();
     mainWindow.webContents.send('app-metrics', {
       metrics,
       streamWindowPid,
       mainWindowPid,
       whiteboardWindowPid,
+      screenShareWindowPid,
     });
   }
 };
@@ -41,19 +44,23 @@ const setProcessPriority = (
   if (process.platform !== 'win32') {
     return;
   }
-  exec(
-    `wmic process where "ProcessId=${pid}" CALL setpriority ${priority}`,
-    (error: any, stdout: any, stderr: any) => {
-      if (error) {
-        Sentry.captureException(error);
-      } else {
-        Sentry.captureMessage(
-          `${processType} process priority set to ${priority} on Windows`,
-          'info'
-        );
+  try {
+    exec(
+      `wmic process where "ProcessId=${pid}" CALL setpriority ${priority}`,
+      (error: any, stdout: any, stderr: any) => {
+        if (error) {
+          Sentry.captureException(error);
+        } else {
+          Sentry.addBreadcrumb({
+            message: `${processType} process priority set to ${priority} on Windows`,
+            level: 'info',
+          });
+        }
       }
-    }
-  );
+    );
+  } catch (error) {
+    Sentry.captureException(error);
+  }
 };
 
 // Get all app metrics to identify Electron processes
@@ -63,6 +70,7 @@ const monitorProcesses = () => {
     const streamWindowPid = getStreamWindowPid();
     const whiteboardWindowPid = getWhiteboardWindowPid();
     const mainWindowPid = getMainWindowPid();
+    const screenShareWindowPid = getScreenShareWindowPid();
 
     // Early return if no metrics available
     if (!metrics || metrics.length === 0) {
@@ -80,6 +88,10 @@ const monitorProcesses = () => {
       [
         whiteboardWindowPid,
         { priority: PROCESS_PRIORITY.HIGH, type: 'Whiteboard window' },
+      ],
+      [
+        screenShareWindowPid,
+        { priority: PROCESS_PRIORITY.REALTIME, type: 'Screen share window' },
       ],
     ]);
 
