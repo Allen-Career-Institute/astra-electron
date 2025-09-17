@@ -116,12 +116,14 @@ app.commandLine.appendSwitch('--disable-ipc-flooding-protection');
 app.commandLine.appendSwitch('--max-active-webgl-contexts', '16');
 
 import 'agora-electron-sdk/js/Private/ipc/main.js';
+import { askMediaAccess } from './utils/permissionUtil';
 
 setupIpcHandlers(ipcMain);
 
 // App event handlers
-app.on('ready', () => {
+app.on('ready', async () => {
   try {
+    await askMediaAccess(['screen', 'microphone', 'camera']);
     createMainWindow();
     createMenu();
 

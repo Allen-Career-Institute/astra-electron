@@ -355,7 +355,7 @@ class AgoraScreenShareService implements IRtcEngineEventHandler {
             windowFocus: this.state.config?.agoraConfig?.windowFocus ?? true,
             captureMouseCursor:
               this.state.config?.agoraConfig?.captureMouseCursor ?? true,
-            highLightWidth: this.state.config?.agoraConfig?.highLightWidth ?? 2,
+            highLightWidth: this.state.config?.agoraConfig?.highLightWidth ?? 5,
             highLightColor:
               this.state.config?.agoraConfig?.highLightColor ?? 4287414054,
             enableHighLight:
@@ -382,7 +382,7 @@ class AgoraScreenShareService implements IRtcEngineEventHandler {
             windowFocus: this.state.config?.agoraConfig?.windowFocus ?? true,
             captureMouseCursor:
               this.state.config?.agoraConfig?.captureMouseCursor ?? true,
-            highLightWidth: this.state.config?.agoraConfig?.highLightWidth ?? 2,
+            highLightWidth: this.state.config?.agoraConfig?.highLightWidth ?? 5,
             excludeWindowList: [],
             excludeWindowCount: 0,
             highLightColor:

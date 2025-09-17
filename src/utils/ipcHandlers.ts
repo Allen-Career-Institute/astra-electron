@@ -564,18 +564,18 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
 
             await sessionInstance.clearAuthCache();
             await sessionInstance.clearCache();
-            await sessionInstance.clearData({
-              dataTypes: [
-                'backgroundFetch',
-                'cache',
-                'cookies',
-                'downloads',
-                'indexedDB',
-                'localStorage',
-                'serviceWorkers',
-                'webSQL',
-              ],
-            });
+            // await sessionInstance.clearData({
+            //   dataTypes: [
+            //     'backgroundFetch',
+            //     'cache',
+            //     'cookies',
+            //     'downloads',
+            //     'indexedDB',
+            //     'localStorage',
+            //     'serviceWorkers',
+            //     'webSQL',
+            //   ],
+            // });
 
             // Clear host resolver cache
             await sessionInstance.clearHostResolverCache();
