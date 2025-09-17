@@ -394,6 +394,13 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
     }
   });
 
+  ipcMain.handle('opened-screen-share-window', async event => {
+    const mainWindow = getMainWindow();
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('screen-share-window-opened');
+    }
+  });
+
   // Stream control handler
   ipcMain.handle('stream-control', async (event, action, deviceId) => {
     try {

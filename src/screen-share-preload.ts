@@ -25,6 +25,9 @@ window.screenShareElectronAPI = {
   closeScreenShareWindow: () => {
     ipcRenderer.invoke('close-screen-share-window');
   },
+  openedScreenShareWindow: () => {
+    ipcRenderer.invoke('opened-screen-share-window');
+  },
   removeAllListeners: (channel: string) => {
     const validChannels = ['get-screen-share-config', 'electron-log-event'];
     if (validChannels.includes(channel)) {

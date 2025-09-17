@@ -135,6 +135,7 @@
   },
   "forceCodeSigning": false,
   "asar": false,
+  "buildDependenciesFromSource": true,
   "compression": "maximum",
   "removePackageScripts": true,
   "removePackageKeywords": true,
@@ -145,9 +146,124 @@
     },
     {
       "from": "node_modules/agora-electron-sdk",
-      "to": "agora-electron-sdk"
+      "to": "node_modules/agora-electron-sdk"
+    },
+    {
+      "from": "node_modules/archive-type",
+      "to": "node_modules/archive-type"
+    },
+    {
+      "from": "node_modules/buffer",
+      "to": "node_modules/buffer"
+    },
+    {
+      "from": "node_modules/content-disposition",
+      "to": "node_modules/content-disposition"
+    },
+    {
+      "from": "node_modules/cross-env",
+      "to": "node_modules/cross-env"
+    },
+    {
+      "from": "node_modules/decompress",
+      "to": "node_modules/decompress"
+    },
+    {
+      "from": "node_modules/eventemitter3",
+      "to": "node_modules/eventemitter3"
+    },
+    {
+      "from": "node_modules/ext-name",
+      "to": "node_modules/ext-name"
+    },
+    {
+      "from": "node_modules/extract-zip",
+      "to": "node_modules/extract-zip"
+    },
+    {
+      "from": "node_modules/file-type",
+      "to": "node_modules/file-type"
+    },
+    {
+      "from": "node_modules/filenamify",
+      "to": "node_modules/filenamify"
+    },
+    {
+      "from": "node_modules/fs-extra",
+      "to": "node_modules/fs-extra"
+    },
+    {
+      "from": "node_modules/get-stream",
+      "to": "node_modules/get-stream"
+    },
+    {
+      "from": "node_modules/got",
+      "to": "node_modules/got"
+    },
+    {
+      "from": "node_modules/gulp",
+      "to": "node_modules/gulp"
+    },
+    {
+      "from": "node_modules/json-bigint",
+      "to": "node_modules/json-bigint"
+    },
+    {
+      "from": "node_modules/jsonfile",
+      "to": "node_modules/jsonfile"
+    },
+    {
+      "from": "node_modules/lodash.isequal",
+      "to": "node_modules/lodash.isequal"
+    },
+    {
+      "from": "node_modules/make-dir",
+      "to": "node_modules/make-dir"
+    },
+    {
+      "from": "node_modules/minimist",
+      "to": "node_modules/minimist"
+    },
+    {
+      "from": "node_modules/node-fetch",
+      "to": "node_modules/node_modules/node-fetch"
+    },
+    {
+      "from": "node_modules/p-event",
+      "to": "node_modules/p-event"
+    },
+    {
+      "from": "node_modules/pify",
+      "to": "node_modules/pify"
+    },
+    {
+      "from": "node_modules/semver",
+      "to": "node_modules/semver"
+    },
+    {
+      "from": "node_modules/shelljs",
+      "to": "node_modules/shelljs"
+    },
+    {
+      "from": "node_modules/ts-interface-checker",
+      "to": "node_modules/ts-interface-checker"
+    },
+    {
+      "from": "node_modules/winston",
+      "to": "node_modules/winston"
+    },
+    {
+      "from": "node_modules/yuv-buffer",
+      "to": "node_modules/yuv-buffer"
+    },
+    {
+      "from": "node_modules/yuv-canvas",
+      "to": "node_modules/yuv-canvas"
+    },
+    {
+      "from": "node_modules/bignumber.js",
+      "to": "node_modules/bignumber.js"
     }
   ],
-  "nodeGypRebuild": false,
-  "buildDependenciesFromSource": false
+  "nodeGypRebuild": false
 }

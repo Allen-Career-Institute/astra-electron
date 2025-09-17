@@ -12,6 +12,7 @@
     "start": "electron dist/main.js",
     "lint": "npx oxlint .",
     "lint:fix": "npx oxlint --fix .",
+    "install-deps": "yarn install && yarn run rebuild",
     "format": "prettier --write \"**/*.{js,ts,jsx,tsx,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{js,ts,jsx,tsx,json,css,md}\"",
     "typecheck": "tsc --noEmit",
@@ -22,7 +23,7 @@
     "dev:full": "concurrently \"yarn renderer:dev\" \"yarn dev:watch\"",
     "clean": "rimraf node_modules out dist dist-electron-builder",
     "clean:dist": "rimraf dist dist-electron-builder",
-    "rebuild": "yarn clean:dist && yarn build:ts",
+    "rebuild": "electron-rebuild -f -o ref-napi",
     "renderer:dev": "webpack --mode development --watch",
     "renderer:build": "cross-env-shell 'webpack --config webpack.config.js'",
     "renderer:start": "webpack serve --mode development",
@@ -62,6 +63,7 @@
     "@babel/preset-typescript": "^7.23.3",
     "@commitlint/cli": "^18.4.3",
     "@commitlint/config-conventional": "^18.4.3",
+    "@electron/rebuild": "^4.0.1",
     "@sentry/webpack-plugin": "^2.5.0",
     "@types/electron": "^1.6.12",
     "@types/node": "^24.2.1",
@@ -73,7 +75,6 @@
     "concurrently": "^8.2.2",
     "copy-webpack-plugin": "^13.0.0",
     "crypto-browserify": "^3.12.1",
-    "csp-html-webpack-plugin": "^4.0.0",
     "css-loader": "^6.8.1",
     "electron": "23.3.13",
     "electron-builder": "^24.9.1",
@@ -128,6 +129,8 @@
     ]
   },
   "agora_electron": {
-    "prebuilt": true
+    "prebuilt": true,
+    "platform": "darwin",
+    "arch": "ia32"
   }
 }
