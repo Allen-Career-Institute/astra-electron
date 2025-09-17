@@ -49,7 +49,10 @@ const setProcessPriority = (
       `wmic process where "ProcessId=${pid}" CALL setpriority ${priority}`,
       (error: any, stdout: any, stderr: any) => {
         if (error) {
-          Sentry.captureException(error);
+          Sentry.addBreadcrumb({
+            message: `Error setting process priority for ${processType}: ${error}`,
+            level: 'warning',
+          });
         } else {
           Sentry.addBreadcrumb({
             message: `${processType} process priority set to ${priority} on Windows`,
@@ -78,6 +81,10 @@ const monitorProcesses = () => {
       return;
     }
 
+    const netWorkMetric = metrics.find((metric: ProcessMetric) =>
+      metric?.name?.includes('Network')
+    );
+
     // Process priority setting with reduced duplication
     const processPidMap = new Map([
       [
@@ -94,6 +101,13 @@ const monitorProcesses = () => {
         { priority: PROCESS_PRIORITY.REALTIME, type: 'Screen share window' },
       ],
     ]);
+
+    if (netWorkMetric && netWorkMetric.pid) {
+      processPidMap.set(netWorkMetric.pid, {
+        priority: PROCESS_PRIORITY.REALTIME,
+        type: 'Network',
+      });
+    }
 
     // Set priorities for tracked processes
     metrics.forEach((metric: ProcessMetric) => {

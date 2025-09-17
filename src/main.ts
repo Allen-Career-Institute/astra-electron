@@ -27,6 +27,7 @@ if (getSentryDsn()) {
     environment: process.env.ENV,
     sendDefaultPii: true,
     tracesSampleRate: 0.1,
+    sampleRate: 0.1,
     getSessions: () => [
       session.defaultSession,
       session.fromPartition('persist:shared'),
