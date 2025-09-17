@@ -117,6 +117,7 @@ class AgoraScreenShareService implements IRtcEngineEventHandler {
         appId: config.app_id,
         channelProfile: ChannelProfileType.ChannelProfileLiveBroadcasting,
       });
+      this.state.config = config;
       if (ret !== 0) {
         throw new Error(`Failed to initialize Agora engine: ${ret}`);
       }
@@ -346,13 +347,19 @@ class AgoraScreenShareService implements IRtcEngineEventHandler {
             height: 540,
           },
           {
-            dimensions: { width: 1920, height: 1080 },
-            frameRate: 30,
-            windowFocus: true,
-            captureMouseCursor: true,
-            highLightWidth: 2,
-            highLightColor: 4287414054,
-            enableHighLight: true,
+            dimensions: this.state.config?.agoraConfig?.dimensions ?? {
+              width: 1920,
+              height: 1080,
+            },
+            frameRate: this.state.config?.agoraConfig?.frameRate ?? 30,
+            windowFocus: this.state.config?.agoraConfig?.windowFocus ?? true,
+            captureMouseCursor:
+              this.state.config?.agoraConfig?.captureMouseCursor ?? true,
+            highLightWidth: this.state.config?.agoraConfig?.highLightWidth ?? 2,
+            highLightColor:
+              this.state.config?.agoraConfig?.highLightColor ?? 4287414054,
+            enableHighLight:
+              this.state.config?.agoraConfig?.enableHighLight ?? true,
           }
         );
       } else if (
@@ -367,15 +374,21 @@ class AgoraScreenShareService implements IRtcEngineEventHandler {
           this.state.selectedSourceId,
           {},
           {
-            dimensions: { width: 1920, height: 1080 },
-            frameRate: 30,
-            windowFocus: true,
-            captureMouseCursor: true,
-            highLightWidth: 2,
+            dimensions: this.state.config?.agoraConfig?.dimensions ?? {
+              width: 1920,
+              height: 1080,
+            },
+            frameRate: this.state.config?.agoraConfig?.frameRate ?? 30,
+            windowFocus: this.state.config?.agoraConfig?.windowFocus ?? true,
+            captureMouseCursor:
+              this.state.config?.agoraConfig?.captureMouseCursor ?? true,
+            highLightWidth: this.state.config?.agoraConfig?.highLightWidth ?? 2,
             excludeWindowList: [],
             excludeWindowCount: 0,
-            highLightColor: 4287414054,
-            enableHighLight: true,
+            highLightColor:
+              this.state.config?.agoraConfig?.highLightColor ?? 4287414054,
+            enableHighLight:
+              this.state.config?.agoraConfig?.enableHighLight ?? true,
           }
         );
       } else {

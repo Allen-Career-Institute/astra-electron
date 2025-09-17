@@ -188,6 +188,7 @@ function createWhiteboardWindow(config: WhiteboardWindowConfig): BrowserWindow {
         // Use shared session for localStorage/cookies persistence
         session: getSharedSession(),
       },
+      thickFrame: true,
       resizable: true,
       minimizable: true,
       maximizable: true,
@@ -198,7 +199,6 @@ function createWhiteboardWindow(config: WhiteboardWindowConfig): BrowserWindow {
       frame: true,
       transparent: false,
       hasShadow: true,
-      thickFrame: true,
       titleBarStyle: 'default',
     });
 

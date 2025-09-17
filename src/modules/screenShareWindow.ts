@@ -9,6 +9,17 @@ export interface ScreenShareWindowConfig {
   user_id: string;
   user_token: string;
   isWhiteboard: boolean;
+
+  agoraConfig?: {
+    dimensions: { width: number; height: number };
+    frameRate: number;
+    bitrate: number;
+    windowFocus: boolean;
+    captureMouseCursor: boolean;
+    highLightWidth: number;
+    highLightColor: number;
+    enableHighLight: boolean;
+  };
 }
 
 let screenShareWindow: BrowserWindow | null = null;
@@ -172,17 +183,12 @@ async function createScreenShareWindow(
       frame: true,
       transparent: false,
       hasShadow: true,
-      thickFrame: process.platform === 'win32' ? true : false, // Enable thickFrame on Windows for proper resizing
+      thickFrame: true,
       titleBarStyle: 'default',
       movable: true,
       focusable: true,
       // Remove parent window relationship on Windows to allow proper resizing
-      parent:
-        process.platform === 'win32'
-          ? undefined
-          : mainWindow && !mainWindow.isDestroyed()
-            ? mainWindow
-            : undefined,
+      parent: mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined,
       minWidth: 600,
       minHeight: 338,
       maxWidth: 1200,

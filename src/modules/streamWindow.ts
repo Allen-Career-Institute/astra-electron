@@ -163,17 +163,12 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
       frame: true,
       transparent: false,
       hasShadow: true,
-      thickFrame: process.platform === 'win32' ? true : false, // Enable thickFrame on Windows for proper resizing
+      thickFrame: true,
       titleBarStyle: 'default',
       movable: true,
       focusable: true,
       // Remove parent window relationship on Windows to allow proper resizing
-      parent:
-        process.platform === 'win32'
-          ? undefined
-          : mainWindow && !mainWindow.isDestroyed()
-            ? mainWindow
-            : undefined,
+      parent: mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined,
       minWidth: 320,
       minHeight: 180,
       maxWidth: 1200,
