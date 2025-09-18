@@ -296,8 +296,22 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
         case 'START_SCREEN_SHARE':
           const screenShareWindow = getScreenShareWindow();
           if (screenShareWindow && !screenShareWindow.isDestroyed()) {
-            screenShareWindow.close();
+            await safeCloseScreenShareWindow('START_SCREEN_SHARE');
+            await new Promise(resolve => setTimeout(resolve, 200));
           }
+
+          // Close existing window if any
+          if (screenShareWindow && !screenShareWindow.isDestroyed()) {
+            console.log(
+              'Screen share window already exists, closing existing window'
+            );
+            await safeCloseScreenShareWindow('recreating');
+          }
+          while (screenShareWindow && !screenShareWindow.isDestroyed()) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+
+          await new Promise(resolve => setTimeout(resolve, 2000));
 
           const screenShareConfig = {
             ...message.payload,
@@ -316,7 +330,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
           return { type: 'SUCCESS', payload: 'Screen share window created' };
 
         case 'STOP_SCREEN_SHARE':
-          safeCloseScreenShareWindow('STOP_SCREEN_SHARE');
+          await safeCloseScreenShareWindow('STOP_SCREEN_SHARE');
           return { type: 'SUCCESS', payload: 'Screen share window closed' };
         case 'CHANGE_AUDIO_DEVICE':
           const streamWindowForChangeAudioDevice = getStreamWindow();
@@ -387,11 +401,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
   });
 
   ipcMain.handle('close-screen-share-window', async event => {
-    safeCloseScreenShareWindow('manual close');
-    const mainWindow = getMainWindow();
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('screen-share-window-closed');
-    }
+    await safeCloseScreenShareWindow('manual close');
   });
 
   ipcMain.handle('opened-screen-share-window', async event => {

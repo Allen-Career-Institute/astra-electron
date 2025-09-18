@@ -104,7 +104,7 @@ app.commandLine.appendSwitch(
   '--force-fieldtrials',
   'WebRTC-Audio-OpusMaxAverageBitrate/Enabled/'
 );
-app.commandLine.appendSwitch('--webrtc-max-cpu-consumption-percentage', '100');
+app.commandLine.appendSwitch('--webrtc-max-cpu-consumption-percentage', '80');
 app.commandLine.appendSwitch('--webrtc-cpu-overuse-detection', 'false');
 
 // Additional performance optimizations for streaming
@@ -114,6 +114,10 @@ app.commandLine.appendSwitch('--disable-renderer-backgrounding');
 app.commandLine.appendSwitch('--disable-features', 'TranslateUI');
 app.commandLine.appendSwitch('--disable-ipc-flooding-protection');
 app.commandLine.appendSwitch('--max-active-webgl-contexts', '16');
+
+// Memory and performance flags
+app.commandLine.appendSwitch('--js-flags', '--max-old-space-size=6196');
+app.commandLine.appendSwitch('--disable-dev-shm-usage');
 
 import 'agora-electron-sdk/js/Private/ipc/main.js';
 import { askMediaAccess } from './utils/permissionUtil';

@@ -49,17 +49,18 @@ function cleanupScreenShareWindowResources(): void {
   }
 }
 
-function safeCloseScreenShareWindow(reason: string = 'unknown'): boolean {
+async function safeCloseScreenShareWindow(
+  reason: string = 'unknown'
+): Promise<boolean> {
   try {
+    cleanupScreenShareWindowResources();
     if (screenShareWindow && !screenShareWindow.isDestroyed()) {
-      cleanupScreenShareWindowResources();
-
       if (
         screenShareWindow.webContents &&
         screenShareWindow.webContents.isLoading()
       ) {
         let loadTimeout = setTimeout(() => {
-          proceedWithClose();
+          Promise.resolve(proceedWithClose());
         }, 2000);
 
         screenShareWindow.webContents.once('did-finish-load', () => {
@@ -71,44 +72,47 @@ function safeCloseScreenShareWindow(reason: string = 'unknown'): boolean {
           clearTimeout(loadTimeout);
           proceedWithClose();
         });
-
-        return true;
       } else {
-        return proceedWithClose();
+        const result = await proceedWithClose();
+        return Promise.resolve(result);
       }
 
-      function proceedWithClose(): boolean {
+      async function proceedWithClose(): Promise<boolean> {
         try {
           screenShareWindow?.close();
-
-          setTimeout(() => {
-            if (screenShareWindow && !screenShareWindow.isDestroyed()) {
-              try {
-                screenShareWindow.destroy();
-              } catch (destroyError) {
-                console.error(
-                  'Error destroying screen share window:',
-                  destroyError
-                );
-              }
+          await new Promise(resolve => setTimeout(resolve, 200));
+          if (screenShareWindow && !screenShareWindow.isDestroyed()) {
+            try {
+              screenShareWindow.destroy();
+            } catch (destroyError) {
+              console.error(
+                'Error destroying screen share window:',
+                destroyError
+              );
             }
+          }
 
-            screenShareWindow = null;
-            screenShareWindowSettingUp = false;
-            screenShareWindowConfig = null;
-            screenShareWindowPid = null;
-          }, 100);
-          return true;
+          const { getMainWindow } = require('./windowManager');
+          const mainWindow = getMainWindow();
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('screen-share-window-closed');
+          }
+
+          screenShareWindow = null;
+          screenShareWindowSettingUp = false;
+          screenShareWindowConfig = null;
+          screenShareWindowPid = null;
+          return Promise.resolve(true);
         } catch (error) {
           console.error('Error during screen share window close:', error);
-          return false;
+          return Promise.resolve(false);
         }
       }
     }
-    return false;
+    return Promise.resolve(true);
   } catch (error) {
     console.error('Error in safeCloseScreenShareWindow:', error);
-    return false;
+    return Promise.resolve(false);
   }
 }
 
@@ -121,15 +125,18 @@ async function createScreenShareWindow(
       console.log(
         'Screen share window already exists, closing existing window'
       );
-      safeCloseScreenShareWindow('recreating');
+      await safeCloseScreenShareWindow('recreating');
     }
+    while (screenShareWindow && !screenShareWindow.isDestroyed()) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    const { getMainWindow } = require('./windowManager');
+    const mainWindow = getMainWindow();
 
     screenShareWindowSettingUp = true;
     screenShareWindowConfig = { ...screenShareConfig };
-
-    // Get main window bounds for positioning
-    const { getMainWindow } = require('./windowManager');
-    const mainWindow = getMainWindow();
 
     // Calculate window dimensions and position for 16:9 aspect ratio with larger default size
     const baseWidth = 1200; // Larger base width for screen share window
@@ -275,6 +282,7 @@ async function createScreenShareWindow(
         if (mainWindow && !mainWindow.isDestroyed()) {
           mainWindow.show();
           mainWindow.focus();
+          mainWindow.webContents.send('screen-share-window-opened');
         }
         screenShareWindowPid = screenShareWindow.webContents.getOSProcessId();
         screenShareWindowSettingUp = false;

@@ -219,6 +219,12 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
     (window as any).screenShareElectronAPI.closeScreenShareWindow();
   }, []);
 
+  useEffect(() => {
+    (window as any).screenShareElectronAPI.onCleanupResources(() => {
+      agoraScreenShareService.cleanup();
+    });
+  }, []);
+
   const handleSourceSelect = useCallback(
     async (sourceId: string) => {
       try {

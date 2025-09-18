@@ -1,8 +1,5 @@
 import { ipcRenderer } from 'electron';
-import {
-  ScreenShareWindowConfig,
-  safeCloseScreenShareWindow,
-} from './modules/screenShareWindow';
+import { ScreenShareWindowConfig } from './modules/screenShareWindow';
 
 // Expose functionality directly to the window object since contextIsolation is false
 // @ts-ignore
@@ -21,6 +18,9 @@ window.screenShareElectronAPI = {
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
+  },
+  onCleanupResources: (callback: (event: any, ...args: any[]) => void) => {
+    ipcRenderer.on('cleanup-resources', callback);
   },
   closeScreenShareWindow: () => {
     ipcRenderer.invoke('close-screen-share-window');
