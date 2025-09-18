@@ -11,7 +11,8 @@ const VideoSourceType = {
 } as const;
 
 const RenderModeType = {
-  RenderModeFit: 1,
+  RenderModeHidden: 1,
+  RenderModeFit: 2,
 } as const;
 interface ScreenShareWindowProps {
   config: ScreenShareWindowConfig;
@@ -165,6 +166,7 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
         agoraState: { ...state.agoraState, status: 'published' },
         status: 'Screen share published successfully!',
       });
+      (window as any)?.screenShareElectronAPI?.shareScreenPublished?.();
       setTimeout(() => {
         updateState({
           status: '',
@@ -230,7 +232,6 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
       try {
         updateState({
           selectedSourceId: sourceId,
-          status: 'Starting preview...',
         });
 
         // Automatically start preview after source selection
@@ -367,7 +368,7 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
                 canvas={{
                   uid: 0,
                   sourceType: VideoSourceType.VideoSourceScreen,
-                  renderMode: RenderModeType.RenderModeFit,
+                  renderMode: RenderModeType.RenderModeHidden,
                   mirrorMode: 0,
                 }}
                 containerClass="preview-video-container"

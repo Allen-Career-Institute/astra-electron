@@ -25,6 +25,9 @@ window.screenShareElectronAPI = {
   closeScreenShareWindow: () => {
     ipcRenderer.invoke('close-screen-share-window');
   },
+  shareScreenPublished: () => {
+    ipcRenderer.invoke('share-screen-published');
+  },
   openedScreenShareWindow: () => {
     ipcRenderer.invoke('opened-screen-share-window');
   },

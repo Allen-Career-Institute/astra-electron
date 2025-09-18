@@ -100,12 +100,20 @@ export class RtcSurfaceView extends Component<Props, State> {
     const element = this.getHTMLElement();
     if (element) {
       agoraScreenShareService.setupLocalVideoView(element);
+
+      // Update CSS objectFit based on render mode
+      const isRenderModeHidden = canvas.renderMode === 1; // RenderModeHidden
+      element.style.objectFit = isRenderModeHidden ? 'cover' : 'contain';
     }
   };
 
   render() {
     const { canvas, containerClass, videoClass } = this.props;
     const { uniqueId } = this.state;
+
+    // Determine objectFit based on render mode
+    const isRenderModeHidden = canvas.renderMode === 1; // RenderModeHidden
+    const objectFit = isRenderModeHidden ? 'cover' : 'contain';
 
     return (
       <div
@@ -126,6 +134,7 @@ export class RtcSurfaceView extends Component<Props, State> {
           style={{
             width: '100%',
             height: '100%',
+            objectFit: objectFit,
             backgroundColor: '#000',
           }}
         />

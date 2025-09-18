@@ -342,10 +342,7 @@ class AgoraScreenShareService implements IRtcEngineEventHandler {
         );
         startCaptureRet = this.agoraEngine.startScreenCaptureByWindowId(
           this.state.selectedSourceId,
-          {
-            width: 1080,
-            height: 540,
-          },
+          {},
           {
             dimensions: this.state.config?.agoraConfig?.dimensions ?? {
               width: 1920,
@@ -484,16 +481,37 @@ class AgoraScreenShareService implements IRtcEngineEventHandler {
         return;
       }
 
-      // Setup local video view for screen sharing
-      const setupRet = this.agoraEngine.setupLocalVideo({
+      // Setup local video view for screen sharing with RenderModeHidden first
+      let setupRet = this.agoraEngine.setupLocalVideo({
         uid: 0,
         sourceType: VideoSourceType.VideoSourceScreen,
         view: element,
-        renderMode: RenderModeType.RenderModeFit,
+        renderMode: RenderModeType.RenderModeHidden,
         mirrorMode: VideoMirrorModeType.VideoMirrorModeDisabled,
       });
 
-      console.log('Setup local video view result:', setupRet);
+      console.log(
+        'Setup local video view with RenderModeHidden result:',
+        setupRet
+      );
+
+      // If RenderModeHidden fails, fallback to RenderModeFit
+      if (setupRet !== 0) {
+        console.warn(
+          `RenderModeHidden failed (${setupRet}), trying RenderModeFit as fallback`
+        );
+        setupRet = this.agoraEngine.setupLocalVideo({
+          uid: 0,
+          sourceType: VideoSourceType.VideoSourceScreen,
+          view: element,
+          renderMode: RenderModeType.RenderModeFit,
+          mirrorMode: VideoMirrorModeType.VideoMirrorModeDisabled,
+        });
+        console.log(
+          'Setup local video view with RenderModeFit result:',
+          setupRet
+        );
+      }
 
       if (setupRet !== 0) {
         console.warn(`Warning: Failed to setup local video view: ${setupRet}`);

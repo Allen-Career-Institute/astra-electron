@@ -404,6 +404,13 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
     await safeCloseScreenShareWindow('manual close');
   });
 
+  ipcMain.handle('share-screen-published', async event => {
+    const screenShareWindow = getScreenShareWindow();
+    if (screenShareWindow && !screenShareWindow.isDestroyed()) {
+      screenShareWindow.setSize(600, 338);
+    }
+  });
+
   ipcMain.handle('opened-screen-share-window', async event => {
     const mainWindow = getMainWindow();
     if (mainWindow && !mainWindow.isDestroyed()) {

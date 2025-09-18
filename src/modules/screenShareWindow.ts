@@ -138,24 +138,19 @@ async function createScreenShareWindow(
     screenShareWindowSettingUp = true;
     screenShareWindowConfig = { ...screenShareConfig };
 
-    // Calculate window dimensions and position for 16:9 aspect ratio with larger default size
-    const baseWidth = 1200; // Larger base width for screen share window
-    const windowWidth = baseWidth;
-    const windowHeight = Math.round((baseWidth * 9) / 16); // 16:9 aspect ratio
-
     let x: number, y: number;
 
     // Center the window on screen
     const primaryDisplay = screen.getPrimaryDisplay();
     const { width: screenWidth, height: screenHeight } =
       primaryDisplay.workAreaSize;
-    x = Math.floor((screenWidth - windowWidth) / 2);
-    y = Math.floor((screenHeight - windowHeight) / 2);
+    x = Math.floor((screenWidth - 600) / 3);
+    y = Math.floor((screenHeight - 338) / 2);
 
     // Create the screen share window
     screenShareWindow = new BrowserWindow({
-      width: windowWidth,
-      height: windowHeight,
+      width: 600,
+      height: 338,
       x,
       y,
       title: 'Astra - Screen Share',
@@ -275,7 +270,7 @@ async function createScreenShareWindow(
         screenShareWindow.show();
         // Ensure window is not fullscreen and has correct size
         screenShareWindow.setFullScreen(false);
-        screenShareWindow.setSize(windowWidth, windowHeight);
+        screenShareWindow.setSize(600, 338);
         screenShareWindow.setPosition(x, y);
         // Don't set fullscreen or maximize - keep it as floating window
         const mainWindow = getMainWindow();
