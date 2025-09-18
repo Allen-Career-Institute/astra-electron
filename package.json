@@ -23,7 +23,6 @@
     "dev:full": "concurrently \"yarn renderer:dev\" \"yarn dev:watch\"",
     "clean": "rimraf node_modules out dist dist-electron-builder",
     "clean:dist": "rimraf dist dist-electron-builder",
-    "rebuild": "electron-rebuild -f -o ref-napi",
     "renderer:dev": "webpack --mode development --watch",
     "renderer:build": "cross-env-shell 'webpack --config webpack.config.js'",
     "renderer:start": "webpack serve --mode development",
