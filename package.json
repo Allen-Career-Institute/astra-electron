@@ -129,8 +129,6 @@
     ]
   },
   "agora_electron": {
-    "prebuilt": true,
-    "platform": "darwin",
-    "arch": "ia32"
+    "prebuilt": true
   }
 }
