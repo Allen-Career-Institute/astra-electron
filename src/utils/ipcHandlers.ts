@@ -295,6 +295,8 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
           }
         case 'START_SCREEN_SHARE':
           const screenShareWindow = getScreenShareWindow();
+          let isScreenShareWindowAlreadyExists =
+            screenShareWindow && !screenShareWindow.isDestroyed();
           if (screenShareWindow && !screenShareWindow.isDestroyed()) {
             await safeCloseScreenShareWindow('START_SCREEN_SHARE');
             await new Promise(resolve => setTimeout(resolve, 200));
@@ -311,7 +313,9 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
             await new Promise(resolve => setTimeout(resolve, 100));
           }
 
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          if (isScreenShareWindowAlreadyExists) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
 
           const screenShareConfig = {
             ...message.payload,
