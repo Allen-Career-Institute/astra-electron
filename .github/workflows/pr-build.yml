@@ -10,7 +10,7 @@ env:
   YARN_VERSION: '4.9.2'
   NODE_ENV: stage
   ENV: stage
-  STAGE_URL: ${{ secrets.STAGE_CONSOLE_URL }}
+  STAGE_URL: "https://allen-ic-stage-pr-2723-allen-frontend-team.vercel.app" # ${{ secrets.STAGE_CONSOLE_URL }}
   PROD_URL: ${{ secrets.PROD_CONSOLE_URL }}
   CUSTOM_URL: ${{ secrets.CUSTOM_CONSOLE_URL }}
   ASTRA_ELECTRON_SENTRY_DSN: ${{ secrets.ASTRA_ELECTRON_SENTRY_DSN }}
