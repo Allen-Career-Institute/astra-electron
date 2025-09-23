@@ -280,6 +280,7 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
         streamWindow.setAlwaysOnTop(true);
         // Ensure window is properly focused and visible
         streamWindow.show();
+        streamWindow.focus();
       }
     });
 
@@ -307,12 +308,11 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
     });
 
     // Prevent maximize attempts
-    // streamWindow.on('maximize', () => {
-    //   if (streamWindow && !streamWindow.isDestroyed()) {
-    //     streamWindow.unmaximize();
-    //     console.log('Maximize attempt blocked');
-    //   }
-    // });
+    streamWindow.on('maximize', () => {
+      if (streamWindow && !streamWindow.isDestroyed()) {
+        streamWindow.focus();
+      }
+    });
 
     streamWindow.on('closed', () => {
       streamWindow = null;
