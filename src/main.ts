@@ -66,33 +66,35 @@ import { getStreamWindow } from './modules/streamWindow';
 import { getWhiteboardWindow } from './modules/whiteboard-window';
 import { setupAutomaticProcessNaming } from './modules/processMonitor';
 
-// Enable hardware acceleration and WebRTC optimizations for better video quality
-app.commandLine.appendSwitch(
-  '--enable-features',
-  'VaapiVideoDecoder,VaapiVideoEncoder,WebCodecs,WebRTCPipeWireCapturer'
-);
-app.commandLine.appendSwitch('--ignore-gpu-blacklist');
-app.commandLine.appendSwitch('--enable-gpu-rasterization');
-app.commandLine.appendSwitch('--enable-zero-copy');
-app.commandLine.appendSwitch('--enable-accelerated-video-decode');
-app.commandLine.appendSwitch('--enable-accelerated-video-encode');
-app.commandLine.appendSwitch('--enable-webcodecs');
-app.commandLine.appendSwitch('--enable-webrtc');
+// https://peter.sh/experiments/chromium-command-line-switches/
+
+app.commandLine.appendArgument('--ignore-gpu-blacklist');
+app.commandLine.appendArgument('--enable-gpu-rasterization');
+app.commandLine.appendArgument('--enable-zero-copy');
+app.commandLine.appendArgument('--enable-accelerated-video-decode');
+app.commandLine.appendArgument('--enable-accelerated-video-encode');
+app.commandLine.appendArgument('--enable-accelerated-2d-canvas');
+app.commandLine.appendArgument('--enable-webcodecs');
+app.commandLine.appendArgument('--enable-webrtc');
 
 // Enable screen sharing permissions
-app.commandLine.appendSwitch('--enable-usermedia-screen-capturing');
-app.commandLine.appendSwitch('--allow-running-insecure-content');
-app.commandLine.appendSwitch('--disable-web-security');
-app.commandLine.appendSwitch('--disable-renderer-backgrounding');
-app.commandLine.appendSwitch('--force_high_performance_gpu');
-app.commandLine.appendSwitch('--disable-features', 'VizDisplayCompositor');
-app.commandLine.appendSwitch('--enable-experimental-web-platform-features');
-app.commandLine.appendSwitch('--enable-features', 'GetDisplayMedia');
-app.commandLine.appendSwitch('--enable-features', 'WebRTC');
-app.commandLine.appendSwitch('--enable-features', 'WebCodecs');
-app.commandLine.appendSwitch('--enable-features', 'WebRTCPipeWireCapturer');
-app.commandLine.appendSwitch('--enable-features', 'ScreenCaptureKit');
-app.commandLine.appendSwitch('--enable-features', 'DesktopCaptureKit');
+app.commandLine.appendArgument('--enable-usermedia-screen-capturing');
+app.commandLine.appendArgument('--allow-running-insecure-content');
+app.commandLine.appendArgument('--disable-web-security');
+app.commandLine.appendArgument('--disable-renderer-backgrounding');
+app.commandLine.appendArgument('--force_high_performance_gpu');
+app.commandLine.appendArgument('--disable-volume-adjust-sound');
+app.commandLine.appendSwitch('disable-features', 'VizDisplayCompositor');
+app.commandLine.appendSwitch('enable-experimental-web-platform-features');
+app.commandLine.appendSwitch('enable-features', 'GetDisplayMedia');
+app.commandLine.appendSwitch('enable-features', 'WebRTC');
+app.commandLine.appendSwitch('enable-features', 'WebCodecs');
+app.commandLine.appendSwitch('enable-features', 'VaapiVideoEncoder');
+app.commandLine.appendSwitch('enable-features', 'VaapiVideoDecoder');
+app.commandLine.appendSwitch('enable-features', 'WebRTCPipeWireCapturer');
+app.commandLine.appendSwitch('enable-features', 'ScreenCaptureKit');
+app.commandLine.appendSwitch('enable-features', 'DesktopCaptureKit');
+app.commandLine.appendSwitch('enable-features', 'AutoInputVolumeAdjustment');
 
 // Additional WebRTC flags to resolve SDP codec collision issues
 app.commandLine.appendSwitch(
