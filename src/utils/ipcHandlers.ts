@@ -563,62 +563,74 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
     try {
       console.log('Logout request received, clearing all app data...');
 
-      // Get all browser windows to clear their data
-      const allWindows = BrowserWindow.getAllWindows();
-
-      // Clear cookies and storage data for all sessions
-      const sessions = [
-        session.defaultSession,
-        session.fromPartition('persist:shared'),
-        ...allWindows.map(win => win.webContents.session),
-      ];
-
-      // Clear cookies and storage data for each session
-      for (const sessionInstance of sessions) {
-        if (sessionInstance) {
-          try {
-            // Clear all cookies and storage data
-            await sessionInstance.clearStorageData({
-              storages: [
-                'cookies',
-                'localstorage',
-                'websql',
-                'indexdb',
-                'shadercache',
-                'serviceworkers',
-                'cachestorage',
-              ],
-            });
-
-            await sessionInstance.clearAuthCache();
-            await sessionInstance.clearCache();
-            // await sessionInstance.clearData({
-            //   dataTypes: [
-            //     'backgroundFetch',
-            //     'cache',
-            //     'cookies',
-            //     'downloads',
-            //     'indexedDB',
-            //     'localStorage',
-            //     'serviceWorkers',
-            //     'webSQL',
-            //   ],
-            // });
-
-            // Clear host resolver cache
-            await sessionInstance.clearHostResolverCache();
-
-            console.log(`Cleared storage data for session: default`);
-          } catch (error) {
-            console.error(`Error clearing session:`, error);
-          }
-        }
-      }
-
       // Clear rolling merge processes
       rollingMergeManager.cleanup();
+      const allWindows = BrowserWindow.getAllWindows();
 
-      reloadMainWindow(true);
+      // Create logout window for Gmail logout (preserves account for future sign-ins)
+      const logoutWindow = new BrowserWindow({
+        width: 1280,
+        height: 720,
+        show: false,
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true,
+          webSecurity: true,
+          allowRunningInsecureContent: true,
+          experimentalFeatures: true,
+          session: session.fromPartition('persist:shared'),
+        },
+      });
+
+      logoutWindow.loadURL('https://accounts.google.com/Logout');
+
+      logoutWindow.webContents.on('did-finish-load', async () => {
+        // Close the logout window after a short delay
+        setTimeout(async () => {
+          if (logoutWindow && !logoutWindow.isDestroyed()) {
+            logoutWindow.close();
+          }
+
+          // Get all browser windows to clear their data
+
+          // Clear cookies and storage data for all sessions
+          const sessions = [
+            session.defaultSession,
+            session.fromPartition('persist:shared'),
+            ...allWindows.map(win => win.webContents.session),
+          ];
+
+          // Clear cookies and storage data for each session
+          for (const sessionInstance of sessions) {
+            if (sessionInstance) {
+              try {
+                // Clear all cookies and storage data
+                await sessionInstance.clearStorageData({
+                  storages: [
+                    // 'cookies',
+                    'localstorage',
+                    // 'websql',
+                    // 'indexdb',
+                    // 'shadercache',
+                    // 'serviceworkers',
+                    // 'cachestorage',
+                  ],
+                });
+
+                // await sessionInstance.clearAuthCache();
+                // await sessionInstance.clearCache();
+                // await sessionInstance.clearHostResolverCache();
+              } catch (error) {
+                console.error(`Error clearing session:`, error);
+              }
+            }
+          }
+
+          // Reload main window to clear any remaining state
+          const { reloadMainWindow } = await import('../modules/reloadUtils');
+          reloadMainWindow(true);
+        }, 1000);
+      });
 
       console.log('Logout completed successfully - all app data cleared');
       return {
