@@ -272,7 +272,7 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
     if (config.isWhiteboard) {
       return 'Select a window to screen share. Preview will start automatically. The whiteboard will continue streaming camera video and audio.';
     }
-    return 'Select a window to screen share. Preview will start automatically. Only selected screen will be streamed.';
+    return 'Select a window to screen share. Click "Start Sharing" to start streaming. Only selected screen will be streamed.';
   };
 
   useEffect(() => {
@@ -311,7 +311,10 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
         {state.error && <div className="error">{state.error}</div>}
 
         {state.agoraState.status !== 'published' && (
-          <button className="btn btn-secondary" onClick={refreshSources}>
+          <button
+            className="refresh-sources btn btn-secondary"
+            onClick={refreshSources}
+          >
             Refresh Sources
           </button>
         )}
@@ -432,6 +435,13 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
           height: 100vh;
           display: flex;
           flex-direction: column;
+        }
+
+        .refresh-sources {
+          margin-top: 0px;
+          margin-left: 20px;
+          margin-right: 20px;
+          margin-bottom: 20px;
         }
 
         .header {
