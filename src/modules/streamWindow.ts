@@ -281,6 +281,22 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
         streamWindow.setAlwaysOnTop(true);
         // Ensure window is properly focused and visible
         streamWindow.show();
+        streamWindow.focus();
+      }
+    });
+
+    streamWindow.on('resize', () => {
+      if (streamWindow && !streamWindow.isDestroyed()) {
+        // Maintain 16:9 aspect ratio
+        const [width, height] = streamWindow.getSize();
+        const targetAspectRatio = 16 / 9;
+        const currentAspectRatio = width / height;
+
+        if (Math.abs(currentAspectRatio - targetAspectRatio) > 0.1) {
+          // If aspect ratio is significantly off, adjust height based on width
+          const newHeight = Math.round(width / targetAspectRatio);
+          streamWindow.setSize(width, newHeight);
+        }
       }
     });
 
@@ -307,12 +323,11 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
     });
 
     // Prevent maximize attempts
-    // streamWindow.on('maximize', () => {
-    //   if (streamWindow && !streamWindow.isDestroyed()) {
-    //     streamWindow.unmaximize();
-    //     console.log('Maximize attempt blocked');
-    //   }
-    // });
+    streamWindow.on('maximize', () => {
+      if (streamWindow && !streamWindow.isDestroyed()) {
+        streamWindow.focus();
+      }
+    });
 
     streamWindow.on('closed', () => {
       streamWindow = null;
