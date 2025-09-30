@@ -345,10 +345,10 @@ class AgoraScreenShareService implements IRtcEngineEventHandler {
           {},
           {
             dimensions: this.state.config?.agoraConfig?.dimensions ?? {
-              width: 1920,
-              height: 1080,
+              width: 1280,
+              height: 720,
             },
-            frameRate: this.state.config?.agoraConfig?.frameRate ?? 30,
+            frameRate: this.state.config?.agoraConfig?.frameRate ?? 25,
             windowFocus: this.state.config?.agoraConfig?.windowFocus ?? true,
             captureMouseCursor:
               this.state.config?.agoraConfig?.captureMouseCursor ?? true,
@@ -372,10 +372,10 @@ class AgoraScreenShareService implements IRtcEngineEventHandler {
           {},
           {
             dimensions: this.state.config?.agoraConfig?.dimensions ?? {
-              width: 1920,
-              height: 1080,
+              width: 1280,
+              height: 720,
             },
-            frameRate: this.state.config?.agoraConfig?.frameRate ?? 30,
+            frameRate: this.state.config?.agoraConfig?.frameRate ?? 25,
             windowFocus: this.state.config?.agoraConfig?.windowFocus ?? true,
             captureMouseCursor:
               this.state.config?.agoraConfig?.captureMouseCursor ?? true,
