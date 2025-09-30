@@ -1,4 +1,11 @@
-import { IpcMain, app, BrowserWindow, session } from 'electron';
+import {
+  IpcMain,
+  app,
+  BrowserWindow,
+  session,
+  desktopCapturer,
+  systemPreferences,
+} from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -8,24 +15,28 @@ import {
   createStreamWindow,
   safeCloseStreamWindow,
   isStreamWindowSettingUp,
-} from './streamWindow';
+} from '../modules/streamWindow';
 import {
   createWhiteboardWindow,
   safeClosewhiteboardWindow,
-} from './whiteboard-window';
-import { screenSharingManager } from './screenSharing';
-import { rollingMergeManager } from './rollingMergeManager';
+} from '../modules/whiteboard-window';
+import { rollingMergeManager } from '../modules/rollingMergeManager';
 import {
   getRollingMergeDisabled,
   isUpdateAvailable,
   setUpdateAvailable,
-} from './config';
-import { isChunkLoggingEnabled } from './user-config';
-import { reloadMainWindow } from './reloadUtils';
-import { getAutoUpdater } from './autoUpdater';
-
-// Global variables for FFmpeg processing
-let ffmpegProcesses = new Map<string, any>(); // Map to store FFmpeg processes by meetingId
+} from '../modules/config';
+import { isChunkLoggingEnabled } from '../modules/user-config';
+import { reloadMainWindow } from '../modules/reloadUtils';
+import { getAutoUpdater } from '../modules/autoUpdater';
+import {
+  createScreenShareWindow,
+  getScreenShareWindow,
+  getScreenShareWindowConfig,
+  safeCloseScreenShareWindow,
+} from '../modules/screenShareWindow';
+import { askMediaAccess } from './permissionUtil';
+import { getMainWindow } from '../modules/windowManager';
 
 // Helper function to check if stream window is ready
 function isStreamWindowReady(): boolean {
@@ -42,19 +53,17 @@ async function waitForStreamWindowReady(
   maxWaitMs: number = 5000
 ): Promise<boolean> {
   const startTime = Date.now();
-
   while (Date.now() - startTime < maxWaitMs) {
     if (isStreamWindowReady()) {
       return true;
     }
     await new Promise(resolve => setTimeout(resolve, 100));
   }
-
   return false;
 }
 
-// IPC Handlers
-function setupIpcHandlers(ipcMain: IpcMain): void {
+// Main IPC Handlers
+export function setupIpcHandlers(ipcMain: IpcMain): void {
   // Centralized IPC Communication handler for allen-ui-live web app
   ipcMain.handle('sendMessage', async (event, message) => {
     try {
@@ -172,20 +181,11 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
         case 'LEAVE_MEETING':
           safeCloseStreamWindow('LEAVE_MEETING');
           safeClosewhiteboardWindow('LEAVE_MEETING');
+          safeCloseScreenShareWindow('LEAVE_MEETING');
 
           // Stop FFmpeg process for this meeting
           const meetingId = message.payload?.meetingId;
           if (meetingId) {
-            const ffmpegProcess = ffmpegProcesses.get(meetingId);
-            if (ffmpegProcess && !ffmpegProcess.killed) {
-              ffmpegProcess.stdin.end();
-              ffmpegProcess.kill('SIGTERM');
-              ffmpegProcesses.delete(meetingId);
-              console.log(
-                `FFmpeg process stopped for meeting ${meetingId} on leave`
-              );
-            }
-
             // Stop rolling merge process and cleanup
             rollingMergeManager.cleanupMeeting(meetingId);
 
@@ -201,65 +201,6 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
             type: 'SUCCESS',
             payload: 'Stream window closed and processes stopped',
           };
-
-        case 'SCREEN_SHARING_TOGGLE':
-          const streamWindowForScreenSharingToggle = getStreamWindow();
-          if (
-            streamWindowForScreenSharingToggle &&
-            !streamWindowForScreenSharingToggle.isDestroyed()
-          ) {
-            // Focus the stream window when screen sharing is toggled
-            streamWindowForScreenSharingToggle.focus();
-            streamWindowForScreenSharingToggle.show();
-
-            if (message.payload.enabled) {
-              // Start screen sharing - show desktop capturer dialog
-              try {
-                console.log('About to show desktop capturer dialog');
-
-                if (
-                  !screenSharingManager ||
-                  typeof screenSharingManager.showDesktopCapturer !== 'function'
-                ) {
-                  console.error(
-                    'screenSharingManager is not properly initialized'
-                  );
-                  return {
-                    type: 'ERROR',
-                    error: 'Screen sharing manager not initialized',
-                  };
-                }
-
-                // Show the desktop capturer dialog
-                await screenSharingManager.showDesktopCapturer();
-                console.log('Desktop capturer dialog shown');
-              } catch (error) {
-                console.error('Error showing desktop capturer:', error);
-                return {
-                  type: 'ERROR',
-                  error: 'Failed to show desktop capturer',
-                };
-              }
-            } else {
-              // Stop screen sharing
-              try {
-                await screenSharingManager.stopScreenSharing();
-                const action = 'mute-screen-sharing';
-                streamWindowForScreenSharingToggle.webContents.send(
-                  'stream-control',
-                  action,
-                  message.payload.enabled
-                );
-              } catch (error) {
-                console.error('Error stopping screen sharing:', error);
-                return {
-                  type: 'ERROR',
-                  error: 'Failed to stop screen sharing',
-                };
-              }
-            }
-          }
-          return { type: 'SUCCESS', payload: 'Screen sharing toggle sent' };
         case 'OPEN_WHITEBOARD':
           createWhiteboardWindow(message.payload);
           return { type: 'SUCCESS', payload: 'Whiteboard window created' };
@@ -352,6 +293,49 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
               error: error instanceof Error ? error.message : 'Unknown error',
             };
           }
+        case 'START_SCREEN_SHARE':
+          const screenShareWindow = getScreenShareWindow();
+          let isScreenShareWindowAlreadyExists =
+            screenShareWindow && !screenShareWindow.isDestroyed();
+          if (screenShareWindow && !screenShareWindow.isDestroyed()) {
+            await safeCloseScreenShareWindow('START_SCREEN_SHARE');
+            await new Promise(resolve => setTimeout(resolve, 200));
+          }
+
+          // Close existing window if any
+          if (screenShareWindow && !screenShareWindow.isDestroyed()) {
+            console.log(
+              'Screen share window already exists, closing existing window'
+            );
+            await safeCloseScreenShareWindow('recreating');
+          }
+          while (screenShareWindow && !screenShareWindow.isDestroyed()) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+
+          if (isScreenShareWindowAlreadyExists) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+
+          const screenShareConfig = {
+            ...message.payload,
+          };
+
+          try {
+            await askMediaAccess(['screen']);
+            await createScreenShareWindow(screenShareConfig);
+          } catch (error) {
+            console.error('Error creating screen share window:', error);
+            return {
+              type: 'ERROR',
+              error: 'Failed to create screen share window',
+            };
+          }
+          return { type: 'SUCCESS', payload: 'Screen share window created' };
+
+        case 'STOP_SCREEN_SHARE':
+          await safeCloseScreenShareWindow('STOP_SCREEN_SHARE');
+          return { type: 'SUCCESS', payload: 'Screen share window closed' };
         case 'CHANGE_AUDIO_DEVICE':
           const streamWindowForChangeAudioDevice = getStreamWindow();
           if (
@@ -401,6 +385,40 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
       }
     } catch (error) {
       throw error instanceof Error ? error : new Error('Unknown error');
+    }
+  });
+
+  ipcMain.handle('get-screen-share-config', async event => {
+    try {
+      const config = getScreenShareWindowConfig();
+      if (config) {
+        return {
+          type: 'SUCCESS',
+          payload: config,
+        };
+      } else {
+        throw new Error('No screen share config available');
+      }
+    } catch (error) {
+      throw error instanceof Error ? error : new Error('Unknown error');
+    }
+  });
+
+  ipcMain.handle('close-screen-share-window', async event => {
+    await safeCloseScreenShareWindow('manual close');
+  });
+
+  ipcMain.handle('share-screen-published', async event => {
+    const screenShareWindow = getScreenShareWindow();
+    if (screenShareWindow && !screenShareWindow.isDestroyed()) {
+      screenShareWindow.setSize(600, 338);
+    }
+  });
+
+  ipcMain.handle('opened-screen-share-window', async event => {
+    const mainWindow = getMainWindow();
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('screen-share-window-opened');
     }
   });
 
@@ -545,65 +563,74 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
     try {
       console.log('Logout request received, clearing all app data...');
 
-      // Get all browser windows to clear their data
-      const allWindows = BrowserWindow.getAllWindows();
-
-      // Clear cookies and storage data for all sessions
-      const sessions = [
-        session.defaultSession,
-        session.fromPartition('persist:shared'),
-        ...allWindows.map(win => win.webContents.session),
-      ];
-
-      // Clear cookies and storage data for each session
-      for (const sessionInstance of sessions) {
-        if (sessionInstance) {
-          try {
-            // Clear all cookies and storage data
-            await sessionInstance.clearStorageData({
-              storages: [
-                'cookies',
-                'localstorage',
-                'websql',
-                'indexdb',
-                'shadercache',
-                'serviceworkers',
-                'cachestorage',
-              ],
-            });
-
-            await sessionInstance.clearAuthCache();
-            await sessionInstance.clearCache();
-            await sessionInstance.clearData({
-              dataTypes: [
-                'backgroundFetch',
-                'cache',
-                'cookies',
-                'downloads',
-                'indexedDB',
-                'localStorage',
-                'serviceWorkers',
-                'webSQL',
-              ],
-            });
-
-            // Clear host resolver cache
-            await sessionInstance.clearHostResolverCache();
-
-            console.log(`Cleared storage data for session: default`);
-          } catch (error) {
-            console.error(`Error clearing session:`, error);
-          }
-        }
-      }
-
-      // Clear FFmpeg processes
-      cleanupFFmpegProcesses();
-
       // Clear rolling merge processes
       rollingMergeManager.cleanup();
+      const allWindows = BrowserWindow.getAllWindows();
 
-      reloadMainWindow(true);
+      // Create logout window for Gmail logout (preserves account for future sign-ins)
+      const logoutWindow = new BrowserWindow({
+        width: 1280,
+        height: 720,
+        show: false,
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true,
+          webSecurity: true,
+          allowRunningInsecureContent: true,
+          experimentalFeatures: true,
+          session: session.fromPartition('persist:shared'),
+        },
+      });
+
+      logoutWindow.loadURL('https://accounts.google.com/Logout');
+
+      logoutWindow.webContents.on('did-finish-load', async () => {
+        // Close the logout window after a short delay
+        setTimeout(async () => {
+          if (logoutWindow && !logoutWindow.isDestroyed()) {
+            logoutWindow.close();
+          }
+
+          // Get all browser windows to clear their data
+
+          // Clear cookies and storage data for all sessions
+          const sessions = [
+            session.defaultSession,
+            session.fromPartition('persist:shared'),
+            ...allWindows.map(win => win.webContents.session),
+          ];
+
+          // Clear cookies and storage data for each session
+          for (const sessionInstance of sessions) {
+            if (sessionInstance) {
+              try {
+                // Clear all cookies and storage data
+                await sessionInstance.clearStorageData({
+                  storages: [
+                    // 'cookies',
+                    'localstorage',
+                    // 'websql',
+                    // 'indexdb',
+                    // 'shadercache',
+                    // 'serviceworkers',
+                    // 'cachestorage',
+                  ],
+                });
+
+                // await sessionInstance.clearAuthCache();
+                // await sessionInstance.clearCache();
+                // await sessionInstance.clearHostResolverCache();
+              } catch (error) {
+                console.error(`Error clearing session:`, error);
+              }
+            }
+          }
+
+          // Reload main window to clear any remaining state
+          const { reloadMainWindow } = await import('../modules/reloadUtils');
+          reloadMainWindow(true);
+        }, 1000);
+      });
 
       console.log('Logout completed successfully - all app data cleared');
       return {
@@ -621,29 +648,57 @@ function setupIpcHandlers(ipcMain: IpcMain): void {
       };
     }
   });
-}
 
-// Cleanup function for FFmpeg processes
-const cleanupFFmpegProcesses = () => {
-  console.log('Cleaning up FFmpeg processes...');
-  ffmpegProcesses.forEach((process, meetingId) => {
-    if (process && !process.killed) {
-      try {
-        process.stdin.end();
-        process.kill('SIGTERM');
-        console.log(`FFmpeg process killed for meeting ${meetingId}`);
-      } catch (error) {
-        console.error(
-          `Error killing FFmpeg process for meeting ${meetingId}:`,
-          error
-        );
-      }
+  ipcMain.handle('get-stream-window-config', () => {
+    try {
+      const config = getStreamWindowConfig();
+      return { success: true, config };
+    } catch (error) {
+      console.error('Error getting stream window config:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
     }
   });
-  ffmpegProcesses.clear();
 
-  // Cleanup rolling merge processes using the manager
-  rollingMergeManager.cleanup();
-};
+  // App information handlers
+  ipcMain.handle('get-app-version', () => {
+    try {
+      const version = app.getVersion();
+      return { success: true, version };
+    } catch (error) {
+      console.error('Error getting app version:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  });
 
-export { setupIpcHandlers, cleanupFFmpegProcesses };
+  ipcMain.handle('get-app-name', () => {
+    try {
+      const name = app.getName();
+      return { success: true, name };
+    } catch (error) {
+      console.error('Error getting app name:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  });
+
+  ipcMain.handle('get-app-path', () => {
+    try {
+      const appPath = app.getAppPath();
+      return { success: true, appPath };
+    } catch (error) {
+      console.error('Error getting app path:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  });
+}

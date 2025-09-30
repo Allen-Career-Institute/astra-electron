@@ -27,6 +27,7 @@ if (getSentryDsn()) {
     environment: process.env.ENV,
     sendDefaultPii: true,
     tracesSampleRate: 0.1,
+    sampleRate: 0.1,
     getSessions: () => [
       session.defaultSession,
       session.fromPartition('persist:shared'),
@@ -51,48 +52,46 @@ if (getSentryDsn()) {
 
 // Import modules
 import { createMenu } from './modules/menu';
-import {
-  setupIpcHandlers,
-  cleanupFFmpegProcesses,
-} from './modules/ipcHandlers';
+import { setupIpcHandlers } from './utils/ipcHandlers';
 import { setupAutoUpdater } from './modules/autoUpdater';
 import {
   cleanup,
+  cleanupNonMainWindow,
   cleanupOldRecordings,
   setupPeriodicCleanup,
 } from './modules/cleanup';
 import { createMainWindow } from './modules/windowManager';
-import { getStreamWindow } from './modules/streamWindow';
-import { getWhiteboardWindow } from './modules/whiteboard-window';
 import { setupAutomaticProcessNaming } from './modules/processMonitor';
 
-// Enable hardware acceleration and WebRTC optimizations for better video quality
-app.commandLine.appendSwitch(
-  '--enable-features',
-  'VaapiVideoDecoder,VaapiVideoEncoder,WebCodecs,WebRTCPipeWireCapturer'
-);
-app.commandLine.appendSwitch('--ignore-gpu-blacklist');
-app.commandLine.appendSwitch('--enable-gpu-rasterization');
-app.commandLine.appendSwitch('--enable-zero-copy');
-app.commandLine.appendSwitch('--enable-accelerated-video-decode');
-app.commandLine.appendSwitch('--enable-accelerated-video-encode');
-app.commandLine.appendSwitch('--enable-webcodecs');
-app.commandLine.appendSwitch('--enable-webrtc');
+// https://peter.sh/experiments/chromium-command-line-switches/
+
+app.commandLine.appendArgument('--ignore-gpu-blacklist');
+app.commandLine.appendArgument('--enable-gpu-rasterization');
+app.commandLine.appendArgument('--enable-zero-copy');
+app.commandLine.appendArgument('--enable-accelerated-video-decode');
+app.commandLine.appendArgument('--enable-accelerated-video-encode');
+app.commandLine.appendArgument('--enable-accelerated-2d-canvas');
+app.commandLine.appendArgument('--enable-webcodecs');
+app.commandLine.appendArgument('--enable-webrtc');
 
 // Enable screen sharing permissions
-app.commandLine.appendSwitch('--enable-usermedia-screen-capturing');
-app.commandLine.appendSwitch('--allow-running-insecure-content');
-app.commandLine.appendSwitch('--disable-web-security');
-app.commandLine.appendSwitch('--disable-renderer-backgrounding');
-app.commandLine.appendSwitch('--force_high_performance_gpu');
-app.commandLine.appendSwitch('--disable-features', 'VizDisplayCompositor');
-app.commandLine.appendSwitch('--enable-experimental-web-platform-features');
-app.commandLine.appendSwitch('--enable-features', 'GetDisplayMedia');
-app.commandLine.appendSwitch('--enable-features', 'WebRTC');
-app.commandLine.appendSwitch('--enable-features', 'WebCodecs');
-app.commandLine.appendSwitch('--enable-features', 'WebRTCPipeWireCapturer');
-app.commandLine.appendSwitch('--enable-features', 'ScreenCaptureKit');
-app.commandLine.appendSwitch('--enable-features', 'DesktopCaptureKit');
+app.commandLine.appendArgument('--enable-usermedia-screen-capturing');
+app.commandLine.appendArgument('--allow-running-insecure-content');
+app.commandLine.appendArgument('--disable-web-security');
+app.commandLine.appendArgument('--disable-renderer-backgrounding');
+app.commandLine.appendArgument('--force_high_performance_gpu');
+app.commandLine.appendArgument('--disable-volume-adjust-sound');
+app.commandLine.appendSwitch('disable-features', 'VizDisplayCompositor');
+app.commandLine.appendSwitch('enable-experimental-web-platform-features');
+app.commandLine.appendSwitch('enable-features', 'GetDisplayMedia');
+app.commandLine.appendSwitch('enable-features', 'WebRTC');
+app.commandLine.appendSwitch('enable-features', 'WebCodecs');
+app.commandLine.appendSwitch('enable-features', 'VaapiVideoEncoder');
+app.commandLine.appendSwitch('enable-features', 'VaapiVideoDecoder');
+app.commandLine.appendSwitch('enable-features', 'WebRTCPipeWireCapturer');
+app.commandLine.appendSwitch('enable-features', 'ScreenCaptureKit');
+app.commandLine.appendSwitch('enable-features', 'DesktopCaptureKit');
+app.commandLine.appendSwitch('enable-features', 'AutoInputVolumeAdjustment');
 
 // Additional WebRTC flags to resolve SDP codec collision issues
 app.commandLine.appendSwitch(
@@ -107,7 +106,7 @@ app.commandLine.appendSwitch(
   '--force-fieldtrials',
   'WebRTC-Audio-OpusMaxAverageBitrate/Enabled/'
 );
-app.commandLine.appendSwitch('--webrtc-max-cpu-consumption-percentage', '100');
+app.commandLine.appendSwitch('--webrtc-max-cpu-consumption-percentage', '80');
 app.commandLine.appendSwitch('--webrtc-cpu-overuse-detection', 'false');
 
 // Additional performance optimizations for streaming
@@ -118,11 +117,19 @@ app.commandLine.appendSwitch('--disable-features', 'TranslateUI');
 app.commandLine.appendSwitch('--disable-ipc-flooding-protection');
 app.commandLine.appendSwitch('--max-active-webgl-contexts', '16');
 
+// Memory and performance flags
+app.commandLine.appendSwitch('--js-flags', '--max-old-space-size=6196');
+app.commandLine.appendSwitch('--disable-dev-shm-usage');
+
+import 'agora-electron-sdk/js/Private/ipc/main.js';
+import { askMediaAccess } from './utils/permissionUtil';
+
 setupIpcHandlers(ipcMain);
 
 // App event handlers
-app.on('ready', () => {
+app.on('ready', async () => {
   try {
+    await askMediaAccess(['screen', 'microphone', 'camera']);
     createMainWindow();
     createMenu();
 
@@ -181,16 +188,7 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   } else {
-    console.log('window-all-closed');
-    cleanupFFmpegProcesses();
-    const streamWindow = getStreamWindow();
-    if (streamWindow && !streamWindow.isDestroyed()) {
-      streamWindow.close();
-    }
-    const whiteboardWindow = getWhiteboardWindow();
-    if (whiteboardWindow && !whiteboardWindow.isDestroyed()) {
-      whiteboardWindow.close();
-    }
+    cleanupNonMainWindow();
   }
 });
 
@@ -201,6 +199,5 @@ app.on('activate', () => {
 });
 
 app.on('before-quit', () => {
-  cleanupFFmpegProcesses();
   cleanup();
 });

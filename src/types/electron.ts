@@ -36,9 +36,10 @@ export interface StreamWindowConfig {
 export interface ScreenSource {
   id: string;
   name: string;
-  thumbnail: Electron.NativeImage;
-  display_id: string;
-  appIcon?: Electron.NativeImage;
+  title: string;
+  thumbnail: string; // Data URL string
+  display_id?: string;
+  appIcon?: string; // Data URL string
 }
 
 export interface ScreenSharingState {

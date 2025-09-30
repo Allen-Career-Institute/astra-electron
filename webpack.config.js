@@ -44,7 +44,6 @@ const commonjsConfig = {
   },
 
   externals: {
-    'agora-electron-sdk': 'commonjs2 agora-electron-sdk',
     'koffi': 'commonjs2 koffi',
     'ref-napi': 'commonjs2 ref-napi',
   },
@@ -62,9 +61,10 @@ module.exports = [
       chunkFilename: 'chunk-[name].js',
     },
     resolve: {
-      extensions: ['.ts', '.js', '.json'],
+      extensions: ['.ts', '.js', '.json', '.node'],
       alias: {
-        '@': path.resolve(__dirname, 'src')
+        '@': path.resolve(__dirname, 'src'),
+        'agora_node_ext': path.resolve(__dirname, 'node_modules/agora-electron-sdk/build/Release/agora_node_ext.node')
       }
     },
    
@@ -72,6 +72,13 @@ module.exports = [
       rules: [
         {
           test: /\.node$/,
+          use: {
+            loader: 'node-loader',
+            options: { name: '[name].[ext]' }
+          }
+        },
+        {
+          test: /agora_node_ext(\.node)?$/,
           use: {
             loader: 'node-loader',
             options: { name: '[name].[ext]' }
@@ -146,7 +153,10 @@ module.exports = [
       maxEntrypointSize: 512000,
       maxAssetSize: 512000,
     },
-   externals: commonjsConfig.externals,
+   externals: {
+     ...commonjsConfig.externals,
+     'agora-electron-sdk': 'commonjs2 agora-electron-sdk',
+   },
   },
 
   // Preload Scripts Configuration
@@ -155,22 +165,33 @@ module.exports = [
     entry: {
       preload: './src/preload.ts',
       'stream-preload': './src/stream-preload.ts',
-      'whiteboard-preload': './src/whiteboard-preload.ts'
+      'whiteboard-preload': './src/whiteboard-preload.ts',
+      'screen-share-preload': './src/screen-share-preload.ts'
     },
     target: 'electron-renderer',
     output: {
       path: path.resolve(__dirname, 'dist'),
       filename: '[name].js',
+      publicPath: './',
     },
     resolve: {
-      extensions: ['.ts', '.js', '.json'],
+      extensions: ['.ts', '.js', '.json', '.node'],
       alias: {
-        '@': path.resolve(__dirname, 'src')
+        '@': path.resolve(__dirname, 'src'),
+        'agora_node_ext': path.resolve(__dirname, 'node_modules/agora-electron-sdk/build/Release/agora_node_ext.node'),
+        '../../../build/Release/agora_node_ext': path.resolve(__dirname, 'node_modules/agora-electron-sdk/build/Release/agora_node_ext.node')
       }
     },
   
     module: {
       rules: [
+        {
+          test: /agora_node_ext(\.node)?$/,
+          use: {
+            loader: 'node-loader',
+            options: { name: '[name].[ext]' }
+          }
+        },
         {
           test: /\.ts$/,
           exclude: /node_modules/,
@@ -234,14 +255,18 @@ module.exports = [
       maxEntrypointSize: 512000,
       maxAssetSize: 512000,
     },
-    externals: commonjsConfig.externals,
+    externals: {
+      ...commonjsConfig.externals,
+      'agora-electron-sdk': 'commonjs2 agora-electron-sdk',
+    },
   },
 
   // Renderer Process Configuration
   {
     mode: process.env.ENV === 'production' ? 'production' : 'development',
     entry: {
-      main: './src/renderer/index.tsx'
+      main: './src/renderer/index.tsx',
+      'screen-share': './src/renderer/screen-share.tsx'
     },
     target: 'electron-renderer',
     output: {
@@ -250,15 +275,30 @@ module.exports = [
       publicPath: './'
     },
     resolve: {
-      extensions: ['.tsx', '.ts', '.js', '.jsx'],
+      extensions: ['.tsx', '.ts', '.js', '.jsx', '.node'],
       alias: {
-        '@': path.resolve(__dirname, 'src/renderer')
+        '@': path.resolve(__dirname, 'src/renderer'),
+        'agora_node_ext': path.resolve(__dirname, 'node_modules/agora-electron-sdk/build/Release/agora_node_ext.node'),
+        '../../../build/Release/agora_node_ext': path.resolve(__dirname, 'node_modules/agora-electron-sdk/build/Release/agora_node_ext.node')
+      },
+      fallback: {
+        global: false,
+        fs: false,
+        path: false,
+        crypto: false,
       }
     },
     module: {
       rules: [
         {
           test: /\.node$/,
+          use: {
+            loader: 'node-loader',
+            options: { name: '[name].[ext]' }
+          }
+        },
+        {
+          test: /agora_node_ext(\.node)?$/,
           use: {
             loader: 'node-loader',
             options: { name: '[name].[ext]' }
@@ -311,6 +351,12 @@ module.exports = [
     },
     plugins: [
       ...commonjsConfig.plugins,
+      new webpack.DefinePlugin({
+        global: 'globalThis',
+      }),
+      new webpack.ProvidePlugin({
+        global: 'globalThis',
+      }),
       new HtmlWebpackPlugin({
         template: './src/renderer/index.html',
         filename: 'index.html',
@@ -335,6 +381,31 @@ module.exports = [
           minifyURLs: true,
         } : false,
         chunks: ['main'],
+      }),
+      new HtmlWebpackPlugin({
+        template: './src/renderer/screen-share.html',
+        filename: 'screen-share.html',
+        inject: 'body',
+        scriptLoading: 'defer',
+        minify: process.env.ENV === 'production' ? {
+          collapseWhitespace: true,
+          removeComments: true,
+          removeRedundantAttributes: true,
+          removeScriptTypeAttributes: true,
+          removeStyleLinkTypeAttributes: true,
+          useShortDoctype: true,
+          removeAttributeQuotes: true,
+          removeEmptyAttributes: true,
+          removeOptionalTags: true,
+          removeRedundantAttributes: true,
+          removeScriptTypeAttributes: true,
+          removeStyleLinkTypeAttributes: true,
+          removeTagWhitespace: true,  
+          minifyCSS: true,
+          minifyJS: true,
+          minifyURLs: true,
+        } : false,
+        chunks: ['screen-share'],
       })
     ],
     optimization: {
@@ -368,6 +439,10 @@ module.exports = [
       maxEntrypointSize: 512000,
       maxAssetSize: 512000,
     },
-    externals: commonjsConfig.externals
+    externals: {
+      'koffi': 'commonjs2 koffi',
+      'ref-napi': 'commonjs2 ref-napi',
+      'agora-electron-sdk': 'commonjs2 agora-electron-sdk',
+    }
   }
 ];

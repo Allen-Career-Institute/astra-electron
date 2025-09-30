@@ -7,5 +7,11 @@
 </head>
 <body>
     <div id="root"></div>
+    <script>
+        // Global polyfill for Electron renderer process
+        if (typeof global === 'undefined') {
+            window.global = globalThis;
+        }
+    </script>
 </body>
 </html>

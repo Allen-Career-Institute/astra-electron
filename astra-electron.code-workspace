@@ -7,12 +7,15 @@
     {
       "name": "allen-ui-live",
       "path": "/Users/dineshkumard/ALLEN_Digital/allen-ui-live"
+    },
+    {
+      "name": "Electron SDK",
+      "path": "/Users/dineshkumard/ALLEN_Digital/Electron-SDK"
     }
   ],
   "settings": {
     "files.exclude": {
-      "**/node_modules": true,
-      "**/dist": true,
+      "**/node_modules": false,
       "**/.next": true
     },
     "search.exclude": {

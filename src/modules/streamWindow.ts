@@ -163,15 +163,16 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
       frame: true,
       transparent: false,
       hasShadow: true,
-      thickFrame: false,
+      thickFrame: true,
       titleBarStyle: 'default',
       movable: true,
       focusable: true,
+      // Remove parent window relationship on Windows to allow proper resizing
       parent: mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined,
       minWidth: 320,
       minHeight: 180,
-      maxWidth: 480,
-      maxHeight: 270,
+      maxWidth: 1200,
+      maxHeight: 720,
     });
 
     // Apply performance optimizations for stream window
@@ -267,26 +268,25 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
       }
     });
 
-    // Handle main window resize to reposition stream window in bottom right
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.on('resize', () => {
-        if (streamWindow && !streamWindow.isDestroyed()) {
-          const mainBounds = mainWindow.getBounds();
-          const [streamWidth, streamHeight] = streamWindow.getSize();
-          const margin = 20;
-          const newX = mainBounds.x + mainBounds.width - streamWidth - margin;
-          const newY = mainBounds.y + mainBounds.height - streamHeight - margin;
-          streamWindow.setPosition(newX, newY);
-        }
-      });
-    }
+    // Handle window resize start to ensure proper resizing
+    streamWindow.on('will-resize', (event, newBounds) => {
+      // Allow the resize to proceed
+      event.preventDefault = () => {}; // Don't prevent the resize
+    });
 
-    // Handle window resize to maintain 16:9 aspect ratio and keep it on top
+    // Handle window resize end to maintain proper state
+    streamWindow.on('resized', () => {
+      if (streamWindow && !streamWindow.isDestroyed()) {
+        // Ensure window stays on top after resize
+        streamWindow.setAlwaysOnTop(true);
+        // Ensure window is properly focused and visible
+        streamWindow.show();
+        streamWindow.focus();
+      }
+    });
+
     streamWindow.on('resize', () => {
       if (streamWindow && !streamWindow.isDestroyed()) {
-        // Ensure it stays on top
-        streamWindow.setAlwaysOnTop(true);
-
         // Maintain 16:9 aspect ratio
         const [width, height] = streamWindow.getSize();
         const targetAspectRatio = 16 / 9;
@@ -300,6 +300,20 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
       }
     });
 
+    // Handle main window resize to reposition stream window in bottom right
+    // if (mainWindow && !mainWindow.isDestroyed()) {
+    //   mainWindow.on('resize', () => {
+    //     if (streamWindow && !streamWindow.isDestroyed()) {
+    //       const mainBounds = mainWindow.getBounds();
+    //       const [streamWidth, streamHeight] = streamWindow.getSize();
+    //       const margin = 20;
+    //       const newX = mainBounds.x + mainBounds.width - streamWidth - margin;
+    //       const newY = mainBounds.y + mainBounds.height - streamHeight - margin;
+    //       streamWindow.setPosition(newX, newY);
+    //     }
+    //   });
+    // }
+
     // Prevent fullscreen attempts
     streamWindow.on('enter-full-screen', () => {
       if (streamWindow && !streamWindow.isDestroyed()) {
@@ -309,12 +323,11 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
     });
 
     // Prevent maximize attempts
-    // streamWindow.on('maximize', () => {
-    //   if (streamWindow && !streamWindow.isDestroyed()) {
-    //     streamWindow.unmaximize();
-    //     console.log('Maximize attempt blocked');
-    //   }
-    // });
+    streamWindow.on('maximize', () => {
+      if (streamWindow && !streamWindow.isDestroyed()) {
+        streamWindow.focus();
+      }
+    });
 
     streamWindow.on('closed', () => {
       streamWindow = null;

@@ -1,3 +1,5 @@
+import { ScreenShareWindowConfig } from '@/modules/screenShareWindow';
+
 // Shared types for preload scripts
 export interface BaseElectronAPI {
   isElectron: boolean;
@@ -24,8 +26,17 @@ export interface StreamElectronAPI extends BaseElectronAPI {}
 
 export interface WhiteboardElectronAPI extends BaseElectronAPI {}
 
+export interface ScreenShareElectronAPI extends BaseElectronAPI {
+  getScreenShareConfig: () => Promise<{
+    type: 'SUCCESS' | 'ERROR';
+    error?: string;
+    payload?: ScreenShareWindowConfig;
+  }>;
+}
+
 // Unified interface for all preload scripts
 export type ElectronAPI =
   | MainElectronAPI
   | StreamElectronAPI
-  | WhiteboardElectronAPI;
+  | WhiteboardElectronAPI
+  | ScreenShareElectronAPI;
