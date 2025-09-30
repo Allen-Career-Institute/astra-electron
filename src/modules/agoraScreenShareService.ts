@@ -15,7 +15,7 @@ import createAgoraRtcEngine, {
 } from 'agora-electron-sdk';
 import { ScreenShareWindowConfig } from './screenShareWindow';
 import { getThumbImageBufferToBase64 } from '../utils/agoraThumbnailUtil';
-import { sendLogEvent } from '@/utils/logEventUtil';
+import { sendLogEvent } from '../utils/logEventUtil';
 
 export interface AgoraConfig {
   config: {
