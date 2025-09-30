@@ -15,6 +15,7 @@ import createAgoraRtcEngine, {
 } from 'agora-electron-sdk';
 import { ScreenShareWindowConfig } from './screenShareWindow';
 import { getThumbImageBufferToBase64 } from '../utils/agoraThumbnailUtil';
+import { sendLogEvent } from '@/utils/logEventUtil';
 
 export interface AgoraConfig {
   config: {
@@ -165,9 +166,15 @@ class AgoraScreenShareService implements IRtcEngineEventHandler {
       console.log('joinChannelEx result:', joinChannelRet);
 
       if (joinChannelRet !== 0) {
+        sendLogEvent('agora-ss-join-failed', {
+          messagePayload: JSON.stringify({
+            joinChannelRet,
+          }),
+        });
         throw new Error(`Failed to join channel: ${joinChannelRet}`);
       }
 
+      sendLogEvent('agora-ss-join-success', {});
       this.state.isJoined = true;
       console.log('Successfully joined Agora channel for screen sharing');
     } catch (error) {
@@ -397,17 +404,42 @@ class AgoraScreenShareService implements IRtcEngineEventHandler {
       console.log('Screen capture start result:', startCaptureRet);
 
       if (startCaptureRet !== 0) {
+        sendLogEvent('agora-ss-start-capture-failed', {
+          messagePayload: JSON.stringify({
+            startCaptureRet,
+          }),
+        });
         throw new Error(`Failed to start screen capture: ${startCaptureRet}`);
       }
 
+      sendLogEvent('agora-ss-start-capture-success', {
+        messagePayload: JSON.stringify({
+          startCaptureRet,
+          selectedSourceId: this.state.selectedSourceId,
+          selectedSourceType: this.state.selectedSourceType,
+        }),
+      });
       const enableVideoRet = this.agoraEngine.enableLocalVideo(true);
       console.log('Enable local video for preview result:', enableVideoRet);
 
       if (enableVideoRet !== 0) {
+        sendLogEvent('agora-ss-enable-local-video-failed', {
+          messagePayload: JSON.stringify({
+            enableVideoRet,
+          }),
+        });
         console.warn(
           `Warning: Failed to enable local video for preview: ${enableVideoRet}`
         );
       }
+
+      sendLogEvent('agora-ss-enable-local-video-success', {
+        messagePayload: JSON.stringify({
+          enableVideoRet,
+          selectedSourceId: this.state.selectedSourceId,
+          selectedSourceType: this.state.selectedSourceType,
+        }),
+      });
 
       // Start preview
       const startPreviewRet = this.agoraEngine.startPreview(
@@ -416,10 +448,22 @@ class AgoraScreenShareService implements IRtcEngineEventHandler {
       console.log('Start preview result:', startPreviewRet);
 
       if (startPreviewRet !== 0) {
+        sendLogEvent('agora-ss-start-preview-failed', {
+          messagePayload: JSON.stringify({
+            startPreviewRet,
+          }),
+        });
         this.agoraEngine.stopScreenCapture();
         throw new Error(`Failed to start preview: ${startPreviewRet}`);
       }
 
+      sendLogEvent('agora-ss-start-preview-success', {
+        messagePayload: JSON.stringify({
+          startPreviewRet,
+          selectedSourceId: this.state.selectedSourceId,
+          selectedSourceType: this.state.selectedSourceType,
+        }),
+      });
       this.state.isPublishing = true;
       this.startStatsMonitoring();
 
