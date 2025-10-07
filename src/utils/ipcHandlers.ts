@@ -594,42 +594,42 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
           // Get all browser windows to clear their data
 
           // Clear cookies and storage data for all sessions
-          const sessions = [
-            session.defaultSession,
-            session.fromPartition('persist:shared'),
-            ...allWindows.map(win => win.webContents.session),
-          ];
+          // const sessions = [
+          //   session.defaultSession,
+          //   session.fromPartition('persist:shared'),
+          //   ...allWindows.map(win => win.webContents.session),
+          // ];
 
-          // Clear cookies and storage data for each session
-          for (const sessionInstance of sessions) {
-            if (sessionInstance) {
-              try {
-                // Clear all cookies and storage data
-                await sessionInstance.clearStorageData({
-                  storages: [
-                    // 'cookies',
-                    'localstorage',
-                    // 'websql',
-                    // 'indexdb',
-                    // 'shadercache',
-                    // 'serviceworkers',
-                    // 'cachestorage',
-                  ],
-                });
+          // // Clear cookies and storage data for each session
+          // for (const sessionInstance of sessions) {
+          //   if (sessionInstance) {
+          //     try {
+          //       // Clear all cookies and storage data
+          //       await sessionInstance.clearStorageData({
+          //         storages: [
+          //           'cookies',
+          //           'localstorage',
+          //           'websql',
+          //           'indexdb',
+          //           'shadercache',
+          //           'serviceworkers',
+          //           'cachestorage',
+          //         ],
+          //       });
 
-                // await sessionInstance.clearAuthCache();
-                // await sessionInstance.clearCache();
-                // await sessionInstance.clearHostResolverCache();
-              } catch (error) {
-                console.error(`Error clearing session:`, error);
-              }
-            }
-          }
+          //       await sessionInstance.clearAuthCache();
+          //       await sessionInstance.clearCache();
+          //       await sessionInstance.clearHostResolverCache();
+          //     } catch (error) {
+          //       console.error(`Error clearing session:`, error);
+          //     }
+          //   }
+          // }
 
           // Reload main window to clear any remaining state
           const { reloadMainWindow } = await import('../modules/reloadUtils');
           reloadMainWindow(true);
-        }, 1000);
+        }, 200);
       });
 
       console.log('Logout completed successfully - all app data cleared');
