@@ -627,8 +627,8 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
           // }
 
           // Reload main window to clear any remaining state
-          const { reloadMainWindow } = await import('../modules/reloadUtils');
-          reloadMainWindow(true);
+          // const { reloadMainWindow } = await import('../modules/reloadUtils');
+          // reloadMainWindow(true);
         }, 0);
       });
 
