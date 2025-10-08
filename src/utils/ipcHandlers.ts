@@ -571,18 +571,20 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
       const logoutWindow = new BrowserWindow({
         width: 1280,
         height: 720,
-        show: false,
+        show: true,
         webPreferences: {
-          nodeIntegration: false,
-          contextIsolation: true,
-          webSecurity: true,
+          webSecurity: false,
+          sandbox: false,
           allowRunningInsecureContent: true,
-          experimentalFeatures: true,
           session: session.fromPartition('persist:shared'),
         },
+        closable: false,
       });
 
       logoutWindow.loadURL('https://accounts.google.com/Logout');
+
+      logoutWindow.focus();
+      logoutWindow.show();
 
       logoutWindow.webContents.on('did-finish-load', async () => {
         // Close the logout window after a short delay
@@ -591,45 +593,45 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
             logoutWindow.close();
           }
 
-          // Get all browser windows to clear their data
+          // // Get all browser windows to clear their data
 
-          // Clear cookies and storage data for all sessions
-          const sessions = [
-            session.defaultSession,
-            session.fromPartition('persist:shared'),
-            ...allWindows.map(win => win.webContents.session),
-          ];
+          // // Clear cookies and storage data for all sessions
+          // const sessions = [
+          //   session.defaultSession,
+          //   session.fromPartition('persist:shared'),
+          //   ...allWindows.map(win => win.webContents.session),
+          // ];
 
-          // Clear cookies and storage data for each session
-          for (const sessionInstance of sessions) {
-            if (sessionInstance) {
-              try {
-                // Clear all cookies and storage data
-                await sessionInstance.clearStorageData({
-                  storages: [
-                    // 'cookies',
-                    'localstorage',
-                    // 'websql',
-                    // 'indexdb',
-                    // 'shadercache',
-                    // 'serviceworkers',
-                    // 'cachestorage',
-                  ],
-                });
+          // // Clear cookies and storage data for each session
+          // for (const sessionInstance of sessions) {
+          //   if (sessionInstance) {
+          //     try {
+          //       // Clear all cookies and storage data
+          //       await sessionInstance.clearStorageData({
+          //         storages: [
+          //           // 'cookies',
+          //           // 'localstorage',
+          //           // 'websql',
+          //           // 'indexdb',
+          //           // 'shadercache',
+          //           // 'serviceworkers',
+          //           // 'cachestorage',
+          //         ],
+          //       });
 
-                // await sessionInstance.clearAuthCache();
-                // await sessionInstance.clearCache();
-                // await sessionInstance.clearHostResolverCache();
-              } catch (error) {
-                console.error(`Error clearing session:`, error);
-              }
-            }
-          }
+          //       // await sessionInstance.clearAuthCache();
+          //       // await sessionInstance.clearCache();
+          //       // await sessionInstance.clearHostResolverCache();
+          //     } catch (error) {
+          //       console.error(`Error clearing session:`, error);
+          //     }
+          //   }
+          // }
 
-          // Reload main window to clear any remaining state
-          const { reloadMainWindow } = await import('../modules/reloadUtils');
-          reloadMainWindow(true);
-        }, 1000);
+          // // Reload main window to clear any remaining state
+          // const { reloadMainWindow } = await import('../modules/reloadUtils');
+          // reloadMainWindow(true);
+        }, 3000);
       });
 
       console.log('Logout completed successfully - all app data cleared');
