@@ -578,7 +578,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
           allowRunningInsecureContent: true,
           session: session.fromPartition('persist:shared'),
         },
-        closable: true,
+        closable: false,
       });
 
       logoutWindow.loadURL('https://accounts.google.com/Logout');
