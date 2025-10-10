@@ -9,6 +9,17 @@ function createMenu(): void {
       label: 'File',
       submenu: [
         {
+          label: 'Go Back',
+          accelerator:
+            process.platform === 'darwin' ? 'Cmd+[' : 'Alt+Left Arrow',
+          click: () => {
+            const mainWindow = getMainWindow();
+            if (mainWindow && !mainWindow.isDestroyed()) {
+              mainWindow.webContents.goBack();
+            }
+          },
+        },
+        {
           label: 'Quit',
           accelerator: process.platform === 'darwin' ? 'Cmd+Q' : 'Ctrl+Q',
           click: () => {
