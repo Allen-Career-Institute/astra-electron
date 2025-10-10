@@ -431,22 +431,28 @@ export class RollingMergeManager {
    * Cleanup all rolling merge processes
    */
   cleanup(): void {
-    console.log('Cleaning up rolling merge processes...');
-    this.rollingMergeProcesses.forEach((processRecord, meetingId) => {
-      if (processRecord.status === 'running') {
-        try {
-          processRecord.process.kill('SIGTERM');
-          console.log(`Rolling merge process killed for meeting ${meetingId}`);
-        } catch (error) {
-          console.error(
-            `Error killing rolling merge process for meeting ${meetingId}:`,
-            error
-          );
+    try {
+      console.log('Cleaning up rolling merge processes...');
+      this.rollingMergeProcesses.forEach((processRecord, meetingId) => {
+        if (processRecord.status === 'running') {
+          try {
+            processRecord.process.kill('SIGTERM');
+            console.log(
+              `Rolling merge process killed for meeting ${meetingId}`
+            );
+          } catch (error) {
+            console.error(
+              `Error killing rolling merge process for meeting ${meetingId}:`,
+              error
+            );
+          }
         }
-      }
-    });
-    this.rollingMergeProcesses.clear();
-    this.chunkLists.clear();
+      });
+      this.rollingMergeProcesses.clear();
+      this.chunkLists.clear();
+    } catch (error) {
+      console.error('Error in rolling merge cleanup:', error);
+    }
   }
 
   /**
