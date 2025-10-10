@@ -4,6 +4,7 @@ import { WhiteboardWindowConfig } from '@/types/electron';
 import { getSharedSession } from './windowManager';
 import { isDev } from './config';
 import { registerWhiteboardWindow } from './processNaming';
+import { addKeyboardListenerUtil } from '../utils/keyboardListenerUtil';
 
 let whiteboardWindow: BrowserWindow | null = null;
 let whiteboardWindowConfig: WhiteboardWindowConfig | null = null;
@@ -223,6 +224,7 @@ function createWhiteboardWindow(config: WhiteboardWindowConfig): BrowserWindow {
       if (whiteboardWindow) {
         // Register with new process naming system
         registerWhiteboardWindow(whiteboardWindow);
+        addKeyboardListenerUtil(whiteboardWindow);
         whiteboardWindowPid = whiteboardWindow.webContents.getOSProcessId();
       }
     });

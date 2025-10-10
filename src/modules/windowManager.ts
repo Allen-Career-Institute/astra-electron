@@ -5,6 +5,7 @@ import { safeCloseStreamWindow } from './streamWindow';
 import { safeClosewhiteboardWindow } from './whiteboard-window';
 import { createMenu } from './menu';
 import { registerMainUI } from './processNaming';
+import { addKeyboardListenerUtil } from '../utils/keyboardListenerUtil';
 
 let mainWindow: BrowserWindow | null = null;
 let mainWindowHasLoaded: boolean = false;
@@ -107,6 +108,7 @@ function createMainWindow(): BrowserWindow {
           mainWindow.setFullScreen(true);
         }
         injectTokensToWindow(mainWindow);
+        addKeyboardListenerUtil(mainWindow);
       }
     } catch (error) {
       console.error('Failed to inject tokens to main window:', error);
