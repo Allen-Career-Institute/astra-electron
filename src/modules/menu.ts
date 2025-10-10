@@ -2,6 +2,9 @@ import { Menu, dialog, app } from 'electron';
 import { getAppVersion, getCurrentUrl, getEnv, isDev } from './config';
 import { getMainWindow } from './windowManager';
 import { reloadMainWindow } from './reloadUtils';
+import { safeClosewhiteboardWindow } from './whiteboard-window';
+import { safeCloseScreenShareWindow } from './screenShareWindow';
+import { safeCloseStreamWindow } from './streamWindow';
 
 function createMenu(): void {
   const template = [
@@ -17,6 +20,9 @@ function createMenu(): void {
             if (mainWindow && !mainWindow.isDestroyed()) {
               mainWindow.webContents.goBack();
             }
+            safeCloseStreamWindow('LEAVE_MEETING');
+            safeClosewhiteboardWindow('LEAVE_MEETING');
+            safeCloseScreenShareWindow('LEAVE_MEETING');
           },
         },
         {
