@@ -1,4 +1,4 @@
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, globalShortcut } from 'electron';
 
 const addKeyboardListenerUtil = (window: BrowserWindow) => {
   if (window && !window.isDestroyed()) {
@@ -27,27 +27,49 @@ const addKeyboardListenerUtil = (window: BrowserWindow) => {
               else if (e.keyCode === 89 && e.metaKey) {
                 document.execCommand('redo');
               }
-              else if ((e.keyCode === 187 || e.keyCode === 61) && e.metaKey) {
-                // Cmd+Plus or Cmd+= for zoom in
-                e.preventDefault();
-                window.externalZoom = Math.min(window.externalZoom + 0.1, 3.0);
-                document.body.style.zoom = window.externalZoom;
-              }
-              else if (e.keyCode === 189 && e.metaKey) {
-                // Cmd+Minus for zoom out
-                e.preventDefault();
-                window.externalZoom = Math.max(window.externalZoom - 0.1, 0.5);
-                document.body.style.zoom = window.externalZoom;
-              }
-              else if (e.keyCode === 48 && e.metaKey) {
-                // Cmd+0 for reset zoom
-                e.preventDefault();
-                window.externalZoom = 1;
-                document.body.style.zoom = window.externalZoom;
-              }
             });
         `);
   }
 };
 
-export { addKeyboardListenerUtil };
+const registerZoomShortcut = () => {
+  if (process.platform === 'darwin') {
+    globalShortcut.register('Cmd++', () => {
+      const focusedWindow = BrowserWindow.getFocusedWindow();
+      if (focusedWindow) {
+        focusedWindow.webContents.setZoomLevel(
+          focusedWindow.webContents.getZoomLevel() + 0.1
+        );
+      }
+    });
+
+    globalShortcut.register('Cmd+-', () => {
+      const focusedWindow = BrowserWindow.getFocusedWindow();
+      if (focusedWindow) {
+        focusedWindow.webContents.setZoomLevel(
+          focusedWindow.webContents.getZoomLevel() - 0.1
+        );
+      }
+    });
+  } else {
+    globalShortcut.register('Control+=', () => {
+      const focusedWindow = BrowserWindow.getFocusedWindow();
+      if (focusedWindow) {
+        focusedWindow.webContents.setZoomLevel(
+          focusedWindow.webContents.getZoomLevel() + 0.1
+        );
+      }
+    });
+
+    globalShortcut.register('Control+-', () => {
+      const focusedWindow = BrowserWindow.getFocusedWindow();
+      if (focusedWindow) {
+        focusedWindow.webContents.setZoomLevel(
+          focusedWindow.webContents.getZoomLevel() - 0.1
+        );
+      }
+    });
+  }
+};
+
+export { addKeyboardListenerUtil, registerZoomShortcut };

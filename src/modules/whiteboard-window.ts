@@ -169,6 +169,8 @@ function createWhiteboardWindow(config: WhiteboardWindowConfig): BrowserWindow {
       height: windowHeight,
       x,
       y,
+      useContentSize: false,
+      zoomToPageWidth: true,
       title: 'Whiteboard',
       show: false,
       webPreferences: {
