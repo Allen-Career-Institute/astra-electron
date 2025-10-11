@@ -7,6 +7,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { spawn } from 'child_process';
 import { stopProcessMonitoring } from './processMonitor';
+import * as Sentry from '@sentry/electron/main';
 import { rollingMergeManager } from './rollingMergeManager';
 import { safeCloseScreenShareWindow } from './screenShareWindow';
 
@@ -27,7 +28,7 @@ function cleanupNonMainWindow(): void {
   safeClosewhiteboardWindow();
   safeCloseScreenShareWindow();
   stopProcessMonitoring();
-  rollingMergeManager.cleanup();
+  rollingMergeManager;
 }
 
 function handleUncaughtException(error: Error): void {
@@ -38,6 +39,8 @@ function handleUncaughtException(error: Error): void {
       'Uncaught Exception',
       `An uncaught exception occurred: ${error.message}\n\nStack: ${error.stack}`
     );
+  } else {
+    Sentry.captureException(error);
   }
 }
 

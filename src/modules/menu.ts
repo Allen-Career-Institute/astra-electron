@@ -2,12 +2,29 @@ import { Menu, dialog, app } from 'electron';
 import { getAppVersion, getCurrentUrl, getEnv, isDev } from './config';
 import { getMainWindow } from './windowManager';
 import { reloadMainWindow } from './reloadUtils';
+import { safeClosewhiteboardWindow } from './whiteboard-window';
+import { safeCloseScreenShareWindow } from './screenShareWindow';
+import { safeCloseStreamWindow } from './streamWindow';
 
 function createMenu(): void {
   const template = [
     {
       label: 'File',
       submenu: [
+        {
+          label: 'Go Back',
+          accelerator:
+            process.platform === 'darwin' ? 'Cmd+[' : 'Alt+Left Arrow',
+          click: () => {
+            const mainWindow = getMainWindow();
+            if (mainWindow && !mainWindow.isDestroyed()) {
+              mainWindow.webContents.goBack();
+            }
+            safeCloseStreamWindow('LEAVE_MEETING');
+            safeClosewhiteboardWindow('LEAVE_MEETING');
+            safeCloseScreenShareWindow('LEAVE_MEETING');
+          },
+        },
         {
           label: 'Quit',
           accelerator: process.platform === 'darwin' ? 'Cmd+Q' : 'Ctrl+Q',
