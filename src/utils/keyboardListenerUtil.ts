@@ -1,3 +1,4 @@
+import { getMainWindow } from '@/modules/windowManager';
 import { BrowserWindow, globalShortcut } from 'electron';
 
 const addKeyboardListenerUtil = (window: BrowserWindow) => {
@@ -35,46 +36,41 @@ const addKeyboardListenerUtil = (window: BrowserWindow) => {
 const registerZoomShortcut = () => {
   if (process.platform === 'darwin') {
     globalShortcut.register('Cmd++', () => {
-      const focusedWindow = BrowserWindow.getFocusedWindow();
-      if (focusedWindow) {
-        const zoomLevel = focusedWindow.webContents.getZoomLevel();
-        focusedWindow.webContents.setZoomLevel(
-          focusedWindow.webContents.getZoomLevel() + zoomLevel > 1.5
-            ? 0.25
-            : 0.1
+      const mainWindow = getMainWindow();
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        const zoomLevel = mainWindow.webContents.getZoomLevel();
+        mainWindow.webContents.setZoomLevel(
+          mainWindow.webContents.getZoomLevel() + zoomLevel > 1.5 ? 0.25 : 0.1
         );
       }
     });
 
     globalShortcut.register('Cmd+-', () => {
-      const focusedWindow = BrowserWindow.getFocusedWindow();
-      if (focusedWindow) {
-        const zoomLevel = focusedWindow.webContents.getZoomLevel();
-        focusedWindow.webContents.setZoomLevel(
-          focusedWindow.webContents.getZoomLevel() -
-            (zoomLevel < 1.5 ? 0.25 : 0.1)
+      const mainWindow = getMainWindow();
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        const zoomLevel = mainWindow.webContents.getZoomLevel();
+        mainWindow.webContents.setZoomLevel(
+          mainWindow.webContents.getZoomLevel() - (zoomLevel < 1.5 ? 0.1 : 0.25)
         );
       }
     });
   } else {
     globalShortcut.register('Control+=', () => {
-      const focusedWindow = BrowserWindow.getFocusedWindow();
-      if (focusedWindow) {
-        const zoomLevel = focusedWindow.webContents.getZoomLevel();
-        focusedWindow.webContents.setZoomLevel(
-          focusedWindow.webContents.getZoomLevel() +
-            (zoomLevel < 1.5 ? 0.25 : 0.1)
+      const mainWindow = getMainWindow();
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        const zoomLevel = mainWindow.webContents.getZoomLevel();
+        mainWindow.webContents.setZoomLevel(
+          mainWindow.webContents.getZoomLevel() + (zoomLevel > 1.5 ? 0.25 : 0.1)
         );
       }
     });
 
     globalShortcut.register('Control+-', () => {
-      const focusedWindow = BrowserWindow.getFocusedWindow();
-      if (focusedWindow) {
-        const zoomLevel = focusedWindow.webContents.getZoomLevel();
-        focusedWindow.webContents.setZoomLevel(
-          focusedWindow.webContents.getZoomLevel() -
-            (zoomLevel < 1.5 ? 0.25 : 0.1)
+      const mainWindow = getMainWindow();
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        const zoomLevel = mainWindow.webContents.getZoomLevel();
+        mainWindow.webContents.setZoomLevel(
+          mainWindow.webContents.getZoomLevel() - (zoomLevel < 1.5 ? 0.1 : 0.25)
         );
       }
     });
