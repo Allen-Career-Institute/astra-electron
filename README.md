@@ -127,19 +127,21 @@ yarn package:msix
 
 3. **Set up development environment**:
 
-   ```bash
-   ./scripts/setup-dev.sh
+   ```
+     Create a .env.local file with following details
+
+     APP_VERSION=0.0.1
+     ENV=development
+     NODE_ENV=development
+     CUSTOM_URL=https://console.allen-stage.in/ can be your local host or vercel url
+     AUTH_TOKEN=Your teacher user's console token
+
    ```
 
 4. **Start development**:
 
    ```bash
-   yarn dev
-   ```
-
-5. **Build for development** (no code signing):
-   ```bash
-   yarn dev:build
+   yarn dev:full
    ```
 
 ## 🔧 **Configuration**
