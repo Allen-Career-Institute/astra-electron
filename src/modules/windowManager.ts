@@ -1,10 +1,14 @@
-import { BrowserWindow, session, app } from 'electron';
+import { BrowserWindow, session, app, globalShortcut } from 'electron';
 import path from 'path';
 import { getUrlByEnv, isDev, setCurrentUrl } from './config';
 import { safeCloseStreamWindow } from './streamWindow';
 import { safeClosewhiteboardWindow } from './whiteboard-window';
 import { createMenu } from './menu';
 import { registerMainUI } from './processNaming';
+import {
+  addKeyboardListenerUtil,
+  registerZoomShortcut,
+} from '../utils/keyboardListenerUtil';
 
 let mainWindow: BrowserWindow | null = null;
 let mainWindowHasLoaded: boolean = false;
@@ -62,6 +66,8 @@ function createMainWindow(): BrowserWindow {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    useContentSize: false,
+    zoomToPageWidth: true,
     fullscreen: process.platform === 'darwin' ? true : false,
     frame: true,
     maximizable: true,
@@ -87,6 +93,7 @@ function createMainWindow(): BrowserWindow {
 
   mainWindow.loadURL(getUrlByEnv());
   mainWindow.maximize();
+  registerZoomShortcut();
 
   if (isDev()) {
     // mainWindow.webContents.openDevTools();
@@ -107,6 +114,7 @@ function createMainWindow(): BrowserWindow {
           mainWindow.setFullScreen(true);
         }
         injectTokensToWindow(mainWindow);
+        addKeyboardListenerUtil(mainWindow);
       }
     } catch (error) {
       console.error('Failed to inject tokens to main window:', error);
