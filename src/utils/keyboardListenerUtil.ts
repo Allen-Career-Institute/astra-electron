@@ -37,8 +37,11 @@ const registerZoomShortcut = () => {
     globalShortcut.register('Cmd++', () => {
       const focusedWindow = BrowserWindow.getFocusedWindow();
       if (focusedWindow) {
+        const zoomLevel = focusedWindow.webContents.getZoomLevel();
         focusedWindow.webContents.setZoomLevel(
-          focusedWindow.webContents.getZoomLevel() + 0.1
+          focusedWindow.webContents.getZoomLevel() + zoomLevel > 1.5
+            ? 0.25
+            : 0.1
         );
       }
     });
@@ -46,8 +49,10 @@ const registerZoomShortcut = () => {
     globalShortcut.register('Cmd+-', () => {
       const focusedWindow = BrowserWindow.getFocusedWindow();
       if (focusedWindow) {
+        const zoomLevel = focusedWindow.webContents.getZoomLevel();
         focusedWindow.webContents.setZoomLevel(
-          focusedWindow.webContents.getZoomLevel() - 0.1
+          focusedWindow.webContents.getZoomLevel() -
+            (zoomLevel < 1.5 ? 0.25 : 0.1)
         );
       }
     });
@@ -55,8 +60,10 @@ const registerZoomShortcut = () => {
     globalShortcut.register('Control+=', () => {
       const focusedWindow = BrowserWindow.getFocusedWindow();
       if (focusedWindow) {
+        const zoomLevel = focusedWindow.webContents.getZoomLevel();
         focusedWindow.webContents.setZoomLevel(
-          focusedWindow.webContents.getZoomLevel() + 0.1
+          focusedWindow.webContents.getZoomLevel() +
+            (zoomLevel < 1.5 ? 0.25 : 0.1)
         );
       }
     });
@@ -64,8 +71,10 @@ const registerZoomShortcut = () => {
     globalShortcut.register('Control+-', () => {
       const focusedWindow = BrowserWindow.getFocusedWindow();
       if (focusedWindow) {
+        const zoomLevel = focusedWindow.webContents.getZoomLevel();
         focusedWindow.webContents.setZoomLevel(
-          focusedWindow.webContents.getZoomLevel() - 0.1
+          focusedWindow.webContents.getZoomLevel() -
+            (zoomLevel < 1.5 ? 0.25 : 0.1)
         );
       }
     });
