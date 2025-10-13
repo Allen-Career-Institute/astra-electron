@@ -1,4 +1,4 @@
-import { getMainWindow } from '@/modules/windowManager';
+import { getMainWindow } from '../modules/windowManager';
 import { BrowserWindow, globalShortcut } from 'electron';
 
 const addKeyboardListenerUtil = (window: BrowserWindow) => {
