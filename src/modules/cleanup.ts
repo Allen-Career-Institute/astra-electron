@@ -28,7 +28,7 @@ function cleanupNonMainWindow(): void {
   safeClosewhiteboardWindow();
   safeCloseScreenShareWindow();
   stopProcessMonitoring();
-  rollingMergeManager;
+  rollingMergeManager.cleanup();
 }
 
 function handleUncaughtException(error: Error): void {
