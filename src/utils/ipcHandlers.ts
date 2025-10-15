@@ -590,7 +590,12 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
         // Close the logout window after a short delay
         setTimeout(async () => {
           if (logoutWindow && !logoutWindow.isDestroyed()) {
-            logoutWindow.close();
+            logoutWindow.destroy();
+            setTimeout(() => {
+              if (logoutWindow && !logoutWindow.isDestroyed()) {
+                logoutWindow.destroy();
+              }
+            }, 300);
           }
 
           // // Get all browser windows to clear their data
@@ -631,7 +636,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
           // // Reload main window to clear any remaining state
           // const { reloadMainWindow } = await import('../modules/reloadUtils');
           // reloadMainWindow(true);
-        }, 3000);
+        }, 2000);
       });
 
       console.log('Logout completed successfully - all app data cleared');
@@ -647,6 +652,21 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
           error instanceof Error
             ? error.message
             : 'Unknown error during logout',
+      };
+    }
+  });
+
+  ipcMain.handle('get-desktop-sources', async (event, options) => {
+    try {
+      console.log('getDesktopSources', event, options);
+      await askMediaAccess(['screen']);
+      const sources = await desktopCapturer.getSources(options);
+      return sources || [];
+    } catch (error) {
+      console.error('Error getting desktop sources:', error);
+      return {
+        type: 'ERROR',
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   });
