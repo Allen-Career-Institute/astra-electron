@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { MainElectronAPI } from './types/preload';
+import { getAppVersion } from './modules/config';
 
 // Set process name for OS task manager visibility
 try {
@@ -13,6 +14,7 @@ try {
 contextBridge.exposeInMainWorld('electronAPI', {
   // Detect if running in Electron environment
   isElectron: true,
+  getAppVersion: () => getAppVersion(),
   // IPC Communication interface
   sendMessage: async (message: any): Promise<any> => {
     try {
