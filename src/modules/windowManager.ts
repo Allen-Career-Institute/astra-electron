@@ -84,7 +84,8 @@ function createMainWindow(): BrowserWindow {
       // Most important for WebRTC:
       webviewTag: false,
       experimentalFeatures: true,
-      enableBlinkFeatures: 'MediaCapture,ScreenCapture',
+      enableBlinkFeatures:
+        'WebCodecs,WebRTC,GetDisplayMedia,ScreenCaptureKit,DesktopCaptureKit,WebRTCPipeWireCapturer,MediaCapture,ScreenCapture',
       // Use shared session for localStorage/cookies persistence
       session: getSharedSession(),
     },

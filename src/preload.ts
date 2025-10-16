@@ -1,4 +1,4 @@
-import { contextBridge, desktopCapturer, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer } from 'electron';
 import { MainElectronAPI } from './types/preload';
 
 // Set process name for OS task manager visibility
@@ -85,8 +85,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }
   },
   getDesktopSources: async (options: any) => {
-    const sources = await desktopCapturer.getSources(options);
-    return sources;
+    try {
+      const sources = await ipcRenderer.invoke('get-desktop-sources', options);
+      return sources;
+    } catch (error) {
+      return error;
+    }
   },
   // Metrics event listener
   onMetrics: (
