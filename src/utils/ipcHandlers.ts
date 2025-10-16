@@ -659,16 +659,11 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
 
   ipcMain.handle('get-desktop-sources', async (event, options) => {
     try {
-      console.log('getDesktopSources', event, options);
       await askMediaAccess(['screen']);
       const sources = await desktopCapturer.getSources(options);
       return sources || [];
     } catch (error) {
-      console.error('Error getting desktop sources:', error);
-      return {
-        type: 'ERROR',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
+      return error;
     }
   });
 
