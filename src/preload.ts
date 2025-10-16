@@ -89,10 +89,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
       const sources = await ipcRenderer.invoke('get-desktop-sources', options);
       return sources;
     } catch (error) {
-      return {
-        type: 'ERROR',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
+      return error;
     }
   },
   // Metrics event listener

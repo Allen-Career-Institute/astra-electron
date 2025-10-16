@@ -661,7 +661,14 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
     try {
       await askMediaAccess(['screen']);
       const sources = await desktopCapturer.getSources(options);
-      return sources || [];
+      if (sources.length === 0) {
+        return [];
+      }
+      return sources.map(source => ({
+        ...source,
+        thumbImageDataURL: source.thumbnail.toDataURL(),
+        thumbnail: null,
+      }));
     } catch (error) {
       return error;
     }
