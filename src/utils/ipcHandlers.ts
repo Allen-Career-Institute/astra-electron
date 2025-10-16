@@ -591,7 +591,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
         // Close the logout window after a short delay
         setTimeout(async () => {
           if (logoutWindow && !logoutWindow.isDestroyed()) {
-            logoutWindow.destroy();
+            logoutWindow.close();
             setTimeout(() => {
               if (logoutWindow && !logoutWindow.isDestroyed()) {
                 logoutWindow.destroy();
