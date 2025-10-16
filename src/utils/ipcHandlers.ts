@@ -587,6 +587,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
       logoutWindow.show();
 
       logoutWindow.webContents.on('did-finish-load', async () => {
+        logoutWindow.setClosable(true);
         // Close the logout window after a short delay
         setTimeout(async () => {
           if (logoutWindow && !logoutWindow.isDestroyed()) {
@@ -636,7 +637,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
           // // Reload main window to clear any remaining state
           // const { reloadMainWindow } = await import('../modules/reloadUtils');
           // reloadMainWindow(true);
-        }, 2000);
+        }, 2500);
       });
 
       console.log('Logout completed successfully - all app data cleared');
