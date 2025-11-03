@@ -1,10 +1,30 @@
-import { Menu, dialog, app } from 'electron';
+import { Menu, dialog, app, BrowserWindow, shell } from 'electron';
 import { getAppVersion, getCurrentUrl, getEnv, isDev } from './config';
 import { getMainWindow } from './windowManager';
 import { reloadMainWindow } from './reloadUtils';
 import { safeClosewhiteboardWindow } from './whiteboard-window';
 import { safeCloseScreenShareWindow } from './screenShareWindow';
 import { safeCloseStreamWindow } from './streamWindow';
+
+/**
+ * Opens a Chrome internal URL in a new window
+ */
+function openChromeInternalUrl(url: string) {
+  const debugWindow = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+    },
+    title: `Debug: ${url}`,
+  });
+
+  debugWindow.loadURL(url);
+  if (isDev()) {
+    debugWindow.webContents.openDevTools({ mode: 'detach' });
+  }
+}
 
 function createMenu(): void {
   const template = [
@@ -90,6 +110,101 @@ function createMenu(): void {
               } else {
                 mainWindow.webContents.openDevTools();
               }
+            }
+          },
+        },
+      ],
+    },
+    {
+      label: 'Debug',
+      submenu: [
+        {
+          label: 'GPU Information',
+          click: () => {
+            openChromeInternalUrl('chrome://gpu');
+          },
+        },
+        {
+          label: 'WebRTC Internals',
+          click: () => {
+            openChromeInternalUrl('chrome://webrtc-internals');
+          },
+        },
+        {
+          label: 'Media Internals',
+          click: () => {
+            openChromeInternalUrl('chrome://media-internals');
+          },
+        },
+        {
+          label: 'Process Internals',
+          click: () => {
+            openChromeInternalUrl('chrome://process-internals');
+          },
+        },
+        {
+          label: 'Flags',
+          click: () => {
+            openChromeInternalUrl('chrome://flags/');
+          },
+        },
+        {
+          label: 'System',
+          click: () => {
+            openChromeInternalUrl('chrome://system/');
+          },
+        },
+        {
+          label: 'Network',
+          click: () => {
+            openChromeInternalUrl('chrome://network-errors/');
+          },
+        },
+        { type: 'separator' as const },
+        {
+          label: 'Show GPU Status',
+          click: () => {
+            const mainWindow = getMainWindow();
+            if (mainWindow && !mainWindow.isDestroyed()) {
+              const gpuStatus = app.getGPUFeatureStatus();
+              const statusMessage = Object.entries(gpuStatus)
+                .map(([key, value]) => `${key}: ${value}`)
+                .join('\n');
+
+              dialog.showMessageBox(mainWindow, {
+                type: 'info',
+                title: 'GPU Feature Status',
+                message: 'Current GPU Features Status',
+                detail: statusMessage,
+                buttons: ['OK'],
+              });
+            }
+          },
+        },
+        {
+          label: 'Show App Metrics',
+          click: () => {
+            const mainWindow = getMainWindow();
+            if (mainWindow && !mainWindow.isDestroyed()) {
+              const metrics = app.getAppMetrics();
+              const metricsMessage = metrics
+                .map(
+                  (metric, idx) =>
+                    `Process ${idx + 1}:\n` +
+                    `  Type: ${metric.type}\n` +
+                    `  PID: ${metric.pid}\n` +
+                    `  CPU: ${metric.cpu?.percentCPUUsage || 'N/A'}%\n` +
+                    `  Memory: ${Math.round((metric.memory?.workingSetSize || 0) / 1024 / 1024)}MB`
+                )
+                .join('\n\n');
+
+              dialog.showMessageBox(mainWindow, {
+                type: 'info',
+                title: 'App Metrics',
+                message: 'Current Application Metrics',
+                detail: metricsMessage,
+                buttons: ['OK'],
+              });
             }
           },
         },

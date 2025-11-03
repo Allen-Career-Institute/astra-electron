@@ -65,61 +65,74 @@ import { setupAutomaticProcessNaming } from './modules/processMonitor';
 
 // https://peter.sh/experiments/chromium-command-line-switches/
 
-app.commandLine.appendArgument('--ignore-gpu-blacklist');
-app.commandLine.appendArgument('--enable-gpu-rasterization');
-app.commandLine.appendArgument('--enable-zero-copy');
-app.commandLine.appendArgument('--enable-accelerated-video-decode');
-app.commandLine.appendArgument('--enable-accelerated-video-encode');
-app.commandLine.appendArgument('--enable-accelerated-2d-canvas');
-app.commandLine.appendArgument('--enable-webcodecs');
-app.commandLine.appendArgument('--enable-webrtc');
+// GPU Hardware Acceleration flags
+app.commandLine.appendSwitch('ignore-gpu-blocklist');
+app.commandLine.appendSwitch('enable-gpu-rasterization');
+app.commandLine.appendSwitch('enable-zero-copy');
+app.commandLine.appendSwitch('enable-accelerated-video-decode');
+app.commandLine.appendSwitch('enable-accelerated-video-encode');
+app.commandLine.appendSwitch('enable-accelerated-2d-canvas');
+app.commandLine.appendSwitch('enable-native-gpu-memory-buffers');
+app.commandLine.appendSwitch('enable-hardware-overlays');
+app.commandLine.appendSwitch('enable-webcodecs');
+app.commandLine.appendSwitch('enable-webrtc');
 
 // Enable screen sharing permissions
-app.commandLine.appendArgument('--enable-usermedia-screen-capturing');
-app.commandLine.appendArgument('--allow-running-insecure-content');
-app.commandLine.appendArgument('--disable-web-security');
-app.commandLine.appendArgument('--disable-renderer-backgrounding');
-app.commandLine.appendArgument('--force_high_performance_gpu');
-app.commandLine.appendArgument('--disable-volume-adjust-sound');
-app.commandLine.appendSwitch('disable-features', 'VizDisplayCompositor');
+app.commandLine.appendSwitch('enable-usermedia-screen-capturing');
+app.commandLine.appendSwitch('allow-running-insecure-content');
+app.commandLine.appendSwitch('disable-web-security');
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
+app.commandLine.appendSwitch('force_high_performance_gpu');
+app.commandLine.appendSwitch('disable-volume-adjust-sound');
 app.commandLine.appendSwitch('enable-experimental-web-platform-features');
-app.commandLine.appendSwitch('enable-features', 'GetDisplayMedia');
-app.commandLine.appendSwitch('enable-features', 'WebRTC');
-app.commandLine.appendSwitch('enable-features', 'WebCodecs');
-app.commandLine.appendSwitch('enable-features', 'VaapiVideoEncoder');
-app.commandLine.appendSwitch('enable-features', 'VaapiVideoDecoder');
-app.commandLine.appendSwitch('enable-features', 'WebRTCPipeWireCapturer');
-app.commandLine.appendSwitch('enable-features', 'ScreenCaptureKit');
-app.commandLine.appendSwitch('enable-features', 'DesktopCaptureKit');
-app.commandLine.appendSwitch('enable-features', 'AutoInputVolumeAdjustment');
+
+// Enable features with proper comma-separated values
+const enabledFeatures = [
+  'GetDisplayMedia',
+  'WebRTC',
+  'Vulkan',
+  'WebCodecs',
+  'VaapiVideoEncoder',
+  'VaapiVideoDecoder',
+  'WebRTCPipeWireCapturer',
+  'ScreenCaptureKit',
+  'DesktopCaptureKit',
+  'HardwareEncodeDecodeAccelerator',
+  'WebGPU',
+  'MediaCapabilities',
+  'HardwareMediaKeyHandling',
+  'PlatformHEVCEncoderSupport',
+  'PlatformHEVCDecoderSupport',
+].join(',');
+app.commandLine.appendSwitch('enable-features', enabledFeatures);
 
 // Additional WebRTC flags to resolve SDP codec collision issues
 app.commandLine.appendSwitch(
-  '--force-fieldtrials',
+  'force-fieldtrials',
   'WebRTC-Audio-MinimizeResamplingOnMobile/Enabled/'
 );
 app.commandLine.appendSwitch(
-  '--force-fieldtrials',
+  'force-fieldtrials',
   'WebRTC-Video-QualityScaling/Enabled/'
 );
 app.commandLine.appendSwitch(
-  '--force-fieldtrials',
+  'force-fieldtrials',
   'WebRTC-Audio-OpusMaxAverageBitrate/Enabled/'
 );
-app.commandLine.appendSwitch('--webrtc-max-cpu-consumption-percentage', '80');
-app.commandLine.appendSwitch('--webrtc-cpu-overuse-detection', 'false');
+app.commandLine.appendSwitch('webrtc-max-cpu-consumption-percentage', '80');
+app.commandLine.appendSwitch('webrtc-cpu-overuse-detection', 'false');
 
 // Additional performance optimizations for streaming
-app.commandLine.appendSwitch('--disable-background-timer-throttling');
-app.commandLine.appendSwitch('--disable-backgrounding-occluded-windows');
-app.commandLine.appendSwitch('--disable-renderer-backgrounding');
-app.commandLine.appendSwitch('--disable-features', 'TranslateUI');
-app.commandLine.appendSwitch('--disable-ipc-flooding-protection');
-app.commandLine.appendSwitch('--max-active-webgl-contexts', '16');
+app.commandLine.appendSwitch('disable-background-timer-throttling');
+app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
+app.commandLine.appendSwitch('disable-features', 'TranslateUI');
+app.commandLine.appendSwitch('disable-ipc-flooding-protection');
+app.commandLine.appendSwitch('max-active-webgl-contexts', '16');
 
 // Memory and performance flags
-app.commandLine.appendSwitch('--js-flags', '--max-old-space-size=6196');
-app.commandLine.appendSwitch('--disable-dev-shm-usage');
+app.commandLine.appendSwitch('js-flags', '--max-old-space-size=6196');
+app.commandLine.appendSwitch('disable-dev-shm-usage');
 
 import 'agora-electron-sdk/js/Private/ipc/main.js';
 import { askMediaAccess } from './utils/permissionUtil';
@@ -132,7 +145,6 @@ app.on('ready', async () => {
     await askMediaAccess(['screen', 'microphone', 'camera']);
     createMainWindow();
     createMenu();
-
     process.title = 'Astra-Main';
     // Set up automatic process naming for Electron processes
     setupAutomaticProcessNaming();
