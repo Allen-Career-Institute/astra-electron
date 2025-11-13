@@ -64,6 +64,8 @@ import { createMainWindow } from './modules/windowManager';
 import { setupAutomaticProcessNaming } from './modules/processMonitor';
 
 // https://peter.sh/experiments/chromium-command-line-switches/
+// Incase of any issues, please use chrome://version in the browser to check the flags in commandline
+//  and compare with the ones you are using here.
 
 // GPU Hardware Acceleration flags
 app.commandLine.appendArgument('--ignore-gpu-blocklist');
@@ -128,18 +130,18 @@ app.commandLine.appendSwitch('webrtc-max-cpu-consumption-percentage', '80');
 app.commandLine.appendArgument('--webrtc-cpu-overuse-detection');
 
 // Additional performance optimizations for streaming
-app.commandLine.appendSwitch('disable-background-timer-throttling', 'true');
-app.commandLine.appendSwitch('disable-backgrounding-occluded-windows', 'true');
+app.commandLine.appendArgument('--disable-background-timer-throttling');
+app.commandLine.appendArgument('--disable-backgrounding-occluded-windows');
 app.commandLine.appendSwitch(
   'disable-features',
-  'WebRtcAllowInputVolumeAdjustment,TranslateUI'
+  'WebRtcAllowInputVolumeAdjustment'
 );
-app.commandLine.appendSwitch('disable-ipc-flooding-protection', 'true');
+app.commandLine.appendArgument('--disable-ipc-flooding-protection');
 app.commandLine.appendSwitch('max-active-webgl-contexts', '16');
 
 // Memory and performance flags
 app.commandLine.appendSwitch('js-flags', '--max-old-space-size=6196');
-app.commandLine.appendSwitch('disable-dev-shm-usage', 'true');
+app.commandLine.appendArgument('--disable-dev-shm-usage');
 
 import 'agora-electron-sdk/js/Private/ipc/main.js';
 import { askMediaAccess } from './utils/permissionUtil';
