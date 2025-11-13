@@ -66,31 +66,36 @@ import { setupAutomaticProcessNaming } from './modules/processMonitor';
 // https://peter.sh/experiments/chromium-command-line-switches/
 
 // GPU Hardware Acceleration flags
-app.commandLine.appendSwitch('ignore-gpu-blocklist');
-app.commandLine.appendSwitch('enable-gpu-rasterization');
-app.commandLine.appendSwitch('enable-zero-copy');
-app.commandLine.appendSwitch('enable-accelerated-video-decode');
-app.commandLine.appendSwitch('enable-accelerated-video-encode');
-app.commandLine.appendSwitch('enable-accelerated-2d-canvas');
-app.commandLine.appendSwitch('enable-native-gpu-memory-buffers');
-app.commandLine.appendSwitch('enable-hardware-overlays');
-app.commandLine.appendSwitch('enable-webcodecs');
-app.commandLine.appendSwitch('enable-webrtc');
+app.commandLine.appendArgument('--ignore-gpu-blocklist');
+app.commandLine.appendArgument('--enable-gpu-rasterization');
+app.commandLine.appendArgument('--enable-gpu-service-logging');
+app.commandLine.appendArgument('--enable-webgpu-developer-features');
+app.commandLine.appendArgument('--enable-zero-copy');
+app.commandLine.appendArgument('--enable-accelerated-video-decode');
+app.commandLine.appendArgument('--enable-accelerated-video-encode');
+app.commandLine.appendArgument('--enable-accelerated-2d-canvas');
+app.commandLine.appendArgument('--enable-native-gpu-memory-buffers');
+app.commandLine.appendArgument('--enable-hardware-overlays');
+app.commandLine.appendArgument('--enable-webcodecs');
+app.commandLine.appendArgument('--enable-webrtc');
 
 // Enable screen sharing permissions
-app.commandLine.appendSwitch('enable-usermedia-screen-capturing');
-app.commandLine.appendSwitch('allow-running-insecure-content');
-app.commandLine.appendSwitch('disable-web-security');
-app.commandLine.appendSwitch('disable-renderer-backgrounding');
-app.commandLine.appendSwitch('force_high_performance_gpu');
-app.commandLine.appendSwitch('disable-volume-adjust-sound');
-app.commandLine.appendSwitch('enable-experimental-web-platform-features');
+app.commandLine.appendArgument('--enable-usermedia-screen-capturing');
+app.commandLine.appendArgument('--allow-running-insecure-content');
+app.commandLine.appendArgument('--disable-web-security');
+app.commandLine.appendArgument('--disable-renderer-backgrounding');
+app.commandLine.appendArgument('--force_high_performance_gpu');
+app.commandLine.appendArgument('--disable-volume-adjust-sound');
+app.commandLine.appendArgument(
+  '--disable-webrtc-allow-input-volume-adjustment'
+);
+app.commandLine.appendArgument('--enable-experimental-web-platform-features');
 
 // Enable features with proper comma-separated values
 const enabledFeatures = [
+  'WebNNCoreMLExplicitGPUOrNPU',
   'GetDisplayMedia',
   'WebRTC',
-  'Vulkan',
   'WebCodecs',
   'VaapiVideoEncoder',
   'VaapiVideoDecoder',
@@ -120,19 +125,21 @@ app.commandLine.appendSwitch(
   'WebRTC-Audio-OpusMaxAverageBitrate/Enabled/'
 );
 app.commandLine.appendSwitch('webrtc-max-cpu-consumption-percentage', '80');
-app.commandLine.appendSwitch('webrtc-cpu-overuse-detection', 'false');
+app.commandLine.appendArgument('--webrtc-cpu-overuse-detection');
 
 // Additional performance optimizations for streaming
-app.commandLine.appendSwitch('disable-background-timer-throttling');
-app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
-app.commandLine.appendSwitch('disable-renderer-backgrounding');
-app.commandLine.appendSwitch('disable-features', 'TranslateUI');
-app.commandLine.appendSwitch('disable-ipc-flooding-protection');
+app.commandLine.appendSwitch('disable-background-timer-throttling', 'true');
+app.commandLine.appendSwitch('disable-backgrounding-occluded-windows', 'true');
+app.commandLine.appendSwitch(
+  'disable-features',
+  'WebRtcAllowInputVolumeAdjustment,TranslateUI'
+);
+app.commandLine.appendSwitch('disable-ipc-flooding-protection', 'true');
 app.commandLine.appendSwitch('max-active-webgl-contexts', '16');
 
 // Memory and performance flags
 app.commandLine.appendSwitch('js-flags', '--max-old-space-size=6196');
-app.commandLine.appendSwitch('disable-dev-shm-usage');
+app.commandLine.appendSwitch('disable-dev-shm-usage', 'true');
 
 import 'agora-electron-sdk/js/Private/ipc/main.js';
 import { askMediaAccess } from './utils/permissionUtil';
