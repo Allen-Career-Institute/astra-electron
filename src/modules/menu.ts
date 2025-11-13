@@ -13,8 +13,22 @@ const openChromeInternalUrl = (url: string) => {
   const debugWindow = new BrowserWindow({
     width: 1200,
     height: 800,
-    fullscreen: true,
+    fullscreen: false,
     show: true,
+    closable: true,
+    maximizable: true,
+    minimizable: true,
+    resizable: true,
+    frame: true,
+    thickFrame: true,
+    hasShadow: true,
+    alwaysOnTop: true, // Keep on top of main window
+    skipTaskbar: false,
+    autoHideMenuBar: true,
+    transparent: false,
+    titleBarStyle: 'default',
+    movable: true,
+    focusable: true,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: true,
@@ -73,9 +87,6 @@ const showChromeFlagsDialog = () => {
     flagsMessage += `Electron Version: ${process.versions.electron}\n`;
     flagsMessage += `Node Version: ${process.versions.node}\n`;
     flagsMessage += `V8 Version: ${process.versions.v8}`;
-
-    flagsMessage += '\n\n=== Command Line ===\n';
-    flagsMessage += process.argv.join('\n');
 
     dialog.showMessageBox(mainWindow, {
       type: 'info',

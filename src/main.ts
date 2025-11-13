@@ -95,6 +95,7 @@ app.commandLine.appendArgument('--enable-experimental-web-platform-features');
 
 // Enable features with proper comma-separated values
 const enabledFeatures = [
+  'TreesInViz',
   'WebNNCoreMLExplicitGPUOrNPU',
   'GetDisplayMedia',
   'WebRTC',
