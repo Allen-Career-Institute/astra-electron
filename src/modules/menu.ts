@@ -52,17 +52,9 @@ const showChromeFlagsDialog = () => {
 
     // Build flags status message
     let flagsMessage = '\n\n=== Command Line Switches ===\n';
-    const hasFlags = commandLineSwitches
-      .filter(flag => {
-        app.commandLine.hasSwitch(flag);
-        console.log(
-          `${flag}: ${app.commandLine.getSwitchValue(flag) || 'N/A'}`
-        );
-        return true;
-      })
-      .map(
-        flag => `${flag}: ${app.commandLine.getSwitchValue(flag) || 'enabled'}`
-      );
+    const hasFlags = commandLineSwitches.map(
+      flag => `${flag}: ${app.commandLine.getSwitchValue(flag) || 'enabled'}`
+    );
 
     if (hasFlags.length > 0) {
       flagsMessage += hasFlags.join('\n');
