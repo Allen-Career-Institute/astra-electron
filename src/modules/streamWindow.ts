@@ -149,7 +149,7 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
         experimentalFeatures: true,
         // Enable WebRTC features
         enableBlinkFeatures:
-          'WebCodecs,WebRTC,GetDisplayMedia,ScreenCaptureKit,DesktopCaptureKit,WebRTCPipeWireCapturer,MediaCapture,ScreenCapture',
+          'WebCodecs,WebRTC,GetDisplayMedia,ScreenCaptureKit,DesktopCaptureKit,WebRTCPipeWireCapturer,MediaCapture,ScreenCapture,MediaCapabilities,HardwareMediaKeyHandling,PlatformHEVCEncoderSupport,PlatformHEVCDecoderSupport',
         // Use shared session for localStorage/cookies persistence
         session: getSharedSession(),
       },

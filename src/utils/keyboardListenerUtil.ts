@@ -35,7 +35,7 @@ const addKeyboardListenerUtil = (window: BrowserWindow) => {
 
 const registerZoomShortcut = () => {
   if (process.platform === 'darwin') {
-    globalShortcut.register('Cmd++', () => {
+    globalShortcut.register('Cmd+P', () => {
       const mainWindow = getMainWindow();
       if (mainWindow && !mainWindow.isDestroyed()) {
         const zoomLevel = mainWindow.webContents.getZoomLevel();
