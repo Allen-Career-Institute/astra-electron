@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, clipboard, nativeImage } from 'electron';
 import { MainElectronAPI } from './types/preload';
 import { getAppVersion } from './modules/config';
 
@@ -84,6 +84,20 @@ contextBridge.exposeInMainWorld('electronAPI', {
         type: 'ERROR',
         error: error instanceof Error ? error.message : 'Unknown error',
       };
+    }
+  },
+  writeImageToClipboard: async (dataUrl: string): Promise<boolean> => {
+    try {
+      // Create a native image from the base64 data
+      const image = nativeImage.createFromDataURL(dataUrl);
+
+      // Write to clipboard
+      clipboard.writeImage(image);
+
+      return true;
+    } catch (error) {
+      console.error('Failed to write image to clipboard:', error);
+      return false;
     }
   },
   getDesktopSources: async (options: any) => {
