@@ -388,6 +388,13 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
     }
   });
 
+  ipcMain.handle('electron-tracks-published', async event => {
+    const mainWindow = getMainWindow();
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('electron-tracks-published-success');
+    }
+  });
+
   ipcMain.handle('get-screen-share-config', async event => {
     try {
       const config = getScreenShareWindowConfig();
