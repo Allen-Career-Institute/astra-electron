@@ -70,7 +70,6 @@ import { setupAutomaticProcessNaming } from './modules/processMonitor';
 // GPU Hardware Acceleration flags
 app.commandLine.appendArgument('--ignore-gpu-blocklist');
 app.commandLine.appendArgument('--enable-gpu-rasterization');
-app.commandLine.appendArgument('--enable-gpu-service-logging');
 app.commandLine.appendArgument('--enable-webgpu-developer-features');
 app.commandLine.appendArgument('--enable-zero-copy');
 app.commandLine.appendArgument('--enable-accelerated-video-decode');
