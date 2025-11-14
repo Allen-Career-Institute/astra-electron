@@ -161,6 +161,8 @@ try {
     onStreamControl: (callback: (event: any, ...args: any[]) => void): void => {
       ipcRenderer.on('stream-control', callback);
     },
+    onElectronTracksPublished: (): Promise<any> =>
+      ipcRenderer.invoke('electron-tracks-published'),
     onCleanupResources: (
       callback: (event: any, ...args: any[]) => void
     ): void => {

@@ -20,6 +20,20 @@ export interface MainElectronAPI extends BaseElectronAPI {
   logout: () => void;
   getDesktopSources: (options: any) => Promise<any>;
   onMetrics: (callback: (event: any, metrics: any) => void) => void;
+  writeImageToClipboard: (dataUrl: string) => Promise<boolean>;
+  getAppVersion: () => string;
+  onElectronScreenShareWindowClosed: (
+    callback: (event: any, ...args: any[]) => void
+  ) => void;
+  onElectronScreenShareWindowOpened: (
+    callback: (event: any, ...args: any[]) => void
+  ) => void;
+  onElectronLogEvent: (
+    callback: (event: any, eventName: string, eventData: any) => void
+  ) => void;
+  onElectronTracksPublishedSuccess: (
+    callback: (event: any, ...args: any[]) => void
+  ) => void;
 }
 
 export interface StreamElectronAPI extends BaseElectronAPI {}
