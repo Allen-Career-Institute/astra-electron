@@ -64,7 +64,7 @@ function setupCleanupHandlers(): void {
 }
 
 /**
- * Clean up recording folders older than 3 days
+ * Clean up recording folders older than 30 minutes (0.5 hours)
  * Runs as a separate process and gets closed once done
  */
 function cleanupOldRecordings(): void {
@@ -191,7 +191,7 @@ const path = require('path');
 const os = require('os');
 
 /**
- * Clean up recording folders older than 3 days
+ * Clean up recording folders older than 30 minutes (0.5 hours)
  */
 function cleanupOldRecordings() {
   try {
@@ -226,15 +226,20 @@ function cleanupOldRecordings() {
       
       try {
         const stats = fs.statSync(meetingPath);
-        const folderAge = currentTime - stats.mtime.getTime();
+        // Use birthtime (creation time) instead of mtime (modification time)
+        // This ensures folders are cleaned up based on when they were created,
+        // not when they were last modified (which can be updated by ongoing writes)
+        const creationTime = stats.birthtime.getTime();
+        const folderAge = currentTime - creationTime;
         
-        // Check if folder is older than 3 days
+        // Check if folder is older than the expiry time (0.5 hour)
         if (folderAge > expiryTime) {
           // Remove the entire meeting folder and all its contents
           fs.rmSync(meetingPath, { recursive: true, force: true });
           
           cleanedCount++;
-          console.log(\`Cleaned up old recording folder: \${meetingFolder} (age: \${Math.round(folderAge / (24 * 60 * 60 * 1000))} days)\`);
+          const ageInMinutes = Math.round(folderAge / (60 * 1000));
+          console.log(\`Cleaned up old recording folder: \${meetingFolder} (age: \${ageInMinutes} minutes)\`);
         }
       } catch (error) {
         console.error(\`Error processing meeting folder \${meetingFolder}:\`, error);
@@ -291,10 +296,10 @@ function triggerManualCleanup(): void {
 }
 
 /**
- * Set up periodic cleanup of old recordings (every 24 hours)
+ * Set up periodic cleanup of old recordings (every 10 minutes)
  */
 function setupPeriodicCleanup(): void {
-  // Clean up every 24 hours (24 * 60 * 60 * 1000 milliseconds)
+  // Clean up every 10 minutes (10 * 60 * 1000 milliseconds)
   const cleanupInterval = 10 * 60 * 1000;
 
   setInterval(() => {
@@ -306,7 +311,7 @@ function setupPeriodicCleanup(): void {
     }
   }, cleanupInterval);
 
-  console.log('Periodic recording cleanup scheduled (every 24 hours)');
+  console.log('Periodic recording cleanup scheduled (every 10 minutes)');
 }
 
 export {
