@@ -212,7 +212,7 @@ function cleanupOldRecordings() {
     }
 
     const currentTime = Date.now();
-    const fiveDaysInMs = 3 * 24 * 60 * 60 * 1000; // 3 days in milliseconds
+    const expiryTime =  0.5 * 60 * 60 * 1000; // 0.5 hour
     
     // Read all meeting folders in recordings directory
     const meetingFolders = fs.readdirSync(recordingsDir, { withFileTypes: true })
@@ -229,7 +229,7 @@ function cleanupOldRecordings() {
         const folderAge = currentTime - stats.mtime.getTime();
         
         // Check if folder is older than 3 days
-        if (folderAge > fiveDaysInMs) {
+        if (folderAge > expiryTime) {
           // Remove the entire meeting folder and all its contents
           fs.rmSync(meetingPath, { recursive: true, force: true });
           
@@ -295,7 +295,7 @@ function triggerManualCleanup(): void {
  */
 function setupPeriodicCleanup(): void {
   // Clean up every 24 hours (24 * 60 * 60 * 1000 milliseconds)
-  const cleanupInterval = 24 * 60 * 60 * 1000;
+  const cleanupInterval = 10 * 60 * 1000;
 
   setInterval(() => {
     try {
