@@ -26,7 +26,6 @@
     "!**/coverage/**",
     "!**/docs/**",
     "!**/examples/**",
-    "!**/scripts/**",
     "!**/build/**",
     "!**/out/**",
     "!**/node_modules/**",
