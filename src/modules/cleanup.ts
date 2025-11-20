@@ -85,6 +85,11 @@ function cleanupOldRecordings(): void {
       'cleanup-task.js'
     );
 
+    Sentry.addBreadcrumb({
+      message: `[Cleanup Process] Cleanup script path: ${cleanupScriptPath}`,
+      level: 'log',
+    });
+
     // Check if the script exists
     if (!fs.existsSync(cleanupScriptPath)) {
       Sentry.captureException(
@@ -155,12 +160,14 @@ function cleanupOldRecordings(): void {
     cleanupProcess.on('error', error => {
       clearTimeout(timeout);
       console.error('[Cleanup Process] Failed to start:', error);
+      Sentry.captureException(error);
       isCleanupRunning = false;
     });
 
     // Unref the process so it doesn't keep the main process alive
     cleanupProcess.unref();
   } catch (error) {
+    Sentry.captureException(error);
     console.error('[Cleanup Process] Error starting cleanup process:', error);
     isCleanupRunning = false;
   }
