@@ -110,9 +110,10 @@ function cleanupOldRecordings(): void {
 
     // Spawn a separate Node.js process for cleanup
     // Use process.execPath instead of 'node' to work in packaged apps (Windows/Mac/Linux)
+    // Use 'ignore' for stdio since this is a detached background task
     const cleanupProcess = spawn(process.execPath, [cleanupScriptPath], {
       detached: true,
-      stdio: 'pipe',
+      stdio: 'ignore', // Prevents EPIPE errors when process is detached and unref'd
     });
 
     // Set a timeout to kill the process if it takes too long (5 minutes)
@@ -127,18 +128,8 @@ function cleanupOldRecordings(): void {
       5 * 60 * 1000
     );
 
-    // Handle process output
-    cleanupProcess.stdout?.on('data', data => {
-      console.log(`[Cleanup Process] ${data.toString().trim()}`);
-    });
-
-    cleanupProcess.stderr?.on('data', data => {
-      console.error(`[Cleanup Process Error] ${data.toString().trim()}`);
-      Sentry.addBreadcrumb({
-        message: `[Cleanup Process Error] ${data.toString().trim()}`,
-        level: 'log',
-      });
-    });
+    // Note: stdio is set to 'ignore', so we don't capture stdout/stderr
+    // This prevents EPIPE errors with detached processes
 
     // Handle process completion (process will exit automatically)
     cleanupProcess.on('close', (code: number | null) => {
