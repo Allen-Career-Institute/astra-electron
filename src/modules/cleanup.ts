@@ -212,7 +212,7 @@ function cleanupOldRecordings() {
     }
 
     const currentTime = Date.now();
-    const expiryTime =  0.5 * 60 * 60 * 1000; // 0.5 hour
+    const expiryTime =  10 * 60 * 1000; // 10 minutes
     
     // Read all meeting folders in recordings directory
     const meetingFolders = fs.readdirSync(recordingsDir, { withFileTypes: true })
@@ -299,8 +299,8 @@ function triggerManualCleanup(): void {
  * Set up periodic cleanup of old recordings (every 10 minutes)
  */
 function setupPeriodicCleanup(): void {
-  // Clean up every 10 minutes (10 * 60 * 1000 milliseconds)
-  const cleanupInterval = 10 * 60 * 1000;
+  // Clean up every 0.5 minutes (10 * 60 * 1000 milliseconds)
+  const cleanupInterval = 0.5 * 60 * 1000; // 0.5 minutes
 
   setInterval(() => {
     try {
