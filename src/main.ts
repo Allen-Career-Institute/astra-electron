@@ -162,8 +162,7 @@ app.on('ready', async () => {
     try {
       cleanupOldRecordings();
     } catch (cleanupError) {
-      console.error('Failed to cleanup old recordings:', cleanupError);
-      // Continue with app initialization even if cleanup fails
+      Sentry.captureException(cleanupError);
     }
 
     // Set up periodic cleanup of old recordings

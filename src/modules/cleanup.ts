@@ -64,8 +64,8 @@ function setupCleanupHandlers(): void {
 }
 
 /**
- * Clean up recording folders older than 30 minutes (0.5 hours)
- * Runs as a separate process and gets closed once done
+ * Clean up recording folders older than 10 minutes
+ * Runs as a separate process that automatically exits when done
  */
 function cleanupOldRecordings(): void {
   // Check if cleanup is already running
@@ -77,20 +77,32 @@ function cleanupOldRecordings(): void {
   try {
     isCleanupRunning = true;
 
-    // Get the path to the cleanup script
-    // Use dist directory for production, src for development
-    const isProduction = !isDev();
-    const baseDir = isProduction ? path.join(__dirname, '..') : __dirname;
-    const cleanupScriptPath = path.join(baseDir, 'cleanup-worker.js');
+    // Get the path to the cleanup task script (always in dist/scripts after build)
+    const cleanupScriptPath = path.join(
+      __dirname,
+      '..',
+      'scripts',
+      'cleanup-task.js'
+    );
 
-    // Create the cleanup worker script if it doesn't exist
-    createCleanupWorkerScript(cleanupScriptPath);
+    // Check if the script exists
+    if (!fs.existsSync(cleanupScriptPath)) {
+      console.error(
+        '[Cleanup Process] Cleanup script not found:',
+        cleanupScriptPath
+      );
+      isCleanupRunning = false;
+      return;
+    }
 
-    // Spawn a separate process for cleanup
+    console.log(
+      '[Cleanup Process] Starting cleanup task in separate process...'
+    );
+
+    // Spawn a separate Node.js process for cleanup
     const cleanupProcess = spawn('node', [cleanupScriptPath], {
-      detached: true, // Detach from parent process
-      stdio: 'pipe', // Pipe stdio for logging
-      cwd: process.cwd(),
+      detached: true,
+      stdio: 'pipe',
     });
 
     // Set a timeout to kill the process if it takes too long (5 minutes)
@@ -99,22 +111,11 @@ function cleanupOldRecordings(): void {
         if (!cleanupProcess.killed) {
           console.warn('[Cleanup Process] Timeout reached, killing process');
           cleanupProcess.kill('SIGTERM');
-
-          // Clean up the worker script on timeout
-          try {
-            if (fs.existsSync(cleanupScriptPath)) {
-              fs.unlinkSync(cleanupScriptPath);
-            }
-          } catch (error) {
-            console.error('Failed to cleanup worker script on timeout:', error);
-          }
         }
-
-        // Reset running state
         isCleanupRunning = false;
       },
       5 * 60 * 1000
-    ); // 5 minutes
+    );
 
     // Handle process output
     cleanupProcess.stdout?.on('data', data => {
@@ -125,195 +126,55 @@ function cleanupOldRecordings(): void {
       console.error(`[Cleanup Process Error] ${data.toString().trim()}`);
     });
 
-    // Handle process completion
-    cleanupProcess.on('close', (code: number) => {
-      // Clear the timeout since process completed
+    // Handle process completion (process will exit automatically)
+    cleanupProcess.on('close', (code: number | null) => {
       clearTimeout(timeout);
 
       if (code === 0) {
-        console.log('[Cleanup Process] Completed successfully');
+        console.log('[Cleanup Process] Completed successfully and exited');
       } else {
         console.error(`[Cleanup Process] Exited with code ${code}`);
       }
 
-      // Clean up the worker script
-      try {
-        if (fs.existsSync(cleanupScriptPath)) {
-          fs.unlinkSync(cleanupScriptPath);
-        }
-      } catch (error) {
-        console.error('Failed to cleanup worker script:', error);
-      }
-
-      // Reset running state
       isCleanupRunning = false;
     });
 
     // Handle process errors
     cleanupProcess.on('error', error => {
-      // Clear the timeout since process failed
       clearTimeout(timeout);
-
       console.error('[Cleanup Process] Failed to start:', error);
-
-      // Clean up the worker script on error
-      try {
-        if (fs.existsSync(cleanupScriptPath)) {
-          fs.unlinkSync(cleanupScriptPath);
-        }
-      } catch (cleanupError) {
-        console.error('Failed to cleanup worker script:', error);
-      }
-
-      // Reset running state
       isCleanupRunning = false;
     });
 
     // Unref the process so it doesn't keep the main process alive
     cleanupProcess.unref();
-
-    console.log('[Cleanup Process] Started cleanup in separate process');
   } catch (error) {
-    console.error('Error starting cleanup process:', error);
-    // Reset running state on error
+    console.error('[Cleanup Process] Error starting cleanup process:', error);
     isCleanupRunning = false;
   }
 }
 
 /**
- * Create the cleanup worker script
- */
-function createCleanupWorkerScript(scriptPath: string): void {
-  try {
-    const workerScript = `
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
-
-/**
- * Clean up recording folders older than 30 minutes (0.5 hours)
- */
-function cleanupOldRecordings() {
-  try {
-    // Get user data path (equivalent to app.getPath('userData'))
-    let userDataPath = path.join(os.homedir(), '.config', 'astra-electron');
-    
-    // For Windows, use the correct path
-    if (process.platform === 'win32') {
-      userDataPath = path.join(os.homedir(), 'AppData', 'Roaming', 'astra-electron');
-    } else if (process.platform === 'darwin') {
-      userDataPath = path.join(os.homedir(), 'Library', 'Application Support', 'astra-electron');
-    }
-    
-    const recordingsDir = path.join(userDataPath, 'recordings');
-    
-    // Check if recordings directory exists
-    if (!fs.existsSync(recordingsDir)) {
-      console.log('Recordings directory does not exist, skipping cleanup');
-      return;
-    }
-
-    const currentTime = Date.now();
-    const expiryTime =  10 * 60 * 1000; // 10 minutes
-    
-    // Read all meeting folders in recordings directory
-    const meetingFolders = fs.readdirSync(recordingsDir, { withFileTypes: true })
-      .filter(dirent => dirent.isDirectory())
-      .map(dirent => dirent.name);
-
-    let cleanedCount = 0;
-
-    for (const meetingFolder of meetingFolders) {
-      const meetingPath = path.join(recordingsDir, meetingFolder);
-      
-      try {
-        const stats = fs.statSync(meetingPath);
-        // Use birthtime (creation time) instead of mtime (modification time)
-        // This ensures folders are cleaned up based on when they were created,
-        // not when they were last modified (which can be updated by ongoing writes)
-        const creationTime = stats.birthtime.getTime();
-        const folderAge = currentTime - creationTime;
-        
-        // Check if folder is older than the expiry time (0.5 hour)
-        if (folderAge > expiryTime) {
-          // Remove the entire meeting folder and all its contents
-          fs.rmSync(meetingPath, { recursive: true, force: true });
-          
-          cleanedCount++;
-          const ageInMinutes = Math.round(folderAge / (60 * 1000));
-          console.log(\`Cleaned up old recording folder: \${meetingFolder} (age: \${ageInMinutes} minutes)\`);
-        }
-      } catch (error) {
-        console.error(\`Error processing meeting folder \${meetingFolder}:\`, error);
-      }
-    }
-
-    if (cleanedCount > 0) {
-      console.log(\`Recording cleanup completed: \${cleanedCount} folders removed\`);
-    } else {
-      console.log('No old recording folders found to clean up');
-    }
-  } catch (error) {
-    console.error('Error during recording cleanup:', error);
-    process.exit(1);
-  }
-}
-
-
-
-
-
-// Run cleanup and exit
-cleanupOldRecordings();
-process.exit(0);
-`;
-
-    fs.writeFileSync(scriptPath, workerScript);
-  } catch (error) {
-    console.error('Failed to create cleanup worker script:', error);
-    throw error;
-  }
-}
-
-/**
- * Check if cleanup is currently running
- */
-function isCleanupInProgress(): boolean {
-  return isCleanupRunning;
-}
-
-/**
- * Manually trigger cleanup (useful for testing or manual cleanup)
- */
-function triggerManualCleanup(): void {
-  if (isCleanupRunning) {
-    console.log(
-      '[Cleanup Process] Cleanup already in progress, cannot trigger manual cleanup'
-    );
-    return;
-  }
-
-  console.log('[Cleanup Process] Manual cleanup triggered');
-  cleanupOldRecordings();
-}
-
-/**
  * Set up periodic cleanup of old recordings (every 10 minutes)
+ * Each cleanup runs as a separate process that automatically exits when done
  */
 function setupPeriodicCleanup(): void {
-  // Clean up every 0.5 minutes (10 * 60 * 1000 milliseconds)
-  const cleanupInterval = 0.5 * 60 * 1000; // 0.5 minutes
+  const cleanupInterval = 1 * 60 * 1000; // 1 minutes
+  // const cleanupInterval = 30 * 60 * 1000; // 30 minutes
 
+  // Schedule periodic cleanup
   setInterval(() => {
     try {
-      console.log('Running periodic recording cleanup...');
+      console.log('[Cleanup Scheduler] Running periodic recording cleanup...');
       cleanupOldRecordings();
     } catch (error) {
-      console.error('Error during periodic cleanup:', error);
+      Sentry.captureException(error);
     }
   }, cleanupInterval);
 
-  console.log('Periodic recording cleanup scheduled (every 10 minutes)');
+  console.log(
+    `[Cleanup Scheduler] Periodic recording cleanup scheduled (every ${cleanupInterval / 60000} minutes)`
+  );
 }
 
 export {
@@ -323,7 +184,5 @@ export {
   setupCleanupHandlers,
   cleanupOldRecordings,
   setupPeriodicCleanup,
-  isCleanupInProgress,
-  triggerManualCleanup,
   cleanupNonMainWindow,
 };
