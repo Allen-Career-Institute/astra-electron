@@ -87,6 +87,11 @@ function cleanupOldRecordings(): void {
 
     // Check if the script exists
     if (!fs.existsSync(cleanupScriptPath)) {
+      Sentry.captureException(
+        new Error(
+          `[Cleanup Process] Cleanup script not found: ${cleanupScriptPath}`
+        )
+      );
       console.error(
         '[Cleanup Process] Cleanup script not found:',
         cleanupScriptPath
