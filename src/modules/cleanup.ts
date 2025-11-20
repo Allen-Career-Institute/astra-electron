@@ -109,7 +109,8 @@ function cleanupOldRecordings(): void {
     );
 
     // Spawn a separate Node.js process for cleanup
-    const cleanupProcess = spawn('node', [cleanupScriptPath], {
+    // Use process.execPath instead of 'node' to work in packaged apps (Windows/Mac/Linux)
+    const cleanupProcess = spawn(process.execPath, [cleanupScriptPath], {
       detached: true,
       stdio: 'pipe',
     });
