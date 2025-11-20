@@ -1,6 +1,6 @@
 {
   "name": "astra-electron",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Astra Electron App with WebView and Video Streaming",
   "main": "dist/main.js",
   "packageManager": "yarn@4.9.2",
