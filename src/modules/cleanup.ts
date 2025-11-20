@@ -124,6 +124,10 @@ function cleanupOldRecordings(): void {
 
     cleanupProcess.stderr?.on('data', data => {
       console.error(`[Cleanup Process Error] ${data.toString().trim()}`);
+      Sentry.addBreadcrumb({
+        message: `[Cleanup Process Error] ${data.toString().trim()}`,
+        level: 'log',
+      });
     });
 
     // Handle process completion (process will exit automatically)
@@ -134,6 +138,9 @@ function cleanupOldRecordings(): void {
         console.log('[Cleanup Process] Completed successfully and exited');
       } else {
         console.error(`[Cleanup Process] Exited with code ${code}`);
+        Sentry.captureException(
+          new Error(`[Cleanup Process] Exited with code ${code}`)
+        );
       }
 
       isCleanupRunning = false;
