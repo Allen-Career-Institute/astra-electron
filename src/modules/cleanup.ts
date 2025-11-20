@@ -198,8 +198,10 @@ function cleanupOldRecordings() {
     // Get user data path (equivalent to app.getPath('userData'))
     let userDataPath = path.join(os.homedir(), '.config', 'astra-electron');
     
-    // For macOS, use the correct path
-    if (process.platform === 'darwin') {
+    // For Windows, use the correct path
+    if (process.platform === 'win32') {
+      userDataPath = path.join(os.homedir(), 'AppData', 'Roaming', 'astra-electron');
+    } else if (process.platform === 'darwin') {
       userDataPath = path.join(os.homedir(), 'Library', 'Application Support', 'astra-electron');
     }
     
