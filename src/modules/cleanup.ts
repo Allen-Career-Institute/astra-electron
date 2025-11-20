@@ -80,7 +80,6 @@ function cleanupOldRecordings(): void {
     // Get the path to the cleanup task script (always in dist/scripts after build)
     const cleanupScriptPath = path.join(
       __dirname,
-      '..',
       'scripts',
       'cleanup-task.js'
     );
