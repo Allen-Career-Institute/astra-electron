@@ -42,9 +42,6 @@ function cleanupOldRecordings(): void {
   try {
     const userDataPath = getUserDataPath();
     let recordingsDir = path.join(userDataPath, 'recordings');
-    if (recordingsDir.includes('astra-electron')) {
-      recordingsDir = recordingsDir.replace('astra-electron', 'Electron');
-    }
     console.log('[Cleanup Task] Recordings directory:', recordingsDir);
     // Check if recordings directory exists
     if (!fs.existsSync(recordingsDir)) {
