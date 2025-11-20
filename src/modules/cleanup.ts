@@ -5,7 +5,7 @@ import { safeClosewhiteboardWindow } from './whiteboard-window';
 import { isDev } from './config';
 import * as fs from 'fs';
 import * as path from 'path';
-import { spawn } from 'child_process';
+import { fork } from 'child_process';
 import { stopProcessMonitoring } from './processMonitor';
 import * as Sentry from '@sentry/electron/main';
 import { rollingMergeManager } from './rollingMergeManager';
@@ -65,7 +65,7 @@ function setupCleanupHandlers(): void {
 
 /**
  * Clean up recording folders older than 10 minutes
- * Runs as a separate process that automatically exits when done
+ * Runs as a separate Node.js child process using fork()
  */
 function cleanupOldRecordings(): void {
   // Check if cleanup is already running
@@ -77,17 +77,16 @@ function cleanupOldRecordings(): void {
   try {
     isCleanupRunning = true;
 
-    // Get the path to the cleanup task script (always in dist/scripts after build)
-    const cleanupScriptPath = path.join(
-      __dirname,
-      'scripts',
-      'cleanup-task.js'
-    );
+    // Get the path to the cleanup task script (in dist/scripts after build)
+    const cleanupScriptPath = isDev()
+      ? path.join(__dirname, '..', 'scripts', 'cleanup-task.js')
+      : path.join(__dirname, 'scripts', 'cleanup-task.js');
 
     Sentry.addBreadcrumb({
       message: `[Cleanup Process] Cleanup script path: ${cleanupScriptPath}`,
       level: 'log',
     });
+    console.log(`[Cleanup Process] Cleanup script path: ${cleanupScriptPath}`);
 
     // Check if the script exists
     if (!fs.existsSync(cleanupScriptPath)) {
@@ -108,12 +107,12 @@ function cleanupOldRecordings(): void {
       '[Cleanup Process] Starting cleanup task in separate process...'
     );
 
-    // Spawn a separate Node.js process for cleanup
-    // Use process.execPath instead of 'node' to work in packaged apps (Windows/Mac/Linux)
-    // Use 'ignore' for stdio since this is a detached background task
-    const cleanupProcess = spawn(process.execPath, [cleanupScriptPath], {
+    // Use fork() instead of spawn() for Node.js scripts
+    // fork() properly handles Node.js execution in both dev and packaged apps
+    const cleanupProcess = fork(cleanupScriptPath, [], {
       detached: true,
       stdio: 'ignore', // Prevents EPIPE errors when process is detached and unref'd
+      // fork() automatically uses the correct Node.js executable
     });
 
     // Set a timeout to kill the process if it takes too long (5 minutes)
@@ -127,9 +126,6 @@ function cleanupOldRecordings(): void {
       },
       5 * 60 * 1000
     );
-
-    // Note: stdio is set to 'ignore', so we don't capture stdout/stderr
-    // This prevents EPIPE errors with detached processes
 
     // Handle process completion (process will exit automatically)
     cleanupProcess.on('close', (code: number | null) => {
@@ -165,11 +161,11 @@ function cleanupOldRecordings(): void {
 }
 
 /**
- * Set up periodic cleanup of old recordings (every 10 minutes)
- * Each cleanup runs as a separate process that automatically exits when done
+ * Set up periodic cleanup of old recordings (every 1 minute)
+ * Each cleanup runs as a separate child process that automatically exits when done
  */
 function setupPeriodicCleanup(): void {
-  const cleanupInterval = 1 * 60 * 1000; // 1 minutes
+  const cleanupInterval = 1 * 60 * 1000; // 1 minute
   // const cleanupInterval = 30 * 60 * 1000; // 30 minutes
 
   // Schedule periodic cleanup
@@ -183,7 +179,7 @@ function setupPeriodicCleanup(): void {
   }, cleanupInterval);
 
   console.log(
-    `[Cleanup Scheduler] Periodic recording cleanup scheduled (every ${cleanupInterval / 60000} minutes)`
+    `[Cleanup Scheduler] Periodic recording cleanup scheduled (every ${cleanupInterval / 60000} minute(s))`
   );
 }
 
