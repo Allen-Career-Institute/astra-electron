@@ -36,7 +36,7 @@ function getUserDataPath(): string {
 }
 
 /**
- * Clean up recording folders older than 10 minutes
+ * Clean up recording folders older than 2 days
  */
 function cleanupOldRecordings(): void {
   try {

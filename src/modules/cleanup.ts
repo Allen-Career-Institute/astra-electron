@@ -13,6 +13,7 @@ import { safeCloseScreenShareWindow } from './screenShareWindow';
 
 // Track if cleanup is currently running
 let isCleanupRunning = false;
+let cleanupIntervalTimer: NodeJS.Timeout | null = null;
 
 function cleanup(): void {
   const mainWindow = getMainWindow();
@@ -21,6 +22,8 @@ function cleanup(): void {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.close();
   }
+
+  cleanupIntervalTimer && clearInterval(cleanupIntervalTimer);
 }
 
 function cleanupNonMainWindow(): void {
@@ -64,7 +67,6 @@ function setupCleanupHandlers(): void {
 }
 
 /**
- * Clean up recording folders older than 10 minutes
  * Runs as a separate Node.js child process using fork()
  */
 function cleanupOldRecordings(): void {
@@ -161,7 +163,7 @@ function cleanupOldRecordings(): void {
 }
 
 /**
- * Set up periodic cleanup of old recordings (every 1 minute)
+ * Set up periodic cleanup of old recordings (every 30 minute)
  * Each cleanup runs as a separate child process that automatically exits when done
  */
 function setupPeriodicCleanup(): void {
@@ -169,7 +171,7 @@ function setupPeriodicCleanup(): void {
   const cleanupInterval = 30 * 60 * 1000; // 30 minutes
 
   // Schedule periodic cleanup
-  setInterval(() => {
+  cleanupIntervalTimer = setInterval(() => {
     try {
       console.log('[Cleanup Scheduler] Running periodic recording cleanup...');
       cleanupOldRecordings();
