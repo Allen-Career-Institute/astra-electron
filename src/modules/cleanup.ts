@@ -165,8 +165,8 @@ function cleanupOldRecordings(): void {
  * Each cleanup runs as a separate child process that automatically exits when done
  */
 function setupPeriodicCleanup(): void {
-  const cleanupInterval = 1 * 60 * 1000; // 1 minute
-  // const cleanupInterval = 30 * 60 * 1000; // 30 minutes
+  // const cleanupInterval = 1 * 60 * 1000; // 1 minute
+  const cleanupInterval = 30 * 60 * 1000; // 30 minutes
 
   // Schedule periodic cleanup
   setInterval(() => {
