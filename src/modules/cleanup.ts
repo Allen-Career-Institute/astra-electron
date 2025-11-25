@@ -170,6 +170,8 @@ function setupPeriodicCleanup(): void {
   // const cleanupInterval = 1 * 60 * 1000; // 1 minute
   const cleanupInterval = 30 * 60 * 1000; // 30 minutes
 
+  cleanupIntervalTimer && clearInterval(cleanupIntervalTimer);
+
   // Schedule periodic cleanup
   cleanupIntervalTimer = setInterval(() => {
     try {

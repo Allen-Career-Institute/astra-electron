@@ -169,8 +169,7 @@ app.on('ready', async () => {
     try {
       setupPeriodicCleanup();
     } catch (periodicCleanupError) {
-      console.error('Failed to setup periodic cleanup:', periodicCleanupError);
-      // Continue with app initialization even if periodic cleanup fails
+      Sentry.captureException(periodicCleanupError);
     }
 
     // Show error dialog if environment variables failed to load
