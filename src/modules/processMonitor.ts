@@ -6,9 +6,14 @@ import { getMainWindowPid, getMainWindow } from './windowManager';
 import * as Sentry from '@sentry/electron/main';
 import { getCurrentUrl } from './config';
 import { getScreenShareWindowPid } from './screenShareWindow';
+const si = require('systeminformation');
+
 let monitorInterval: NodeJS.Timeout;
 // Send metrics to main window
-const sendMetricsToMainWindow = (metrics: ProcessMetric[]): void => {
+const sendMetricsToMainWindow = (
+  metrics: ProcessMetric[],
+  systemMetrics: { cpuUsage: any; networkUsage: any }
+): void => {
   const mainWindow = getMainWindow();
   if (
     mainWindow &&
@@ -23,6 +28,7 @@ const sendMetricsToMainWindow = (metrics: ProcessMetric[]): void => {
       metrics,
       streamWindowPid,
       mainWindowPid,
+      systemMetrics,
       whiteboardWindowPid,
       screenShareWindowPid,
     });
@@ -67,7 +73,7 @@ const setProcessPriority = (
 };
 
 // Get all app metrics to identify Electron processes
-const monitorProcesses = () => {
+const monitorProcesses = async () => {
   try {
     const metrics = app.getAppMetrics();
     const streamWindowPid = getStreamWindowPid();
@@ -119,8 +125,22 @@ const monitorProcesses = () => {
       }
     });
 
+    let cpuUsage: any;
+    let networkUsage: any;
+    try {
+      cpuUsage = await si.currentLoad();
+      networkUsage = (await si.networkInterfaces()).filter(
+        (item: { speed: null | number }) => item?.speed !== null
+      );
+    } catch (error) {
+      Sentry.captureException(error);
+    }
+
     // Send metrics to main window
-    sendMetricsToMainWindow(metrics);
+    sendMetricsToMainWindow(metrics, {
+      cpuUsage,
+      networkUsage,
+    });
 
     // Set main process name for OS task manager visibility
     process.title = 'Astra-Main';
