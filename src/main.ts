@@ -26,8 +26,8 @@ if (getSentryDsn()) {
     dsn: getSentryDsn(),
     environment: process.env.ENV,
     sendDefaultPii: true,
-    tracesSampleRate: 0.1,
-    sampleRate: 0.1,
+    tracesSampleRate: 0.2,
+    sampleRate: 0.2,
     getSessions: () => [
       session.defaultSession,
       session.fromPartition('persist:shared'),
@@ -162,8 +162,7 @@ app.on('ready', async () => {
     try {
       cleanupOldRecordings();
     } catch (cleanupError) {
-      console.error('Failed to cleanup old recordings:', cleanupError);
-      // Continue with app initialization even if cleanup fails
+      Sentry.captureException(cleanupError);
     }
 
     // Set up periodic cleanup of old recordings
