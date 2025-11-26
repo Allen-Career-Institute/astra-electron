@@ -51,7 +51,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     meetingId: string,
     chunkData: any,
     chunkIndex: number,
-    isLastChunk: boolean = false
+    isLastChunk: boolean = false,
+    doRecording?: boolean
   ): Promise<any> => {
     try {
       return await ipcRenderer.invoke('sendMessage', {
@@ -62,6 +63,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
           chunkIndex,
           timestamp: Date.now(),
           isLastChunk,
+          doRecording,
         },
       });
     } catch (error) {
