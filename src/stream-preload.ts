@@ -193,7 +193,8 @@ try {
       meetingId: string,
       chunkData: ArrayBuffer,
       chunkIndex: number,
-      isLastChunk: boolean = false
+      isLastChunk: boolean = false,
+      doRecording?: boolean
     ): Promise<any> => {
       try {
         // Use postMessage for zero-copy transfer of ArrayBuffer
@@ -206,6 +207,7 @@ try {
             chunkIndex,
             timestamp: Date.now(),
             isLastChunk,
+            doRecording,
           },
         };
 
