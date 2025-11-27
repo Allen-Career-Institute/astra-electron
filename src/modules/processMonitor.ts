@@ -12,7 +12,7 @@ let monitorInterval: NodeJS.Timeout;
 // Send metrics to main window
 const sendMetricsToMainWindow = (
   metrics: ProcessMetric[],
-  systemMetrics: { cpuUsage: any; networkUsage: any }
+  systemMetrics: { cpuUsage: any }
 ): void => {
   const mainWindow = getMainWindow();
   if (
@@ -126,12 +126,23 @@ const monitorProcesses = async () => {
     });
 
     let cpuUsage: any;
-    let networkUsage: any;
     try {
-      cpuUsage = await si.currentLoad();
-      networkUsage = (await si.networkInterfaces()).filter(
-        (item: { speed: null | number }) => item?.speed !== null
-      );
+      const originalCpuUsage = await si.currentLoad();
+
+      if (originalCpuUsage && originalCpuUsage?.cpus?.length > 0) {
+        cpuUsage = {
+          avgLoad: originalCpuUsage.avgLoad,
+          currentLoad: originalCpuUsage.currentLoad,
+          currentLoadUser: originalCpuUsage.currentLoadUser,
+          currentLoadSystem: originalCpuUsage.currentLoadSystem,
+          cpus:
+            originalCpuUsage?.cpus?.map((cpu: any) => ({
+              load: cpu.load,
+              loadUser: cpu.loadUser,
+              loadSystem: cpu.loadSystem,
+            })) || [],
+        };
+      }
     } catch (error) {
       Sentry.captureException(error);
     }
@@ -139,7 +150,6 @@ const monitorProcesses = async () => {
     // Send metrics to main window
     sendMetricsToMainWindow(metrics, {
       cpuUsage,
-      networkUsage,
     });
 
     // Set main process name for OS task manager visibility
