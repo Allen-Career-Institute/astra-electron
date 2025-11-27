@@ -64,6 +64,84 @@ async function waitForStreamWindowReady(
 
 // Main IPC Handlers
 export function setupIpcHandlers(ipcMain: IpcMain): void {
+  // Zero-copy media chunk handler using postMessage
+  ipcMain.on('media-chunk-data', async (event, message) => {
+    try {
+      const { meetingId, chunkData, chunkIndex, timestamp, isLastChunk } =
+        message.payload;
+
+      // Save chunk to file system as webm
+      const recordingsDir = path.join(
+        app.getPath('userData'),
+        'recordings',
+        meetingId
+      );
+      console.log('recordingsDir', recordingsDir);
+      // Create recordings directory if it doesn't exist
+      if (!fs.existsSync(recordingsDir)) {
+        fs.mkdirSync(recordingsDir, { recursive: true });
+      }
+
+      // Store chunks as webm files using timestamp for unique naming
+      // This prevents conflicts when page is reloaded and chunkIndex resets
+      const chunkFileName = `${timestamp}.webm`;
+      const chunkFilePath = path.join(recordingsDir, chunkFileName);
+
+      // Convert ArrayBuffer to Buffer before writing to file system
+      const buffer = Buffer.from(chunkData);
+      // Write chunk data to file
+      fs.writeFileSync(chunkFilePath, buffer);
+
+      // Add chunk to rolling merge manager (for tracking purposes)
+      rollingMergeManager.addChunk(meetingId, chunkFileName);
+
+      // Get current chunk list
+      const chunkList = rollingMergeManager.getChunkList(meetingId);
+
+      // Check if rolling merge is disabled
+      if (!getRollingMergeDisabled()) {
+        // Perform rolling merge when we have multiple chunks
+        if (chunkList.length > 1) {
+          await rollingMergeManager.performRollingMerge(
+            meetingId,
+            recordingsDir,
+            chunkList
+          );
+        }
+
+        // Handle final merge when recording stops
+        if (isLastChunk && chunkList.length > 0) {
+          await rollingMergeManager.performFinalMerge(
+            meetingId,
+            recordingsDir,
+            chunkList
+          );
+        }
+      } else {
+        console.log(
+          `Rolling merge disabled - keeping ${chunkList.length} chunks as individual files for meeting ${meetingId}`
+        );
+
+        // Log chunk details when rolling merge is disabled
+        if (isLastChunk && isChunkLoggingEnabled()) {
+          console.log(
+            `Recording completed for meeting ${meetingId}. Total chunks saved: ${chunkList.length}`
+          );
+          console.log(`Chunks saved in: ${recordingsDir}`);
+          chunkList.forEach((chunk, index) => {
+            console.log(`  - ${chunk}`);
+          });
+        }
+      }
+
+      console.log(
+        `Processed media chunk ${chunkIndex} (timestamp: ${timestamp}) - saved to ${chunkFilePath}`
+      );
+    } catch (error) {
+      console.error('Error processing media chunk:', error);
+    }
+  });
+
   // Centralized IPC Communication handler for allen-ui-live web app
   ipcMain.handle('sendMessage', async (event, message) => {
     try {

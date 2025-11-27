@@ -184,7 +184,42 @@ try {
           isLastChunk,
         },
       }),
+    sendMediaChunkV2: async (
+      meetingId: string,
+      chunkData: ArrayBuffer,
+      chunkIndex: number,
+      isLastChunk: boolean = false
+    ): Promise<any> => {
+      try {
+        // Use postMessage for zero-copy transfer of ArrayBuffer
+        // Electron's structured clone automatically handles ArrayBuffer transfer efficiently
+        const message = {
+          type: 'MEDIA_CHUNK_DATA',
+          payload: {
+            meetingId,
+            chunkData, // ArrayBuffer will be transferred efficiently via structured clone
+            chunkIndex,
+            timestamp: Date.now(),
+            isLastChunk,
+          },
+        };
 
+        // postMessage uses structured clone which efficiently transfers ArrayBuffers
+        ipcRenderer.postMessage('media-chunk-data', message);
+
+        // Return success immediately since postMessage is fire-and-forget
+        // The main process will handle the chunk asynchronously
+        return {
+          type: 'SUCCESS',
+          payload: { chunkIndex, isLastChunk },
+        };
+      } catch (error) {
+        return {
+          type: 'ERROR',
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
+    },
     // Remove listeners
     removeAllListeners: (channel: string): void => {
       ipcRenderer.removeAllListeners(channel);
