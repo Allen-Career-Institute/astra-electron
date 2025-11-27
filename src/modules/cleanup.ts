@@ -16,27 +16,27 @@ let isCleanupRunning = false;
 let cleanupIntervalTimer: NodeJS.Timeout | null = null;
 
 function cleanup(): void {
-  const mainWindow = getMainWindow();
-  cleanupNonMainWindow();
-
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.close();
+  try {
+    cleanupIntervalTimer && clearInterval(cleanupIntervalTimer);
+    cleanupNonMainWindow();
+    const mainWindow = getMainWindow();
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.close();
+    }
+  } catch (error) {
+    Sentry.captureException(error);
   }
-
-  cleanupIntervalTimer && clearInterval(cleanupIntervalTimer);
 }
 
 function cleanupNonMainWindow(): void {
+  stopProcessMonitoring();
+  rollingMergeManager.cleanup();
   safeCloseStreamWindow();
   safeClosewhiteboardWindow();
   safeCloseScreenShareWindow();
-  stopProcessMonitoring();
-  rollingMergeManager.cleanup();
 }
 
 function handleUncaughtException(error: Error): void {
-  console.error('Uncaught Exception:', error);
-
   if (isDev()) {
     dialog.showErrorBox(
       'Uncaught Exception',
@@ -51,13 +51,13 @@ function handleUnhandledRejection(
   reason: unknown,
   promise: Promise<unknown>
 ): void {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-
   if (isDev()) {
     dialog.showErrorBox(
       'Unhandled Rejection',
       `An unhandled rejection occurred: ${reason}`
     );
+  } else {
+    Sentry.captureException(new Error(`Unhandled Rejection reason: ${reason}`));
   }
 }
 

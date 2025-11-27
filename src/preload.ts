@@ -67,6 +67,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
         },
       });
     } catch (error) {
+      console.error('Error sending media chunk:', error);
       return {
         type: 'ERROR',
         error: error instanceof Error ? error.message : 'Unknown error',

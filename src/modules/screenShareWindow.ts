@@ -2,6 +2,7 @@ import { BrowserWindow, screen, app } from 'electron';
 import path from 'path';
 import { getSharedSession } from './windowManager';
 import { isDev } from './config';
+import * as Sentry from '@sentry/electron/main';
 
 export interface ScreenShareWindowConfig {
   meetingId: string;
@@ -38,10 +39,7 @@ function cleanupScreenShareWindowResources(): void {
       try {
         screenShareWindow.webContents.send('cleanup-resources');
       } catch (error) {
-        console.log(
-          'Could not send cleanup signal to screen share window:',
-          (error as Error).message
-        );
+        Sentry.captureException(error);
       }
     }
   } catch (error) {
@@ -95,7 +93,11 @@ async function safeCloseScreenShareWindow(
           const { getMainWindow } = require('./windowManager');
           const mainWindow = getMainWindow();
           if (mainWindow && !mainWindow.isDestroyed()) {
-            mainWindow.webContents.send('screen-share-window-closed');
+            try {
+              mainWindow.webContents.send('screen-share-window-closed');
+            } catch (error) {
+              Sentry.captureException(error);
+            }
           }
 
           screenShareWindow = null;
@@ -277,7 +279,11 @@ async function createScreenShareWindow(
         if (mainWindow && !mainWindow.isDestroyed()) {
           mainWindow.show();
           mainWindow.focus();
-          mainWindow.webContents.send('screen-share-window-opened');
+          try {
+            mainWindow.webContents.send('screen-share-window-opened');
+          } catch (error) {
+            Sentry.captureException(error);
+          }
         }
         screenShareWindowPid = screenShareWindow.webContents.getOSProcessId();
         screenShareWindowSettingUp = false;

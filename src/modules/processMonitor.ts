@@ -24,14 +24,18 @@ const sendMetricsToMainWindow = (
     const mainWindowPid = getMainWindowPid();
     const whiteboardWindowPid = getWhiteboardWindowPid();
     const screenShareWindowPid = getScreenShareWindowPid();
-    mainWindow.webContents.send('app-metrics', {
-      metrics,
-      streamWindowPid,
-      mainWindowPid,
-      systemMetrics,
-      whiteboardWindowPid,
-      screenShareWindowPid,
-    });
+    try {
+      mainWindow.webContents.send('app-metrics', {
+        metrics,
+        streamWindowPid,
+        mainWindowPid,
+        systemMetrics,
+        whiteboardWindowPid,
+        screenShareWindowPid,
+      });
+    } catch (error) {
+      Sentry.captureException(error);
+    }
   }
 };
 

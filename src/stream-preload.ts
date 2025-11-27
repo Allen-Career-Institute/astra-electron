@@ -168,22 +168,27 @@ try {
     ): void => {
       ipcRenderer.on('cleanup-resources', callback);
     },
-    sendMediaChunk: (
+    sendMediaChunk: async (
       meetingId: string,
       chunkData: any,
       chunkIndex: number,
       isLastChunk: boolean = false
-    ): Promise<any> =>
-      ipcRenderer.invoke('sendMessage', {
-        type: 'MEDIA_CHUNK_DATA',
-        payload: {
-          meetingId,
-          chunkData,
-          chunkIndex,
-          timestamp: Date.now(),
-          isLastChunk,
-        },
-      }),
+    ): Promise<any> => {
+      try {
+        return await ipcRenderer.invoke('sendMessage', {
+          type: 'MEDIA_CHUNK_DATA',
+          payload: {
+            meetingId,
+            chunkData,
+            chunkIndex,
+            timestamp: Date.now(),
+            isLastChunk,
+          },
+        });
+      } catch (error) {
+        console.error('Error sending media chunk:', error);
+      }
+    },
     sendMediaChunkV2: async (
       meetingId: string,
       chunkData: ArrayBuffer,

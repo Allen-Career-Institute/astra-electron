@@ -37,6 +37,7 @@ import {
 } from '../modules/screenShareWindow';
 import { askMediaAccess } from './permissionUtil';
 import { getMainWindow } from '../modules/windowManager';
+import * as Sentry from '@sentry/electron/main';
 
 // Helper function to check if stream window is ready
 function isStreamWindowReady(): boolean {
@@ -202,10 +203,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
               );
               console.log('Audio toggle sent successfully to stream window');
             } catch (error) {
-              console.error(
-                'Failed to send audio toggle to stream window:',
-                error
-              );
+              Sentry.captureException(error);
               return {
                 type: 'ERROR',
                 error: 'Failed to send audio toggle to stream window',
@@ -241,10 +239,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
               streamWindowForVideo.webContents.send('stream-control', action);
               console.log('Video toggle sent successfully to stream window');
             } catch (error) {
-              console.error(
-                'Failed to send video toggle to stream window:',
-                error
-              );
+              Sentry.captureException(error);
               return {
                 type: 'ERROR',
                 error: 'Failed to send video toggle to stream window',
@@ -428,36 +423,44 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
           await safeCloseScreenShareWindow('STOP_SCREEN_SHARE');
           return { type: 'SUCCESS', payload: 'Screen share window closed' };
         case 'CHANGE_AUDIO_DEVICE':
-          const streamWindowForChangeAudioDevice = getStreamWindow();
-          if (
-            streamWindowForChangeAudioDevice &&
-            !streamWindowForChangeAudioDevice.isDestroyed()
-          ) {
-            streamWindowForChangeAudioDevice.webContents.send(
-              'stream-control',
-              'change-audio-device',
-              message.payload.deviceId
-            );
+          try {
+            const streamWindowForChangeAudioDevice = getStreamWindow();
+            if (
+              streamWindowForChangeAudioDevice &&
+              !streamWindowForChangeAudioDevice.isDestroyed()
+            ) {
+              streamWindowForChangeAudioDevice.webContents.send(
+                'stream-control',
+                'change-audio-device',
+                message.payload.deviceId
+              );
+            }
+          } catch (error) {
+            Sentry.captureException(error);
           }
           return { type: 'SUCCESS', payload: 'Audio device changed' };
         case 'CHANGE_VIDEO_DEVICE':
-          const streamWindowForChangeVideoDevice = getStreamWindow();
-          if (
-            streamWindowForChangeVideoDevice &&
-            !streamWindowForChangeVideoDevice.isDestroyed()
-          ) {
-            streamWindowForChangeVideoDevice.webContents.send(
-              'stream-control',
-              'change-video-device',
-              message.payload.deviceId
-            );
+          try {
+            const streamWindowForChangeVideoDevice = getStreamWindow();
+            if (
+              streamWindowForChangeVideoDevice &&
+              !streamWindowForChangeVideoDevice.isDestroyed()
+            ) {
+              streamWindowForChangeVideoDevice.webContents.send(
+                'stream-control',
+                'change-video-device',
+                message.payload.deviceId
+              );
+            }
+          } catch (error) {
+            Sentry.captureException(error);
           }
           return { type: 'SUCCESS', payload: 'Video device changed' };
         default:
           return { type: 'ERROR', error: 'Unknown message type' };
       }
     } catch (error) {
-      console.error('Error handling message from allen-ui-live:', error);
+      Sentry.captureException(error);
       return {
         type: 'ERROR',
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -480,9 +483,13 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
   });
 
   ipcMain.handle('electron-tracks-published', async event => {
-    const mainWindow = getMainWindow();
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('electron-tracks-published-success');
+    try {
+      const mainWindow = getMainWindow();
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('electron-tracks-published-success');
+      }
+    } catch (error) {
+      Sentry.captureException(error);
     }
   });
 
@@ -514,9 +521,13 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
   });
 
   ipcMain.handle('opened-screen-share-window', async event => {
-    const mainWindow = getMainWindow();
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('screen-share-window-opened');
+    try {
+      const mainWindow = getMainWindow();
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('screen-share-window-opened');
+      }
+    } catch (error) {
+      Sentry.captureException(error);
     }
   });
 
@@ -539,7 +550,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
         message: 'Stream control action sent to stream window',
       };
     } catch (error) {
-      console.error('Failed to handle stream control:', error);
+      Sentry.captureException(error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
