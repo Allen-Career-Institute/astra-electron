@@ -287,8 +287,21 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
           return { type: 'SUCCESS', payload: 'Whiteboard window closed' };
         case 'MEDIA_CHUNK_DATA':
           try {
-            const { meetingId, chunkData, chunkIndex, timestamp, isLastChunk } =
-              message.payload;
+            const {
+              meetingId,
+              chunkData,
+              chunkIndex,
+              timestamp,
+              isLastChunk,
+              doRecording = false,
+            } = message.payload;
+
+            // if (!doRecording) {
+            //   return {
+            //     type: 'SUCCESS',
+            //     payload: 'Recording disabled',
+            //   };
+            // }
 
             // Save chunk to file system as webm
             const recordingsDir = path.join(
