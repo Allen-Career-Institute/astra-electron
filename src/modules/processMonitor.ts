@@ -151,8 +151,15 @@ const monitorProcesses = async () => {
       Sentry.captureException(error);
     }
 
+    const finalMetrics = metrics.filter(
+      (metric: ProcessMetric) =>
+        metric.type !== 'Utility' && metric.type !== 'GPU'
+    );
     // Send metrics to main window
-    sendMetricsToMainWindow(metrics, {
+    sendMetricsToMainWindow(finalMetrics, {
+      cpuUsage: null,
+    });
+    sendMetricsToMainWindow([], {
       cpuUsage,
     });
 
