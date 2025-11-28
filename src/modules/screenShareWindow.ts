@@ -38,10 +38,7 @@ function cleanupScreenShareWindowResources(): void {
       try {
         screenShareWindow.webContents.send('cleanup-resources');
       } catch (error) {
-        console.log(
-          'Could not send cleanup signal to screen share window:',
-          (error as Error).message
-        );
+        console.error('Error during screen share window cleanup:', error);
       }
     }
   } catch (error) {
@@ -95,7 +92,14 @@ async function safeCloseScreenShareWindow(
           const { getMainWindow } = require('./windowManager');
           const mainWindow = getMainWindow();
           if (mainWindow && !mainWindow.isDestroyed()) {
-            mainWindow.webContents.send('screen-share-window-closed');
+            try {
+              mainWindow.webContents.send('screen-share-window-closed');
+            } catch (error) {
+              console.error(
+                'Error sending screen share window closed event:',
+                error
+              );
+            }
           }
 
           screenShareWindow = null;
@@ -277,7 +281,14 @@ async function createScreenShareWindow(
         if (mainWindow && !mainWindow.isDestroyed()) {
           mainWindow.show();
           mainWindow.focus();
-          mainWindow.webContents.send('screen-share-window-opened');
+          try {
+            mainWindow.webContents.send('screen-share-window-opened');
+          } catch (error) {
+            console.error(
+              'Error sending screen share window opened event:',
+              error
+            );
+          }
         }
         screenShareWindowPid = screenShareWindow.webContents.getOSProcessId();
         screenShareWindowSettingUp = false;

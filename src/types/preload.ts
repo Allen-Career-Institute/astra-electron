@@ -12,6 +12,13 @@ export interface BaseElectronAPI {
     chunkIndex: number,
     isLastChunk?: boolean
   ) => Promise<any>;
+  sendMediaChunkV2: (
+    meetingId: string,
+    chunkData: ArrayBuffer,
+    chunkIndex: number,
+    isLastChunk?: boolean,
+    doRecording?: boolean
+  ) => Promise<any>;
   removeAllListeners: (channel: string) => void;
 }
 

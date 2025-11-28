@@ -444,5 +444,84 @@ module.exports = [
       'ref-napi': 'commonjs2 ref-napi',
       'agora-electron-sdk': 'commonjs2 agora-electron-sdk',
     }
+  },
+
+  // Cleanup Task Script Configuration
+  {
+    mode: process.env.ENV === 'production' ? 'production' : 'development',
+    entry: './src/scripts/cleanup-task.ts',
+    target: 'node',
+    output: {
+      path: path.resolve(__dirname, 'dist/scripts'),
+      filename: 'cleanup-task.js',
+      libraryTarget: 'commonjs2',
+    },
+    resolve: {
+      extensions: ['.ts', '.js', '.json'],
+      alias: {
+        '@': path.resolve(__dirname, 'src')
+      }
+    },
+    module: {
+      rules: [
+        {
+          test: /\.ts$/,
+          exclude: /node_modules/,
+          use: {
+            loader: 'babel-loader',
+            options: {
+              presets: [
+                ['@babel/preset-env', {
+                  targets: {
+                    node: '16'
+                  }
+                }],
+                '@babel/preset-typescript'
+              ]
+            }
+          }
+        },
+        {
+          test: /\.js$/,
+          exclude: /node_modules/,
+          use: {
+            loader: 'babel-loader',
+            options: {
+              presets: [
+                ['@babel/preset-env', {
+                  targets: {
+                    node: '16'
+                  }
+                }]
+              ]
+            }
+          }
+        }
+      ]
+    },
+    plugins: [
+      new webpack.BannerPlugin({
+        banner: '#!/usr/bin/env node',
+        raw: true,
+        entryOnly: true,
+      }),
+    ],
+    optimization: {
+      minimize: true,
+      minimizer: [
+        new TerserPlugin({
+          terserOptions: {
+            compress: {
+              drop_console: false, // Keep console for logging in cleanup task
+              drop_debugger: true,
+            },
+            mangle: false, // Don't mangle for easier debugging
+          },
+        }),
+      ],
+    },
+    performance: {
+      hints: false,
+    },
   }
 ];

@@ -1,6 +1,6 @@
 {
   "name": "astra-electron",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Astra Electron App with WebView and Video Streaming",
   "main": "dist/main.js",
   "packageManager": "yarn@4.9.2",
@@ -116,6 +116,7 @@
     "electron-process-manager": "^1.2.0",
     "electron-store": "^10.1.0",
     "electron-updater": "6.6.2",
+    "systeminformation": "^5.27.11",
     "uuid": "^11.1.0"
   },
   "lint-staged": {
