@@ -291,12 +291,12 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
               doRecording = false,
             } = message.payload;
 
-            // if (!doRecording) {
-            //   return {
-            //     type: 'SUCCESS',
-            //     payload: 'Recording disabled',
-            //   };
-            // }
+            if (!doRecording) {
+              return {
+                type: 'SUCCESS',
+                payload: 'Recording disabled',
+              };
+            }
 
             // Save chunk to file system as webm
             const recordingsDir = path.join(
