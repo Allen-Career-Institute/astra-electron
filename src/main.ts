@@ -137,10 +137,10 @@ app.commandLine.appendSwitch(
   'WebRtcAllowInputVolumeAdjustment'
 );
 app.commandLine.appendArgument('--disable-ipc-flooding-protection');
-app.commandLine.appendSwitch('max-active-webgl-contexts', '32');
+app.commandLine.appendSwitch('max-active-webgl-contexts', '16');
 
 // Memory and performance flags
-app.commandLine.appendSwitch('js-flags', '--max-old-space-size=8192');
+app.commandLine.appendSwitch('js-flags', '--max-old-space-size=6196');
 app.commandLine.appendArgument('--disable-dev-shm-usage');
 
 import 'agora-electron-sdk/js/Private/ipc/main.js';
