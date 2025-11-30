@@ -161,6 +161,7 @@ async function createScreenShareWindow(
       show: false,
       fullscreen: false, // Explicitly prevent fullscreen
       webPreferences: {
+        backgroundThrottling: false,
         nodeIntegration: true,
         contextIsolation: false,
         sandbox: false,

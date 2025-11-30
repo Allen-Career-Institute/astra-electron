@@ -80,6 +80,7 @@ function createMainWindow(): BrowserWindow {
       preload: preloadPath,
       webSecurity: false, // only if you trust the content
       sandbox: false,
+      backgroundThrottling: false,
       allowRunningInsecureContent: true, // only if HTTP content
       // Most important for WebRTC:
       webviewTag: false,

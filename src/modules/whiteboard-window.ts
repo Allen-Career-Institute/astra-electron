@@ -174,6 +174,7 @@ function createWhiteboardWindow(config: WhiteboardWindowConfig): BrowserWindow {
       title: 'Whiteboard',
       show: false,
       webPreferences: {
+        backgroundThrottling: false,
         nodeIntegration: true,
         contextIsolation: true,
         preload: path.join(

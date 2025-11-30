@@ -129,12 +129,14 @@ app.commandLine.appendSwitch(
 app.commandLine.appendSwitch('webrtc-max-cpu-consumption-percentage', '80');
 app.commandLine.appendArgument('--webrtc-cpu-overuse-detection');
 
-// Additional performance optimizations for streaming
 app.commandLine.appendArgument('--disable-background-timer-throttling');
+app.commandLine.appendArgument('--disable-renderer-backgrounding');
 app.commandLine.appendArgument('--disable-backgrounding-occluded-windows');
+app.commandLine.appendSwitch('disable-frame-rate-limit');
+app.commandLine.appendSwitch('disable-gpu-vsync');
 app.commandLine.appendSwitch(
   'disable-features',
-  'WebRtcAllowInputVolumeAdjustment'
+  'CalculateNativeWinOcclusion,WebRtcAllowInputVolumeAdjustment,'
 );
 app.commandLine.appendArgument('--disable-ipc-flooding-protection');
 app.commandLine.appendSwitch('max-active-webgl-contexts', '16');
