@@ -4489,6 +4489,7 @@ __metadata:
     rimraf: "npm:^5.0.5"
     stream-browserify: "npm:^3.0.0"
     style-loader: "npm:^3.3.3"
+    systeminformation: "npm:^5.27.11"
     terser-webpack-plugin: "npm:^5.3.14"
     ts-node: "npm:^10.9.2"
     tsc-alias: "npm:^1.8.16"
@@ -14680,6 +14681,16 @@ __metadata:
   bin:
     svg2png: bin/svg2png-cli.js
   checksum: 10c0/0ab5ee91c109d264e5d3696071e28bb666b29fcce4c3ff12028a04f143708ab176ae37c0550546f5d6a56fabb72babb746f43fa0c26126c54236ff0b8f11da8f
+  languageName: node
+  linkType: hard
+
+"systeminformation@npm:^5.27.11":
+  version: 5.27.11
+  resolution: "systeminformation@npm:5.27.11"
+  bin:
+    systeminformation: lib/cli.js
+  checksum: 10c0/f0ef8cec7d2bead69060c5f1d45f9727d549e858f3132cf9e7ba4a8e9ae60bf30072fc7eb8a4269a8e5f293dca7bddd2b0261d7dc498e4a2cb9c0b66cbd46b16
+  conditions: (os=darwin | os=linux | os=win32 | os=freebsd | os=openbsd | os=netbsd | os=sunos | os=android)
   languageName: node
   linkType: hard
 

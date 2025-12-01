@@ -6,9 +6,14 @@ import { getMainWindowPid, getMainWindow } from './windowManager';
 import * as Sentry from '@sentry/electron/main';
 import { getCurrentUrl } from './config';
 import { getScreenShareWindowPid } from './screenShareWindow';
+const si = require('systeminformation');
+
 let monitorInterval: NodeJS.Timeout;
 // Send metrics to main window
-const sendMetricsToMainWindow = (metrics: ProcessMetric[]): void => {
+const sendMetricsToMainWindow = (
+  metrics: ProcessMetric[],
+  systemMetrics: { cpuUsage: any }
+): void => {
   const mainWindow = getMainWindow();
   if (
     mainWindow &&
@@ -19,13 +24,18 @@ const sendMetricsToMainWindow = (metrics: ProcessMetric[]): void => {
     const mainWindowPid = getMainWindowPid();
     const whiteboardWindowPid = getWhiteboardWindowPid();
     const screenShareWindowPid = getScreenShareWindowPid();
-    mainWindow.webContents.send('app-metrics', {
-      metrics,
-      streamWindowPid,
-      mainWindowPid,
-      whiteboardWindowPid,
-      screenShareWindowPid,
-    });
+    try {
+      mainWindow.webContents.send('app-metrics', {
+        metrics,
+        streamWindowPid,
+        mainWindowPid,
+        systemMetrics,
+        whiteboardWindowPid,
+        screenShareWindowPid,
+      });
+    } catch (error) {
+      Sentry.captureException(error);
+    }
   }
 };
 
@@ -67,7 +77,7 @@ const setProcessPriority = (
 };
 
 // Get all app metrics to identify Electron processes
-const monitorProcesses = () => {
+const monitorProcesses = async () => {
   try {
     const metrics = app.getAppMetrics();
     const streamWindowPid = getStreamWindowPid();
@@ -119,8 +129,39 @@ const monitorProcesses = () => {
       }
     });
 
+    let cpuUsage: any;
+    try {
+      const originalCpuUsage = await si.currentLoad();
+
+      if (originalCpuUsage && originalCpuUsage?.cpus?.length > 0) {
+        cpuUsage = {
+          avgLoad: originalCpuUsage.avgLoad,
+          currentLoad: originalCpuUsage.currentLoad,
+          currentLoadUser: originalCpuUsage.currentLoadUser,
+          currentLoadSystem: originalCpuUsage.currentLoadSystem,
+          cpus:
+            originalCpuUsage?.cpus?.map((cpu: any) => ({
+              load: cpu.load,
+              loadUser: cpu.loadUser,
+              loadSystem: cpu.loadSystem,
+            })) || [],
+        };
+      }
+    } catch (error) {
+      Sentry.captureException(error);
+    }
+
+    const finalMetrics = metrics.filter(
+      (metric: ProcessMetric) =>
+        metric.type !== 'Utility' && metric.type !== 'GPU'
+    );
     // Send metrics to main window
-    sendMetricsToMainWindow(metrics);
+    sendMetricsToMainWindow(finalMetrics, {
+      cpuUsage: null,
+    });
+    sendMetricsToMainWindow([], {
+      cpuUsage,
+    });
 
     // Set main process name for OS task manager visibility
     process.title = 'Astra-Main';

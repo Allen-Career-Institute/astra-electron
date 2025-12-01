@@ -37,6 +37,7 @@ import {
 } from '../modules/screenShareWindow';
 import { askMediaAccess } from './permissionUtil';
 import { getMainWindow } from '../modules/windowManager';
+import * as Sentry from '@sentry/electron/main';
 
 // Helper function to check if stream window is ready
 function isStreamWindowReady(): boolean {
@@ -64,6 +65,84 @@ async function waitForStreamWindowReady(
 
 // Main IPC Handlers
 export function setupIpcHandlers(ipcMain: IpcMain): void {
+  // Zero-copy media chunk handler using postMessage
+  ipcMain.on('media-chunk-data', async (event, message) => {
+    try {
+      const { meetingId, chunkData, chunkIndex, timestamp, isLastChunk } =
+        message.payload;
+
+      // Save chunk to file system as webm
+      const recordingsDir = path.join(
+        app.getPath('userData'),
+        'recordings',
+        meetingId
+      );
+      console.log('recordingsDir', recordingsDir);
+      // Create recordings directory if it doesn't exist
+      if (!fs.existsSync(recordingsDir)) {
+        fs.mkdirSync(recordingsDir, { recursive: true });
+      }
+
+      // Store chunks as webm files using timestamp for unique naming
+      // This prevents conflicts when page is reloaded and chunkIndex resets
+      const chunkFileName = `${timestamp}.webm`;
+      const chunkFilePath = path.join(recordingsDir, chunkFileName);
+
+      // Convert ArrayBuffer to Buffer before writing to file system
+      const buffer = Buffer.from(chunkData);
+      // Write chunk data to file
+      fs.writeFileSync(chunkFilePath, buffer);
+
+      // Add chunk to rolling merge manager (for tracking purposes)
+      rollingMergeManager.addChunk(meetingId, chunkFileName);
+
+      // Get current chunk list
+      const chunkList = rollingMergeManager.getChunkList(meetingId);
+
+      // Check if rolling merge is disabled
+      if (!getRollingMergeDisabled()) {
+        // Perform rolling merge when we have multiple chunks
+        if (chunkList.length > 1) {
+          await rollingMergeManager.performRollingMerge(
+            meetingId,
+            recordingsDir,
+            chunkList
+          );
+        }
+
+        // Handle final merge when recording stops
+        if (isLastChunk && chunkList.length > 0) {
+          await rollingMergeManager.performFinalMerge(
+            meetingId,
+            recordingsDir,
+            chunkList
+          );
+        }
+      } else {
+        console.log(
+          `Rolling merge disabled - keeping ${chunkList.length} chunks as individual files for meeting ${meetingId}`
+        );
+
+        // Log chunk details when rolling merge is disabled
+        if (isLastChunk && isChunkLoggingEnabled()) {
+          console.log(
+            `Recording completed for meeting ${meetingId}. Total chunks saved: ${chunkList.length}`
+          );
+          console.log(`Chunks saved in: ${recordingsDir}`);
+          chunkList.forEach((chunk, index) => {
+            console.log(`  - ${chunk}`);
+          });
+        }
+      }
+
+      console.log(
+        `Processed media chunk ${chunkIndex} (timestamp: ${timestamp}) - saved to ${chunkFilePath}`
+      );
+    } catch (error) {
+      console.error('Error processing media chunk:', error);
+    }
+  });
+
   // Centralized IPC Communication handler for allen-ui-live web app
   ipcMain.handle('sendMessage', async (event, message) => {
     try {
@@ -124,10 +203,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
               );
               console.log('Audio toggle sent successfully to stream window');
             } catch (error) {
-              console.error(
-                'Failed to send audio toggle to stream window:',
-                error
-              );
+              Sentry.captureException(error);
               return {
                 type: 'ERROR',
                 error: 'Failed to send audio toggle to stream window',
@@ -163,10 +239,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
               streamWindowForVideo.webContents.send('stream-control', action);
               console.log('Video toggle sent successfully to stream window');
             } catch (error) {
-              console.error(
-                'Failed to send video toggle to stream window:',
-                error
-              );
+              Sentry.captureException(error);
               return {
                 type: 'ERROR',
                 error: 'Failed to send video toggle to stream window',
@@ -350,36 +423,44 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
           await safeCloseScreenShareWindow('STOP_SCREEN_SHARE');
           return { type: 'SUCCESS', payload: 'Screen share window closed' };
         case 'CHANGE_AUDIO_DEVICE':
-          const streamWindowForChangeAudioDevice = getStreamWindow();
-          if (
-            streamWindowForChangeAudioDevice &&
-            !streamWindowForChangeAudioDevice.isDestroyed()
-          ) {
-            streamWindowForChangeAudioDevice.webContents.send(
-              'stream-control',
-              'change-audio-device',
-              message.payload.deviceId
-            );
+          try {
+            const streamWindowForChangeAudioDevice = getStreamWindow();
+            if (
+              streamWindowForChangeAudioDevice &&
+              !streamWindowForChangeAudioDevice.isDestroyed()
+            ) {
+              streamWindowForChangeAudioDevice.webContents.send(
+                'stream-control',
+                'change-audio-device',
+                message.payload.deviceId
+              );
+            }
+          } catch (error) {
+            Sentry.captureException(error);
           }
           return { type: 'SUCCESS', payload: 'Audio device changed' };
         case 'CHANGE_VIDEO_DEVICE':
-          const streamWindowForChangeVideoDevice = getStreamWindow();
-          if (
-            streamWindowForChangeVideoDevice &&
-            !streamWindowForChangeVideoDevice.isDestroyed()
-          ) {
-            streamWindowForChangeVideoDevice.webContents.send(
-              'stream-control',
-              'change-video-device',
-              message.payload.deviceId
-            );
+          try {
+            const streamWindowForChangeVideoDevice = getStreamWindow();
+            if (
+              streamWindowForChangeVideoDevice &&
+              !streamWindowForChangeVideoDevice.isDestroyed()
+            ) {
+              streamWindowForChangeVideoDevice.webContents.send(
+                'stream-control',
+                'change-video-device',
+                message.payload.deviceId
+              );
+            }
+          } catch (error) {
+            Sentry.captureException(error);
           }
           return { type: 'SUCCESS', payload: 'Video device changed' };
         default:
           return { type: 'ERROR', error: 'Unknown message type' };
       }
     } catch (error) {
-      console.error('Error handling message from allen-ui-live:', error);
+      Sentry.captureException(error);
       return {
         type: 'ERROR',
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -402,9 +483,13 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
   });
 
   ipcMain.handle('electron-tracks-published', async event => {
-    const mainWindow = getMainWindow();
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('electron-tracks-published-success');
+    try {
+      const mainWindow = getMainWindow();
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('electron-tracks-published-success');
+      }
+    } catch (error) {
+      Sentry.captureException(error);
     }
   });
 
@@ -436,9 +521,13 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
   });
 
   ipcMain.handle('opened-screen-share-window', async event => {
-    const mainWindow = getMainWindow();
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('screen-share-window-opened');
+    try {
+      const mainWindow = getMainWindow();
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('screen-share-window-opened');
+      }
+    } catch (error) {
+      Sentry.captureException(error);
     }
   });
 
@@ -461,7 +550,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
         message: 'Stream control action sent to stream window',
       };
     } catch (error) {
-      console.error('Failed to handle stream control:', error);
+      Sentry.captureException(error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',

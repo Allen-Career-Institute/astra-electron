@@ -26,8 +26,8 @@ if (getSentryDsn()) {
     dsn: getSentryDsn(),
     environment: process.env.ENV,
     sendDefaultPii: true,
-    tracesSampleRate: 0.1,
-    sampleRate: 0.1,
+    tracesSampleRate: 0.2,
+    sampleRate: 0.2,
     getSessions: () => [
       session.defaultSession,
       session.fromPartition('persist:shared'),
@@ -129,12 +129,14 @@ app.commandLine.appendSwitch(
 app.commandLine.appendSwitch('webrtc-max-cpu-consumption-percentage', '80');
 app.commandLine.appendArgument('--webrtc-cpu-overuse-detection');
 
-// Additional performance optimizations for streaming
 app.commandLine.appendArgument('--disable-background-timer-throttling');
+app.commandLine.appendArgument('--disable-renderer-backgrounding');
 app.commandLine.appendArgument('--disable-backgrounding-occluded-windows');
+app.commandLine.appendSwitch('disable-frame-rate-limit');
+app.commandLine.appendSwitch('disable-gpu-vsync');
 app.commandLine.appendSwitch(
   'disable-features',
-  'WebRtcAllowInputVolumeAdjustment'
+  'CalculateNativeWinOcclusion,WebRtcAllowInputVolumeAdjustment,'
 );
 app.commandLine.appendArgument('--disable-ipc-flooding-protection');
 app.commandLine.appendSwitch('max-active-webgl-contexts', '16');
@@ -162,16 +164,14 @@ app.on('ready', async () => {
     try {
       cleanupOldRecordings();
     } catch (cleanupError) {
-      console.error('Failed to cleanup old recordings:', cleanupError);
-      // Continue with app initialization even if cleanup fails
+      Sentry.captureException(cleanupError);
     }
 
     // Set up periodic cleanup of old recordings
     try {
       setupPeriodicCleanup();
     } catch (periodicCleanupError) {
-      console.error('Failed to setup periodic cleanup:', periodicCleanupError);
-      // Continue with app initialization even if periodic cleanup fails
+      Sentry.captureException(periodicCleanupError);
     }
 
     // Show error dialog if environment variables failed to load

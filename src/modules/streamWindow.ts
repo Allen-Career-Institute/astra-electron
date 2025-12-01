@@ -147,6 +147,7 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
         allowRunningInsecureContent: true,
         // Enable experimental features for better screen sharing
         experimentalFeatures: true,
+        backgroundThrottling: false,
         // Enable WebRTC features
         enableBlinkFeatures:
           'WebCodecs,WebRTC,GetDisplayMedia,ScreenCaptureKit,DesktopCaptureKit,WebRTCPipeWireCapturer,MediaCapture,ScreenCapture,MediaCapabilities,HardwareMediaKeyHandling,PlatformHEVCEncoderSupport,PlatformHEVCDecoderSupport',
