@@ -4,6 +4,7 @@ import { ScreenShareWindowConfig } from './modules/screenShareWindow';
 // Expose functionality directly to the window object since contextIsolation is false
 // @ts-ignore
 window.screenShareElectronAPI = {
+  getAppDataPath: async () => await ipcRenderer.invoke('get-app-data-path'),
   // Screen sharing methods
   getScreenShareConfig: async (): Promise<{
     type: 'SUCCESS' | 'ERROR';

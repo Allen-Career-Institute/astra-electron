@@ -290,7 +290,9 @@ function createMenu(): void {
                 '\nURL: ' +
                 getCurrentUrl() +
                 '\nApp Version: ' +
-                getAppVersion(),
+                getAppVersion() +
+                '\nAppData Path: ' +
+                app.getPath('userData'),
             });
           },
         },

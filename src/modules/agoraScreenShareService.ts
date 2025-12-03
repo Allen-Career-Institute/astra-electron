@@ -6,16 +6,33 @@ import createAgoraRtcEngine, {
   RtcConnection,
   ConnectionStateType,
   ConnectionChangedReasonType,
-  ScreenCaptureSourceInfo,
   ScreenCaptureSourceType,
   VideoSourceType,
   VideoStreamType,
   RenderModeType,
   VideoMirrorModeType,
+  LogLevel,
+  VideoFallbackStrategy,
+  AreaCode,
 } from 'agora-electron-sdk';
 import { ScreenShareWindowConfig } from './screenShareWindow';
 import { getThumbImageBufferToBase64 } from '../utils/agoraThumbnailUtil';
 import { sendLogEvent } from '../utils/logEventUtil';
+
+// Helper to safely get log file path
+const getLogFilePath = async (): Promise<string> => {
+  try {
+    console.log(
+      'Getting app data path:',
+      (window as any)?.screenShareElectronAPI
+    );
+    return await (window as any)?.screenShareElectronAPI.getAppDataPath?.();
+  } catch (e) {
+    // app not available in this context
+    console.error('Error getting app data path:', e);
+  }
+  return process.cwd() + '/agora-sdk-log.txt';
+};
 
 export interface AgoraConfig {
   config: {
@@ -88,6 +105,12 @@ class AgoraScreenShareService implements IRtcEngineEventHandler {
     reason: ConnectionChangedReasonType
   ): void {
     console.log('Agora connection state changed:', state, reason);
+    sendLogEvent('agora-ss-connection-state-changed', {
+      messagePayload: JSON.stringify({
+        state,
+        reason,
+      }),
+    });
     if (state === ConnectionStateType.ConnectionStateConnected) {
       console.log('Successfully connected to Agora channel');
     } else if (state === ConnectionStateType.ConnectionStateDisconnected) {
@@ -112,11 +135,24 @@ class AgoraScreenShareService implements IRtcEngineEventHandler {
       if (this.agoraEngine) {
         return;
       }
-      this.agoraEngine = createAgoraRtcEngine();
+      this.agoraEngine = createAgoraRtcEngine({
+        enableLogging: true,
+        enableDebugLogging: true,
+        enableWebCodecsDecoder: true,
+        videoFallbackStrategy: VideoFallbackStrategy.PerformancePriority,
+        maxDecodeRetryCount: 3,
+        encodeAlpha: false,
+      });
       // Initialize with default settings
+      const logFilePath = await getLogFilePath();
       const ret = this.agoraEngine.initialize({
         appId: config.app_id,
         channelProfile: ChannelProfileType.ChannelProfileLiveBroadcasting,
+        areaCode: AreaCode.AreaCodeIn,
+        logConfig: {
+          level: LogLevel.LogLevelDebug,
+          filePath: logFilePath,
+        },
       });
       this.state.config = config;
       if (ret !== 0) {

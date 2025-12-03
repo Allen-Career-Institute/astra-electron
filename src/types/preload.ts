@@ -53,6 +53,7 @@ export interface ScreenShareElectronAPI extends BaseElectronAPI {
     error?: string;
     payload?: ScreenShareWindowConfig;
   }>;
+  getAppDataPath: () => Promise<string>;
 }
 
 // Unified interface for all preload scripts
