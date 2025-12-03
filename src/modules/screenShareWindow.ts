@@ -148,13 +148,13 @@ async function createScreenShareWindow(
     const primaryDisplay = screen.getPrimaryDisplay();
     const { width: screenWidth, height: screenHeight } =
       primaryDisplay.workAreaSize;
-    x = Math.floor((screenWidth - 1080) / 3);
-    y = Math.floor((screenHeight - 675) / 2);
+    x = Math.floor((screenWidth - 960) / 3);
+    y = Math.floor((screenHeight - 540) / 2);
 
     // Create the screen share window
     screenShareWindow = new BrowserWindow({
-      width: 1080,
-      height: 675,
+      width: 960,
+      height: 540,
       x,
       y,
       title: 'Astra - Screen Share',
@@ -196,8 +196,8 @@ async function createScreenShareWindow(
       focusable: true,
       // Remove parent window relationship on Windows to allow proper resizing
       parent: mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined,
-      minWidth: 1080,
-      minHeight: 675,
+      minWidth: 960,
+      minHeight: 540,
       maxWidth: 1200,
       maxHeight: 720,
     });
