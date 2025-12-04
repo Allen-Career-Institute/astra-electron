@@ -185,7 +185,7 @@ const monitorProcesses = async () => {
 // Function to automatically detect and name Electron processes
 export function setupAutomaticProcessNaming(): void {
   // Monitor processes periodically
-  monitorInterval = setInterval(monitorProcesses, 30000);
+  monitorInterval = setInterval(monitorProcesses, 15000);
 
   // Initial check
   monitorProcesses();
