@@ -12,7 +12,7 @@ let monitorInterval: NodeJS.Timeout;
 // Send metrics to main window
 const sendMetricsToMainWindow = (
   metrics: ProcessMetric[],
-  systemMetrics: { cpuUsage: any }
+  systemMetrics: { cpuUsage: any; networkUsage: any }
 ): void => {
   const mainWindow = getMainWindow();
   if (
@@ -85,13 +85,7 @@ const monitorProcesses = async () => {
     const mainWindowPid = getMainWindowPid();
     const screenShareWindowPid = getScreenShareWindowPid();
 
-    // Early return if no metrics available
-    if (!metrics || metrics.length === 0) {
-      console.warn('No process metrics available');
-      return;
-    }
-
-    const netWorkMetric = metrics.find((metric: ProcessMetric) =>
+    const netWorkMetric = metrics?.find?.((metric: ProcessMetric) =>
       metric?.name?.includes('Network')
     );
 
@@ -130,6 +124,7 @@ const monitorProcesses = async () => {
     });
 
     let cpuUsage: any;
+    let networkUsage: any;
     try {
       const originalCpuUsage = await si.currentLoad();
 
@@ -151,6 +146,20 @@ const monitorProcesses = async () => {
       Sentry.captureException(error);
     }
 
+    try {
+      const networkIb =
+        (await si.networkInterfaces())?.filter(
+          (iface: any) => iface.speed !== null
+        ) || [];
+      networkUsage =
+        networkIb?.length > 0 && networkIb?.[0]?.iface
+          ? await si.networkStats(networkIb[0].iface)
+          : null;
+    } catch (ex) {
+      console.error('Error getting network stats:', ex);
+      Sentry.captureException(ex);
+    }
+
     const finalMetrics = metrics.filter(
       (metric: ProcessMetric) =>
         metric.type !== 'Utility' && metric.type !== 'GPU'
@@ -158,9 +167,11 @@ const monitorProcesses = async () => {
     // Send metrics to main window
     sendMetricsToMainWindow(finalMetrics, {
       cpuUsage: null,
+      networkUsage: null,
     });
     sendMetricsToMainWindow([], {
       cpuUsage,
+      networkUsage,
     });
 
     // Set main process name for OS task manager visibility
@@ -174,7 +185,7 @@ const monitorProcesses = async () => {
 // Function to automatically detect and name Electron processes
 export function setupAutomaticProcessNaming(): void {
   // Monitor processes periodically
-  monitorInterval = setInterval(monitorProcesses, 30000);
+  monitorInterval = setInterval(monitorProcesses, 15000);
 
   // Initial check
   monitorProcesses();

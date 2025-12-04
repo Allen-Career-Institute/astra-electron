@@ -513,6 +513,10 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
     await safeCloseScreenShareWindow('manual close');
   });
 
+  ipcMain.handle('get-app-data-path', async event => {
+    return app.getPath('userData');
+  });
+
   ipcMain.handle('share-screen-published', async event => {
     const screenShareWindow = getScreenShareWindow();
     if (screenShareWindow && !screenShareWindow.isDestroyed()) {
@@ -835,4 +839,36 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
       };
     }
   });
+
+  // Log event handler - forwards log events from any renderer to main window
+  ipcMain.handle(
+    'send-log-event',
+    async (event, eventName: string, eventData: any) => {
+      try {
+        const mainWindow = getMainWindow();
+        console.log('Received log event from renderer:', eventName);
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send(
+            'electron-log-event',
+            eventName,
+            eventData
+          );
+          return { success: true };
+        } else {
+          console.warn(
+            'Main window not available to send log event:',
+            eventName,
+            eventData
+          );
+          return { success: false, error: 'Main window not available' };
+        }
+      } catch (error) {
+        console.error('Error forwarding log event:', error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
+    }
+  );
 }
