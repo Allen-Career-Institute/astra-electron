@@ -95,6 +95,7 @@ app.commandLine.appendArgument('--enable-experimental-web-platform-features');
 // Enable features with proper comma-separated values
 const enabledFeatures = [
   'TreesInViz',
+  'ThrottleMainFrameTo60Hz',
   'WebNNCoreMLExplicitGPUOrNPU',
   'GetDisplayMedia',
   'WebRTC',
@@ -130,10 +131,11 @@ app.commandLine.appendSwitch('webrtc-max-cpu-consumption-percentage', '80');
 app.commandLine.appendArgument('--webrtc-cpu-overuse-detection');
 
 app.commandLine.appendArgument('--disable-background-timer-throttling');
-app.commandLine.appendArgument('--disable-renderer-backgrounding');
+// app.commandLine.appendArgument('--disable-renderer-backgrounding');
 app.commandLine.appendArgument('--disable-backgrounding-occluded-windows');
-app.commandLine.appendSwitch('disable-frame-rate-limit');
-app.commandLine.appendSwitch('disable-gpu-vsync');
+// app.commandLine.appendSwitch('disable-frame-rate-limit');
+// app.commandLine.appendSwitch('disable-gpu-vsync');
+// CalculateNativeWinOcclusion
 app.commandLine.appendSwitch(
   'disable-features',
   'CalculateNativeWinOcclusion,WebRtcAllowInputVolumeAdjustment,'
