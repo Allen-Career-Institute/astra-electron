@@ -138,7 +138,7 @@ app.commandLine.appendArgument('--disable-backgrounding-occluded-windows');
 // CalculateNativeWinOcclusion
 app.commandLine.appendSwitch(
   'disable-features',
-  'CalculateNativeWinOcclusion,WebRtcAllowInputVolumeAdjustment,'
+  'WebRtcAllowInputVolumeAdjustment,'
 );
 app.commandLine.appendArgument('--disable-ipc-flooding-protection');
 app.commandLine.appendSwitch('max-active-webgl-contexts', '16');
