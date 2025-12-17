@@ -106,12 +106,12 @@ const monitorProcesses = async () => {
       ],
     ]);
 
-    if (netWorkMetric && netWorkMetric.pid) {
-      processPidMap.set(netWorkMetric.pid, {
-        priority: PROCESS_PRIORITY.REALTIME,
-        type: 'Network',
-      });
-    }
+    // if (netWorkMetric && netWorkMetric.pid) {
+    //   processPidMap.set(netWorkMetric.pid, {
+    //     priority: PROCESS_PRIORITY.REALTIME,
+    //     type: 'Network',
+    //   });
+    // }
 
     // Set priorities for tracked processes
     metrics.forEach((metric: ProcessMetric) => {
