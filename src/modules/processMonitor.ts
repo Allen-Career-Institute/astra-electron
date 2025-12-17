@@ -118,7 +118,7 @@ const monitorProcesses = async () => {
       const pid = metric.pid;
       const processConfig = processPidMap.get(pid);
 
-      if (processConfig) {
+      if (processConfig && processConfig?.type) {
         setProcessPriority(pid, processConfig.priority, processConfig.type);
       }
     });
