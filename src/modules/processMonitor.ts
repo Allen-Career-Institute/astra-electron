@@ -95,11 +95,11 @@ const monitorProcesses = async () => {
         streamWindowPid,
         { priority: PROCESS_PRIORITY.REALTIME, type: 'Stream window' },
       ],
-      [mainWindowPid, { priority: PROCESS_PRIORITY.HIGH, type: 'Main window' }],
-      [
-        whiteboardWindowPid,
-        { priority: PROCESS_PRIORITY.HIGH, type: 'Whiteboard window' },
-      ],
+      // [mainWindowPid, { priority: PROCESS_PRIORITY.HIGH, type: 'Main window' }],
+      // [
+      //   whiteboardWindowPid,
+      //   { priority: PROCESS_PRIORITY.HIGH, type: 'Whiteboard window' },
+      // ],
       [
         screenShareWindowPid,
         { priority: PROCESS_PRIORITY.REALTIME, type: 'Screen share window' },
