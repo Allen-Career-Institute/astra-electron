@@ -8,7 +8,13 @@ import {
 } from 'electron';
 import * as Sentry from '@sentry/electron/main';
 import { loadEnv, getLoadEnvError } from './modules/loadEnv';
-import { getSentryDsn, getSentryEndpoint, isDev } from './modules/config';
+import {
+  getSentryDsn,
+  getSentryEndpoint,
+  getUrlByEnv,
+  isDev,
+} from './modules/config';
+import settings from 'electron-settings';
 
 loadEnv();
 
@@ -149,6 +155,7 @@ app.commandLine.appendArgument('--disable-dev-shm-usage');
 
 import 'agora-electron-sdk/js/Private/ipc/main.js';
 import { askMediaAccess } from './utils/permissionUtil';
+import { getActiveProfile, getAllProfiles } from './utils/profileUtils';
 
 setupIpcHandlers(ipcMain);
 
@@ -156,6 +163,12 @@ setupIpcHandlers(ipcMain);
 app.on('ready', async () => {
   try {
     await askMediaAccess(['screen', 'microphone', 'camera']);
+    settings.configure({
+      atomicSave: true,
+      fileName: 'settings.json',
+      prettify: true,
+      numSpaces: 2,
+    });
     createMainWindow();
     createMenu();
     process.title = 'Astra-Main';
@@ -215,7 +228,7 @@ app.on('window-all-closed', () => {
   }
 });
 
-app.on('activate', () => {
+app.on('activate', async () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createMainWindow();
   }

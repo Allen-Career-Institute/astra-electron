@@ -36,8 +36,15 @@ import {
   safeCloseScreenShareWindow,
 } from '../modules/screenShareWindow';
 import { askMediaAccess } from './permissionUtil';
-import { getMainWindow } from '../modules/windowManager';
+import { createMainWindow, getMainWindow } from '../modules/windowManager';
 import * as Sentry from '@sentry/electron/main';
+import {
+  createProfile,
+  deleteProfile,
+  getActiveProfile,
+  getAllProfiles,
+  setActiveProfile,
+} from './profileUtils';
 
 // Helper function to check if stream window is ready
 function isStreamWindowReady(): boolean {
@@ -712,14 +719,22 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
             }, 300);
           }
 
-          // // Get all browser windows to clear their data
-
-          // // Clear cookies and storage data for all sessions
-          // const sessions = [
-          //   session.defaultSession,
-          //   session.fromPartition('persist:shared'),
-          //   ...allWindows.map(win => win.webContents.session),
-          // ];
+          const activeProfile = getActiveProfile();
+          if (activeProfile) {
+            const activeSession = session.fromPartition(activeProfile);
+            if (activeSession) {
+              await activeSession.clearStorageData({
+                storages: [
+                  `indexdb`,
+                  `localstorage`,
+                  `shadercache`,
+                  `cachestorage`,
+                ],
+              });
+            }
+          }
+          setActiveProfile(null);
+          createMainWindow();
 
           // // Clear cookies and storage data for each session
           // for (const sessionInstance of sessions) {
@@ -871,4 +886,67 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
       }
     }
   );
+
+  // Request profile selection config handler
+  ipcMain.handle('get-all-profiles', async event => {
+    try {
+      const config = await getAllProfiles();
+      console.log('getAllProfiles config', config);
+      return config || {};
+    } catch (error) {
+      Sentry.captureException(error);
+      return {};
+    }
+  });
+
+  ipcMain.handle('create-profile', async (event, id: string, name: string) => {
+    try {
+      const config = await createProfile({
+        id,
+        name,
+      });
+      await createMainWindow();
+      return { success: true, config };
+    } catch (error) {
+      Sentry.captureException(error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  });
+
+  ipcMain.handle('set-active-profile', async (event, id: string) => {
+    try {
+      await setActiveProfile(id);
+      await createMainWindow();
+    } catch (error) {
+      Sentry.captureException(error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  });
+
+  ipcMain.handle('delete-profile', async (event, id: string) => {
+    try {
+      console.log('delete-profile', id);
+      await deleteProfile(id);
+      const activeSession = session.fromPartition(id);
+      if (activeSession) {
+        await activeSession.clearCache();
+        await activeSession.clearStorageData({
+          storages: [`indexdb`, `localstorage`, `shadercache`, `cachestorage`],
+        });
+      }
+      return { success: true, id };
+    } catch (error) {
+      Sentry.captureException(error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  });
 }

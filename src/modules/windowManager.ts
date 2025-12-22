@@ -9,6 +9,7 @@ import {
   addKeyboardListenerUtil,
   registerZoomShortcut,
 } from '../utils/keyboardListenerUtil';
+import { getActiveProfile } from '../utils/profileUtils';
 
 let mainWindow: BrowserWindow | null = null;
 let mainWindowHasLoaded: boolean = false;
@@ -19,10 +20,11 @@ let mainWindowPid: number | null = null;
 function getSharedSession(): Electron.Session {
   if (!sharedSession) {
     // Create a shared session for all windows to ensure localStorage/cookies persistence
-    sharedSession = session.fromPartition('persist:shared');
+    const sessionValue = getActiveProfile() || 'persist:shared';
+    sharedSession = session.fromPartition(sessionValue);
 
     // Debug: Log session information
-    console.log('Shared session created with partition: persist:shared');
+    console.log('Shared session created with partition:', sessionValue);
     console.log('Shared session storage path:', sharedSession.getStoragePath());
 
     // Configure permission handler
@@ -59,8 +61,54 @@ function injectTokensToWindow(window: BrowserWindow): void {
 }
 
 function createMainWindow(): BrowserWindow {
-  // Use app.getAppPath() for packaged app, process.cwd() for development
   const appPath = app.isPackaged ? app.getAppPath() : process.cwd();
+  const activeProfile = getActiveProfile();
+  if (!activeProfile) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.destroy();
+    }
+    const preloadPath = path.join(
+      appPath,
+      'dist',
+      'profile-selection-preload.js'
+    );
+    // Create a new profile selection window
+    const profileSelectionWindow = new BrowserWindow({
+      title: 'Astra - Profile Selection',
+      show: true,
+      fullscreen: true, // Explicitly prevent fullscreen
+      webPreferences: {
+        session: session.defaultSession,
+        preload: preloadPath,
+      },
+      resizable: true,
+      minimizable: true,
+      maximizable: true,
+      closable: false,
+      alwaysOnTop: true, // Keep on top of main window
+      skipTaskbar: false,
+      autoHideMenuBar: true,
+      frame: true,
+      transparent: false,
+      hasShadow: true,
+      thickFrame: true,
+      titleBarStyle: 'default',
+    });
+
+    profileSelectionWindow.loadFile(
+      path.join(appPath, 'dist', 'renderer', 'profile-selection.html')
+    );
+    if (isDev()) {
+      profileSelectionWindow.webContents.openDevTools();
+    }
+    return profileSelectionWindow;
+  }
+  BrowserWindow.getAllWindows().forEach(window => {
+    if (!window.isDestroyed()) {
+      window.destroy();
+    }
+  });
+  // Use app.getAppPath() for packaged app, process.cwd() for development
   const preloadPath = path.join(appPath, 'dist', 'preload.js');
 
   mainWindow = new BrowserWindow({
