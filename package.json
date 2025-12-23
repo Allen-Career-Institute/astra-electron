@@ -19,7 +19,7 @@
     "build:ts": "cross-env-shell 'tsc'",
     "build": "cross-env yarn build:ts && yarn renderer:build && yarn electron:build",
     "dev": "yarn build:ts && yarn start",
-    "dev:watch": "nodemon --watch src --ext ts,js --ignore src/**/*.d.ts --exec \"yarn build:ts && yarn start\"",
+    "dev:watch": "nodemon --watch src --ext ts,js,css --ignore src/**/*.d.ts --exec \"yarn build:ts && yarn start\"",
     "dev:full": "concurrently \"yarn renderer:dev\" \"yarn dev:watch\"",
     "clean": "rimraf node_modules out dist dist-electron-builder",
     "clean:dist": "rimraf dist dist-electron-builder",
