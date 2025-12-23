@@ -60,13 +60,13 @@ yarn build:win-nsis
 ### **Workflows**
 
 1. **PR Build** (`.github/workflows/pr-build.yml`)
-   - Triggers on pull requests to `main` and `develop`
+   - Triggers on pull requests to `main`
    - Builds for all platforms (macOS, Windows, Linux)
    - Creates artifacts for testing (no GitHub release)
-   - Artifacts retained for 30 days
+   - Artifacts retained for 1 days
 
 2. **Release** (`.github/workflows/release.yml`)
-   - Triggers on pushes to `main` branch
+   - Triggers on release tag with latest `main` branch code
    - Builds for all platforms with code signing
    - Creates GitHub release with downloadable assets
    - Can be manually triggered with custom version
