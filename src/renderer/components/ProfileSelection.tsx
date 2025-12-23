@@ -72,12 +72,14 @@ const ProfileSelection: React.FC = () => {
         <div className="profile-list">
           {profiles && profiles.length >= 0 ? (
             profiles.map((profile, index) => (
-              <div key={profile.id + index} className="profile-item">
-                <div
-                  onClick={() => {
-                    (window as any).electronAPI.setActiveProfile(profile.id);
-                  }}
-                >
+              <div
+                key={profile.id + index}
+                className="profile-item"
+                onClick={() => {
+                  (window as any).electronAPI.setActiveProfile(profile.id);
+                }}
+              >
+                <div>
                   <p
                     style={{
                       backgroundColor: profile.color,
@@ -93,9 +95,9 @@ const ProfileSelection: React.FC = () => {
                   onClick={async (
                     event: React.MouseEvent<HTMLButtonElement>
                   ) => {
-                    await (window as any).electronAPI.deleteProfile(profile.id);
-                    getProfiles();
                     event.stopPropagation();
+                    await (window as any).electronAPI.deleteProfile(profile.id);
+                    await getProfiles();
                   }}
                 >
                   Delete
