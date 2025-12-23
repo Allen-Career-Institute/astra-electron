@@ -14,9 +14,19 @@ import {
   getUrlByEnv,
   isDev,
 } from './modules/config';
+import { setLaunchArgs } from './utils/relaunchUtil';
 import settings from 'electron-settings';
 
 loadEnv();
+
+const selectedProfile =
+  process.argv.find(a => a.startsWith('--profile='))?.split('=')[1] ?? null;
+
+setLaunchArgs(process.argv);
+
+if (selectedProfile) {
+  setActiveProfile(selectedProfile);
+}
 
 if (getSentryEndpoint()) {
   crashReporter.start({
@@ -155,7 +165,10 @@ app.commandLine.appendArgument('--disable-dev-shm-usage');
 
 import 'agora-electron-sdk/js/Private/ipc/main.js';
 import { askMediaAccess } from './utils/permissionUtil';
-import { clearActiveProfileStorage } from './utils/profileUtils';
+import {
+  clearActiveProfileStorage,
+  setActiveProfile,
+} from './utils/profileUtils';
 
 setupIpcHandlers(ipcMain);
 

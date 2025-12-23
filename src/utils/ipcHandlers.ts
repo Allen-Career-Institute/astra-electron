@@ -36,16 +36,19 @@ import {
   safeCloseScreenShareWindow,
 } from '../modules/screenShareWindow';
 import { askMediaAccess } from './permissionUtil';
-import { createMainWindow, getMainWindow } from '../modules/windowManager';
+import {
+  createMainWindow,
+  getMainWindow,
+  getSharedSession,
+} from '../modules/windowManager';
 import * as Sentry from '@sentry/electron/main';
 import {
   clearActiveProfileStorage,
   createProfile,
   deleteProfile,
-  getActiveProfile,
   getAllProfiles,
-  setActiveProfile,
 } from './profileUtils';
+import { relaunchWithArgs, getLaunchArgs } from './relaunchUtil';
 
 // Helper function to check if stream window is ready
 function isStreamWindowReady(): boolean {
@@ -696,7 +699,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
           webSecurity: false,
           sandbox: false,
           allowRunningInsecureContent: true,
-          session: session.fromPartition('persist:shared'),
+          session: getSharedSession(),
         },
         closable: false,
       });
@@ -720,7 +723,6 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
           }
 
           await clearActiveProfileStorage();
-          createMainWindow(true);
         }, 2500);
       });
 
@@ -860,8 +862,10 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
         id,
         name,
       });
-      await setActiveProfile(id);
-      await createMainWindow();
+      relaunchWithArgs([
+        ...getLaunchArgs().filter(a => !a.startsWith('--profile=')),
+        '--profile=' + id,
+      ]);
       return { success: true, config };
     } catch (error) {
       Sentry.captureException(error);
@@ -874,8 +878,11 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
 
   ipcMain.handle('set-active-profile', async (event, id: string) => {
     try {
-      await setActiveProfile(id);
-      await createMainWindow();
+      relaunchWithArgs([
+        ...getLaunchArgs().filter(a => !a.startsWith('--profile=')),
+        '--profile=' + id,
+      ]);
+      return { success: true, id };
     } catch (error) {
       Sentry.captureException(error);
       return {

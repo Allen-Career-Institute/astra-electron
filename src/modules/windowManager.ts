@@ -21,7 +21,7 @@ let profileSelectionWindow: BrowserWindow | null = null;
 function getSharedSession(): Electron.Session {
   if (!sharedSession) {
     // Create a shared session for all windows to ensure localStorage/cookies persistence
-    const sessionValue = getActiveProfile() || 'persist:shared';
+    const sessionValue = 'persist:shared';
     sharedSession = session.fromPartition(sessionValue);
 
     // Debug: Log session information
@@ -61,17 +61,19 @@ function injectTokensToWindow(window: BrowserWindow): void {
   }
 }
 
-function createMainWindow(
-  showProfileSelection: boolean = false
-): BrowserWindow {
+function createMainWindow(): BrowserWindow {
   const appPath = app.isPackaged ? app.getAppPath() : process.cwd();
   const activeProfile = getActiveProfile();
-  if (!activeProfile || showProfileSelection) {
+  if (!activeProfile) {
     const preloadPath = path.join(
       appPath,
       'dist',
       'profile-selection-preload.js'
     );
+    if (profileSelectionWindow && !profileSelectionWindow.isDestroyed()) {
+      profileSelectionWindow.destroy();
+      profileSelectionWindow = null;
+    }
     // Create a new profile selection window
     profileSelectionWindow = new BrowserWindow({
       title: 'Astra - Profile Selection',
@@ -98,12 +100,6 @@ function createMainWindow(
     );
     if (isDev()) {
       profileSelectionWindow.webContents.openDevTools();
-    }
-    if (showProfileSelection) {
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.destroy();
-        mainWindow = null;
-      }
     }
     return profileSelectionWindow;
   }

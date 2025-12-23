@@ -1,6 +1,9 @@
 import settings from 'electron-settings';
 
-import { session } from 'electron';
+import { app } from 'electron';
+import path from 'path';
+import fs from 'fs';
+import { getLaunchArgs, relaunchWithArgs } from './relaunchUtil';
 
 const getAllProfiles = async () => {
   return (await settings.get('profiles')) as Record<
@@ -46,6 +49,14 @@ let activeProfile: string | null = null;
 
 const setActiveProfile = async (id: null | string) => {
   activeProfile = id;
+  if (id) {
+    const baseDir = path.join(app.getPath('appData'), 'profiles');
+    const profileDir = path.join(baseDir, id);
+
+    fs.mkdirSync(profileDir, { recursive: true });
+
+    app.setPath('userData', profileDir);
+  }
   await settings.set('activeProfile', id);
 };
 
@@ -59,13 +70,11 @@ const getActiveProfile = () => {
 
 const clearActiveProfileStorage = async () => {
   const activeProfile = getActiveProfile();
-  if (activeProfile) {
-    const activeSession = session.fromPartition(activeProfile);
-    await activeSession.clearStorageData({
-      storages: [`indexdb`, `localstorage`, `shadercache`, `cachestorage`],
-    });
-  }
-  await setActiveProfile(null);
+  // if (activeProfile) {
+  //   const activeSession = session.fromPartition('persist:shared');
+  //   await activeSession.clearStorageData();
+  // }
+  relaunchWithArgs(getLaunchArgs().filter(a => !a.startsWith('--profile=')));
 };
 
 export {

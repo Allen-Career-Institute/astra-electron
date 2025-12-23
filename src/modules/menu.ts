@@ -1,6 +1,6 @@
 import { Menu, dialog, app, BrowserWindow } from 'electron';
 import { getAppVersion, getCurrentUrl, getEnv, isDev } from './config';
-import { createMainWindow, getMainWindow } from './windowManager';
+import { getMainWindow } from './windowManager';
 import { reloadMainWindow } from './reloadUtils';
 import { safeClosewhiteboardWindow } from './whiteboard-window';
 import { safeCloseScreenShareWindow } from './screenShareWindow';
@@ -167,7 +167,6 @@ function createMenu(): void {
           accelerator: 'F10',
           click: async () => {
             await clearActiveProfileStorage();
-            createMainWindow(true);
           },
         },
         { type: 'separator' as const },
