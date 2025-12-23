@@ -35,9 +35,6 @@ const createProfile = async ({ id, name }: { id: string; name: string }) => {
     color: getRandomColorHexCode(),
     id,
   });
-
-  console.log('createProfile settings', await settings.get());
-  console.log('createProfile profiles', await settings.get('profiles'));
   await setActiveProfile(id);
   return { success: true, id, name };
 };

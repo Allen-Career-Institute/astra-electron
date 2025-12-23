@@ -848,7 +848,6 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
   ipcMain.handle('get-all-profiles', async event => {
     try {
       const config = await getAllProfiles();
-      console.log('getAllProfiles config', config);
       return config || {};
     } catch (error) {
       Sentry.captureException(error);

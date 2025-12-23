@@ -15,6 +15,7 @@ let mainWindow: BrowserWindow | null = null;
 let mainWindowHasLoaded: boolean = false;
 let sharedSession: Electron.Session | null = null;
 let mainWindowPid: number | null = null;
+let profileSelectionWindow: BrowserWindow | null = null;
 
 // Lazy initialization of shared session
 function getSharedSession(): Electron.Session {
@@ -66,18 +67,20 @@ function createMainWindow(
   const appPath = app.isPackaged ? app.getAppPath() : process.cwd();
   const activeProfile = getActiveProfile();
   if (!activeProfile || showProfileSelection) {
-    BrowserWindow.getAllWindows().forEach(window => {
-      if (!window.isDestroyed()) {
-        window.destroy();
-      }
-    });
     const preloadPath = path.join(
       appPath,
       'dist',
       'profile-selection-preload.js'
     );
+    if (showProfileSelection) {
+      BrowserWindow.getAllWindows().forEach(window => {
+        if (!window.isDestroyed()) {
+          window.destroy();
+        }
+      });
+    }
     // Create a new profile selection window
-    const profileSelectionWindow = new BrowserWindow({
+    profileSelectionWindow = new BrowserWindow({
       title: 'Astra - Profile Selection',
       show: true,
       fullscreen: true, // Explicitly prevent fullscreen
@@ -114,7 +117,10 @@ function createMainWindow(
   });
   // Use app.getAppPath() for packaged app, process.cwd() for development
   const preloadPath = path.join(appPath, 'dist', 'preload.js');
-
+  if (profileSelectionWindow && !profileSelectionWindow.isDestroyed()) {
+    profileSelectionWindow.destroy();
+    profileSelectionWindow = null;
+  }
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,

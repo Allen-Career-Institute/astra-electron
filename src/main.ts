@@ -220,13 +220,13 @@ app.on('ready', async () => {
   }
 });
 
-// app.on('window-all-closed', () => {
-//   if (process.platform !== 'darwin') {
-//     app.quit();
-//   } else {
-//     cleanupNonMainWindow();
-//   }
-// });
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  } else {
+    cleanupNonMainWindow();
+  }
+});
 
 app.on('activate', async () => {
   if (BrowserWindow.getAllWindows().length === 0) {

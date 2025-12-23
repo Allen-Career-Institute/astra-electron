@@ -5,7 +5,7 @@ import { reloadMainWindow } from './reloadUtils';
 import { safeClosewhiteboardWindow } from './whiteboard-window';
 import { safeCloseScreenShareWindow } from './screenShareWindow';
 import { safeCloseStreamWindow } from './streamWindow';
-import { clearActiveProfileStorage } from '@/utils/profileUtils';
+import { clearActiveProfileStorage } from '../utils/profileUtils';
 
 /**
  * Opens a Chrome internal URL in a new window
@@ -165,7 +165,8 @@ function createMenu(): void {
         {
           label: 'Profile Selection',
           accelerator: 'F10',
-          click: () => {
+          click: async () => {
+            await clearActiveProfileStorage();
             createMainWindow(true);
           },
         },
