@@ -84,10 +84,8 @@ function createMainWindow(
       resizable: true,
       minimizable: true,
       maximizable: true,
-      closable: false,
+      closable: true,
       alwaysOnTop: true, // Keep on top of main window
-      skipTaskbar: false,
-      autoHideMenuBar: true,
       frame: true,
       transparent: false,
       hasShadow: true,
