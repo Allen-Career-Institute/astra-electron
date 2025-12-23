@@ -1,5 +1,7 @@
 import settings from 'electron-settings';
 
+import { session } from 'electron';
+
 const getAllProfiles = async () => {
   return (await settings.get('profiles')) as Record<
     string,
@@ -59,6 +61,17 @@ const getActiveProfile = () => {
   return activeProfile;
 };
 
+const clearActiveProfileStorage = async () => {
+  const activeProfile = getActiveProfile();
+  if (activeProfile) {
+    const activeSession = session.fromPartition(activeProfile);
+    await activeSession.clearStorageData({
+      storages: [`indexdb`, `localstorage`, `shadercache`, `cachestorage`],
+    });
+  }
+  await setActiveProfile(null);
+};
+
 export {
   getAllProfiles,
   getProfile,
@@ -67,4 +80,5 @@ export {
   clearActiveProfile,
   getActiveProfile,
   deleteProfile,
+  clearActiveProfileStorage,
 };

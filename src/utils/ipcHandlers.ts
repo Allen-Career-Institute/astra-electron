@@ -39,6 +39,7 @@ import { askMediaAccess } from './permissionUtil';
 import { createMainWindow, getMainWindow } from '../modules/windowManager';
 import * as Sentry from '@sentry/electron/main';
 import {
+  clearActiveProfileStorage,
   createProfile,
   deleteProfile,
   getActiveProfile,
@@ -719,52 +720,8 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
             }, 300);
           }
 
-          const activeProfile = getActiveProfile();
-          if (activeProfile) {
-            const activeSession = session.fromPartition(activeProfile);
-            if (activeSession) {
-              await activeSession.clearStorageData({
-                storages: [
-                  `indexdb`,
-                  `localstorage`,
-                  `shadercache`,
-                  `cachestorage`,
-                ],
-              });
-            }
-          }
-          setActiveProfile(null);
-          createMainWindow();
-
-          // // Clear cookies and storage data for each session
-          // for (const sessionInstance of sessions) {
-          //   if (sessionInstance) {
-          //     try {
-          //       // Clear all cookies and storage data
-          //       await sessionInstance.clearStorageData({
-          //         storages: [
-          //           // 'cookies',
-          //           // 'localstorage',
-          //           // 'websql',
-          //           // 'indexdb',
-          //           // 'shadercache',
-          //           // 'serviceworkers',
-          //           // 'cachestorage',
-          //         ],
-          //       });
-
-          //       // await sessionInstance.clearAuthCache();
-          //       // await sessionInstance.clearCache();
-          //       // await sessionInstance.clearHostResolverCache();
-          //     } catch (error) {
-          //       console.error(`Error clearing session:`, error);
-          //     }
-          //   }
-          // }
-
-          // // Reload main window to clear any remaining state
-          // const { reloadMainWindow } = await import('../modules/reloadUtils');
-          // reloadMainWindow(true);
+          await clearActiveProfileStorage();
+          createMainWindow(true);
         }, 2500);
       });
 
@@ -933,13 +890,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
     try {
       console.log('delete-profile', id);
       await deleteProfile(id);
-      const activeSession = session.fromPartition(id);
-      if (activeSession) {
-        await activeSession.clearCache();
-        await activeSession.clearStorageData({
-          storages: [`indexdb`, `localstorage`, `shadercache`, `cachestorage`],
-        });
-      }
+
       return { success: true, id };
     } catch (error) {
       Sentry.captureException(error);

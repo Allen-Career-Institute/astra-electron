@@ -155,7 +155,7 @@ app.commandLine.appendArgument('--disable-dev-shm-usage');
 
 import 'agora-electron-sdk/js/Private/ipc/main.js';
 import { askMediaAccess } from './utils/permissionUtil';
-import { getActiveProfile, getAllProfiles } from './utils/profileUtils';
+import { clearActiveProfileStorage } from './utils/profileUtils';
 
 setupIpcHandlers(ipcMain);
 
@@ -220,13 +220,13 @@ app.on('ready', async () => {
   }
 });
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  } else {
-    cleanupNonMainWindow();
-  }
-});
+// app.on('window-all-closed', () => {
+//   if (process.platform !== 'darwin') {
+//     app.quit();
+//   } else {
+//     cleanupNonMainWindow();
+//   }
+// });
 
 app.on('activate', async () => {
   if (BrowserWindow.getAllWindows().length === 0) {
@@ -234,6 +234,7 @@ app.on('activate', async () => {
   }
 });
 
-app.on('before-quit', () => {
+app.on('before-quit', async () => {
+  await clearActiveProfileStorage();
   cleanup();
 });
