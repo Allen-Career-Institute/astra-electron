@@ -5,6 +5,8 @@ import path from 'path';
 import fs from 'fs';
 import { getLaunchArgs, relaunchWithArgs } from './relaunchUtil';
 
+let activeProfile: string | null = null;
+
 const getAllProfiles = async () => {
   return (await settings.get('profiles')) as Record<
     string,
@@ -14,10 +16,6 @@ const getAllProfiles = async () => {
       color: string;
     }
   > | null;
-};
-
-const getProfile = async (id: string) => {
-  return (await settings.get(`profiles.${id}`)) as string | null;
 };
 
 const getRandomColorHexCode = () => {
@@ -45,8 +43,6 @@ const deleteProfile = async (id: string) => {
   return await settings.unset(`profiles.${id}`);
 };
 
-let activeProfile: string | null = null;
-
 const setActiveProfile = async (id: null | string) => {
   activeProfile = id;
   if (id) {
@@ -69,17 +65,11 @@ const getActiveProfile = () => {
 };
 
 const clearActiveProfileStorage = async () => {
-  const activeProfile = getActiveProfile();
-  // if (activeProfile) {
-  //   const activeSession = session.fromPartition('persist:shared');
-  //   await activeSession.clearStorageData();
-  // }
   relaunchWithArgs(getLaunchArgs().filter(a => !a.startsWith('--profile=')));
 };
 
 export {
   getAllProfiles,
-  getProfile,
   createProfile,
   setActiveProfile,
   clearActiveProfile,

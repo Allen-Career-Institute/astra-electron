@@ -26,6 +26,8 @@ setLaunchArgs(process.argv);
 
 if (selectedProfile) {
   setActiveProfile(selectedProfile);
+} else {
+  clearActiveProfile();
 }
 
 if (getSentryEndpoint()) {
@@ -166,6 +168,7 @@ app.commandLine.appendArgument('--disable-dev-shm-usage');
 import 'agora-electron-sdk/js/Private/ipc/main.js';
 import { askMediaAccess } from './utils/permissionUtil';
 import {
+  clearActiveProfile,
   clearActiveProfileStorage,
   setActiveProfile,
 } from './utils/profileUtils';
@@ -248,6 +251,6 @@ app.on('activate', async () => {
 });
 
 app.on('before-quit', async () => {
-  await clearActiveProfileStorage();
+  await clearActiveProfile();
   cleanup();
 });
