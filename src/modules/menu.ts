@@ -1,10 +1,11 @@
 import { Menu, dialog, app, BrowserWindow, shell } from 'electron';
 import { getAppVersion, getCurrentUrl, getEnv, isDev } from './config';
-import { getMainWindow } from './windowManager';
+import { createMainWindow, getMainWindow } from './windowManager';
 import { reloadMainWindow } from './reloadUtils';
 import { safeClosewhiteboardWindow } from './whiteboard-window';
 import { safeCloseScreenShareWindow } from './screenShareWindow';
 import { safeCloseStreamWindow } from './streamWindow';
+import { setActiveProfile } from '@/utils/profileUtils';
 
 /**
  * Opens a Chrome internal URL in a new window
@@ -121,6 +122,7 @@ function createMenu(): void {
           label: 'Quit',
           accelerator: process.platform === 'darwin' ? 'Cmd+Q' : 'Ctrl+Q',
           click: () => {
+            setActiveProfile(null);
             app.quit();
           },
         },
@@ -157,6 +159,14 @@ function createMenu(): void {
           accelerator: 'CmdOrCtrl+Shift+R',
           click: () => {
             reloadMainWindow(true);
+          },
+        },
+        { type: 'separator' as const },
+        {
+          label: 'Profile Selection',
+          accelerator: 'F10',
+          click: () => {
+            createMainWindow(true);
           },
         },
         { type: 'separator' as const },

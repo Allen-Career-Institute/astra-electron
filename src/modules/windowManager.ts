@@ -60,13 +60,17 @@ function injectTokensToWindow(window: BrowserWindow): void {
   }
 }
 
-function createMainWindow(): BrowserWindow {
+function createMainWindow(
+  showProfileSelection: boolean = false
+): BrowserWindow {
   const appPath = app.isPackaged ? app.getAppPath() : process.cwd();
   const activeProfile = getActiveProfile();
-  if (!activeProfile) {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.destroy();
-    }
+  if (!activeProfile || showProfileSelection) {
+    BrowserWindow.getAllWindows().forEach(window => {
+      if (!window.isDestroyed()) {
+        window.destroy();
+      }
+    });
     const preloadPath = path.join(
       appPath,
       'dist',
