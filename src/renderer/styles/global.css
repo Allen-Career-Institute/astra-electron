@@ -51,6 +51,10 @@ body {
   margin-bottom: 20px;
 }
 
+.modal-input:focus {
+  outline: none;
+}
+
 .disabled {
   background-color: #ccc;
   cursor: not-allowed;

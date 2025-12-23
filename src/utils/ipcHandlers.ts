@@ -860,6 +860,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
         id,
         name,
       });
+      await setActiveProfile(id);
       await createMainWindow();
       return { success: true, config };
     } catch (error) {
