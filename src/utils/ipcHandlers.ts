@@ -1,11 +1,4 @@
-import {
-  IpcMain,
-  app,
-  BrowserWindow,
-  session,
-  desktopCapturer,
-  systemPreferences,
-} from 'electron';
+import { IpcMain, app, BrowserWindow, desktopCapturer } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -27,7 +20,6 @@ import {
   setUpdateAvailable,
 } from '../modules/config';
 import { isChunkLoggingEnabled } from '../modules/user-config';
-import { reloadMainWindow } from '../modules/reloadUtils';
 import { getAutoUpdater } from '../modules/autoUpdater';
 import {
   createScreenShareWindow,
@@ -36,11 +28,7 @@ import {
   safeCloseScreenShareWindow,
 } from '../modules/screenShareWindow';
 import { askMediaAccess } from './permissionUtil';
-import {
-  createMainWindow,
-  getMainWindow,
-  getSharedSession,
-} from '../modules/windowManager';
+import { getMainWindow, getSharedSession } from '../modules/windowManager';
 import * as Sentry from '@sentry/electron/main';
 import {
   clearActiveProfileStorage,

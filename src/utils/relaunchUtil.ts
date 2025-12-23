@@ -15,14 +15,6 @@ const relaunchWithArgs = (args: string[]) => {
   if (app.isPackaged) {
     app.relaunch({ args });
     app.exit(0);
-  } else {
-    const electronBinary = process.execPath;
-    spawn(electronBinary, args, {
-      detached: true,
-      stdio: 'ignore',
-    }).unref();
-
-    app.exit(0);
   }
 };
 

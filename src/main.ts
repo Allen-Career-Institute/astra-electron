@@ -19,6 +19,7 @@ import settings from 'electron-settings';
 
 loadEnv();
 
+// To do incase to avoid profile selection window to open again and again add fallback value as non null value
 const selectedProfile =
   process.argv.find(a => a.startsWith('--profile='))?.split('=')[1] ?? null;
 
