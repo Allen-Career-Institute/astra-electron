@@ -72,13 +72,6 @@ function createMainWindow(
       'dist',
       'profile-selection-preload.js'
     );
-    if (showProfileSelection) {
-      BrowserWindow.getAllWindows().forEach(window => {
-        if (!window.isDestroyed()) {
-          window.destroy();
-        }
-      });
-    }
     // Create a new profile selection window
     profileSelectionWindow = new BrowserWindow({
       title: 'Astra - Profile Selection',
@@ -108,19 +101,16 @@ function createMainWindow(
     if (isDev()) {
       profileSelectionWindow.webContents.openDevTools();
     }
+    if (showProfileSelection) {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.destroy();
+        mainWindow = null;
+      }
+    }
     return profileSelectionWindow;
   }
-  BrowserWindow.getAllWindows().forEach(window => {
-    if (!window.isDestroyed()) {
-      window.destroy();
-    }
-  });
   // Use app.getAppPath() for packaged app, process.cwd() for development
   const preloadPath = path.join(appPath, 'dist', 'preload.js');
-  if (profileSelectionWindow && !profileSelectionWindow.isDestroyed()) {
-    profileSelectionWindow.destroy();
-    profileSelectionWindow = null;
-  }
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -157,6 +147,12 @@ function createMainWindow(
 
   if (isDev()) {
     // mainWindow.webContents.openDevTools();
+  }
+
+  // Cleanup profile selection window if it exists
+  if (profileSelectionWindow && !profileSelectionWindow.isDestroyed()) {
+    profileSelectionWindow.destroy();
+    profileSelectionWindow = null;
   }
 
   // Ensure window is properly set after content loads

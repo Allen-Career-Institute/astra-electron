@@ -686,7 +686,6 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
 
       // Clear rolling merge processes
       rollingMergeManager.cleanup();
-      const allWindows = BrowserWindow.getAllWindows();
 
       // Create logout window for Gmail logout (preserves account for future sign-ins)
       const logoutWindow = new BrowserWindow({
