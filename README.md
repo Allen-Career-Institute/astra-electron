@@ -2,6 +2,10 @@
 
 A modern Electron application for Allen Digital's Astra console with webview integration and video streaming capabilities.
 
+## Structure
+
+![Electron Arch](./Electron_App.png)
+
 ### Build Commands:
 
 ```bash
