@@ -15,6 +15,7 @@ import {
   isDev,
 } from './modules/config';
 import { setLaunchArgs } from './utils/relaunchUtil';
+import { clearActiveProfile, setActiveProfile } from './utils/profileUtils';
 import settings from 'electron-settings';
 
 loadEnv();
@@ -168,11 +169,6 @@ app.commandLine.appendArgument('--disable-dev-shm-usage');
 
 import 'agora-electron-sdk/js/Private/ipc/main.js';
 import { askMediaAccess } from './utils/permissionUtil';
-import {
-  clearActiveProfile,
-  clearActiveProfileStorage,
-  setActiveProfile,
-} from './utils/profileUtils';
 
 setupIpcHandlers(ipcMain);
 
