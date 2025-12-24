@@ -12,7 +12,6 @@ import {
 import { getActiveProfile } from '../utils/profileUtils';
 
 let mainWindow: BrowserWindow | null = null;
-let mainWindowHasLoaded: boolean = false;
 let sharedSession: Electron.Session | null = null;
 let mainWindowPid: number | null = null;
 let profileSelectionWindow: BrowserWindow | null = null;
@@ -100,6 +99,7 @@ function createMainWindow(): BrowserWindow {
     profileSelectionWindow.loadFile(
       path.join(appPath, 'dist', 'renderer', 'profile-selection.html')
     );
+    profileSelectionWindow.maximize();
     if (isDev()) {
       profileSelectionWindow.webContents.openDevTools();
     }
@@ -153,7 +153,6 @@ function createMainWindow(): BrowserWindow {
 
   // Ensure window is properly set after content loads
   mainWindow.webContents.on('did-finish-load', () => {
-    mainWindowHasLoaded = true;
     if (mainWindow && !mainWindow.isDestroyed()) {
       // Register with new process naming system
       registerMainUI(mainWindow);
@@ -173,9 +172,6 @@ function createMainWindow(): BrowserWindow {
     }
   });
 
-  mainWindow.webContents.on('did-start-loading', () => {
-    mainWindowHasLoaded = false;
-  });
   mainWindow.on('close', () => {
     safeCloseStreamWindow();
     safeClosewhiteboardWindow();
@@ -196,14 +192,6 @@ function getMainWindow(): BrowserWindow | null {
   return mainWindow;
 }
 
-function isMainWindowLoaded(): boolean {
-  return mainWindowHasLoaded;
-}
-
-function setMainWindowLoaded(loaded: boolean): void {
-  mainWindowHasLoaded = loaded;
-}
-
 function getMainWindowPid(): number | null {
   return mainWindowPid;
 }
@@ -212,8 +200,6 @@ function getMainWindowPid(): number | null {
 export {
   createMainWindow,
   getMainWindow,
-  isMainWindowLoaded,
-  setMainWindowLoaded,
   injectTokensToWindow,
   getSharedSession,
   getMainWindowPid,
