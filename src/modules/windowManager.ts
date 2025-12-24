@@ -77,8 +77,10 @@ function createMainWindow(): BrowserWindow {
     // Create a new profile selection window
     profileSelectionWindow = new BrowserWindow({
       title: 'Astra - Profile Selection',
+      width: 1200,
+      height: 800,
       show: true,
-      fullscreen: true, // Explicitly prevent fullscreen
+      fullscreen: process.platform === 'darwin' ? true : false,
       webPreferences: {
         session: session.defaultSession,
         preload: preloadPath,

@@ -122,7 +122,6 @@ function createMenu(): void {
           label: 'Quit',
           accelerator: process.platform === 'darwin' ? 'Cmd+Q' : 'Ctrl+Q',
           click: async () => {
-            await clearActiveProfileStorage();
             app.quit();
           },
         },
