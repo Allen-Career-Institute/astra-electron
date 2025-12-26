@@ -166,7 +166,8 @@ module.exports = [
       preload: './src/preload.ts',
       'stream-preload': './src/stream-preload.ts',
       'whiteboard-preload': './src/whiteboard-preload.ts',
-      'screen-share-preload': './src/screen-share-preload.ts'
+      'screen-share-preload': './src/screen-share-preload.ts',
+      'profile-selection-preload': './src/profile-selection-preload.ts'
     },
     target: 'electron-renderer',
     output: {
@@ -266,7 +267,8 @@ module.exports = [
     mode: process.env.ENV === 'production' ? 'production' : 'development',
     entry: {
       main: './src/renderer/index.tsx',
-      'screen-share': './src/renderer/screen-share.tsx'
+      'screen-share': './src/renderer/screen-share.tsx',
+      'profile-selection': './src/renderer/profile-selection.tsx'
     },
     target: 'electron-renderer',
     output: {
@@ -406,6 +408,31 @@ module.exports = [
           minifyURLs: true,
         } : false,
         chunks: ['screen-share'],
+      }),
+      new HtmlWebpackPlugin({
+        template: './src/renderer/profile-selection.html',
+        filename: 'profile-selection.html',
+        inject: 'body',
+        scriptLoading: 'defer',
+        minify: process.env.ENV === 'production' ? {
+          collapseWhitespace: true,
+          removeComments: true,
+          removeRedundantAttributes: true,
+          removeScriptTypeAttributes: true,
+          removeStyleLinkTypeAttributes: true,
+          useShortDoctype: true,
+          removeAttributeQuotes: true,
+          removeEmptyAttributes: true,
+          removeOptionalTags: true,
+          removeRedundantAttributes: true,
+          removeScriptTypeAttributes: true,
+          removeStyleLinkTypeAttributes: true,
+          removeTagWhitespace: true,  
+          minifyCSS: true,
+          minifyJS: true,
+          minifyURLs: true,
+        } : false,
+        chunks: ['profile-selection'],
       })
     ],
     optimization: {
