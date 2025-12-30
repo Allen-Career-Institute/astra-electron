@@ -716,7 +716,7 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
           height: 300px;
           background: #000;
           border-radius: 8px;
-          overflow: hidden;
+          overflow: scroll;
           margin-bottom: 12px;
         }
 
