@@ -8,9 +8,29 @@ import {
 } from 'electron';
 import * as Sentry from '@sentry/electron/main';
 import { loadEnv, getLoadEnvError } from './modules/loadEnv';
-import { getSentryDsn, getSentryEndpoint, isDev } from './modules/config';
+import {
+  getSentryDsn,
+  getSentryEndpoint,
+  getUrlByEnv,
+  isDev,
+} from './modules/config';
+import { setLaunchArgs } from './utils/relaunchUtil';
+import { clearActiveProfile, setActiveProfile } from './utils/profileUtils';
+import settings from 'electron-settings';
 
 loadEnv();
+
+// To do incase to avoid profile selection window to open again and again add fallback value as non null value
+const selectedProfile =
+  process.argv.find(a => a.startsWith('--profile='))?.split('=')[1] ?? null;
+
+setLaunchArgs(process.argv);
+
+if (selectedProfile) {
+  setActiveProfile(selectedProfile);
+} else {
+  clearActiveProfile();
+}
 
 if (getSentryEndpoint()) {
   crashReporter.start({
@@ -156,6 +176,12 @@ setupIpcHandlers(ipcMain);
 app.on('ready', async () => {
   try {
     await askMediaAccess(['screen', 'microphone', 'camera']);
+    settings.configure({
+      atomicSave: true,
+      fileName: 'settings.json',
+      prettify: true,
+      numSpaces: 2,
+    });
     createMainWindow();
     createMenu();
     process.title = 'Astra-Main';
@@ -215,12 +241,13 @@ app.on('window-all-closed', () => {
   }
 });
 
-app.on('activate', () => {
+app.on('activate', async () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createMainWindow();
   }
 });
 
-app.on('before-quit', () => {
+app.on('before-quit', async () => {
+  await clearActiveProfile();
   cleanup();
 });
