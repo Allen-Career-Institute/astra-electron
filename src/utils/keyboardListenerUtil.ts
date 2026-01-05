@@ -34,46 +34,44 @@ const addKeyboardListenerUtil = (window: BrowserWindow) => {
 };
 
 const registerZoomShortcut = () => {
-  if (process.platform === 'darwin') {
-    globalShortcut.register('Cmd+P', () => {
-      const mainWindow = getMainWindow();
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        const zoomLevel = mainWindow.webContents.getZoomLevel();
-        mainWindow.webContents.setZoomLevel(
-          mainWindow.webContents.getZoomLevel() + zoomLevel > 1.5 ? 0.25 : 0.1
-        );
-      }
-    });
+  try {
+    if (process.platform === 'darwin') {
+      // Use Command+= for zoom in (Shift+= gives +)
+      globalShortcut.register('Command+=', () => {
+        const mainWindow = getMainWindow();
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          const zoomLevel = mainWindow.webContents.getZoomLevel();
+          mainWindow.webContents.setZoomLevel(zoomLevel + 0.25);
+        }
+      });
 
-    globalShortcut.register('Cmd+-', () => {
-      const mainWindow = getMainWindow();
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        const zoomLevel = mainWindow.webContents.getZoomLevel();
-        mainWindow.webContents.setZoomLevel(
-          mainWindow.webContents.getZoomLevel() - (zoomLevel < 1.5 ? 0.1 : 0.25)
-        );
-      }
-    });
-  } else {
-    globalShortcut.register('Control+=', () => {
-      const mainWindow = getMainWindow();
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        const zoomLevel = mainWindow.webContents.getZoomLevel();
-        mainWindow.webContents.setZoomLevel(
-          mainWindow.webContents.getZoomLevel() + (zoomLevel > 1.5 ? 0.25 : 0.1)
-        );
-      }
-    });
+      globalShortcut.register('Command+-', () => {
+        const mainWindow = getMainWindow();
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          const zoomLevel = mainWindow.webContents.getZoomLevel();
+          mainWindow.webContents.setZoomLevel(zoomLevel - 0.25);
+        }
+      });
+    } else {
+      globalShortcut.register('Control+=', () => {
+        const mainWindow = getMainWindow();
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          const zoomLevel = mainWindow.webContents.getZoomLevel();
+          mainWindow.webContents.setZoomLevel(zoomLevel + 0.25);
+        }
+      });
 
-    globalShortcut.register('Control+-', () => {
-      const mainWindow = getMainWindow();
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        const zoomLevel = mainWindow.webContents.getZoomLevel();
-        mainWindow.webContents.setZoomLevel(
-          mainWindow.webContents.getZoomLevel() - (zoomLevel < 1.5 ? 0.1 : 0.25)
-        );
-      }
-    });
+      globalShortcut.register('Control+-', () => {
+        const mainWindow = getMainWindow();
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          const zoomLevel = mainWindow.webContents.getZoomLevel();
+          mainWindow.webContents.setZoomLevel(zoomLevel - 0.25);
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Failed to register zoom shortcuts:', error);
+    // Don't crash the app if shortcuts fail to register
   }
 };
 
