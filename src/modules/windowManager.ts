@@ -9,6 +9,7 @@ import {
   addKeyboardListenerUtil,
   registerZoomShortcut,
 } from '../utils/keyboardListenerUtil';
+import { getCustomUrl } from './urlSettings';
 
 let mainWindow: BrowserWindow | null = null;
 let mainWindowHasLoaded: boolean = false;
@@ -93,7 +94,10 @@ function createMainWindow(): BrowserWindow {
     title: 'Astra',
   });
 
-  mainWindow.loadURL(getUrlByEnv());
+  // Use custom URL if set, otherwise use environment URL
+  const urlToLoad = getCustomUrl() || getUrlByEnv();
+  console.log('Loading URL:', urlToLoad);
+  mainWindow.loadURL(urlToLoad);
   mainWindow.maximize();
   registerZoomShortcut();
 

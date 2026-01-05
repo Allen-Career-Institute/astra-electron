@@ -5,6 +5,11 @@ import { reloadMainWindow } from './reloadUtils';
 import { safeClosewhiteboardWindow } from './whiteboard-window';
 import { safeCloseScreenShareWindow } from './screenShareWindow';
 import { safeCloseStreamWindow } from './streamWindow';
+import {
+  showUrlInputDialogNative,
+  getCustomUrl,
+  isCustomUrlEnabled,
+} from './urlSettings';
 
 /**
  * Opens a Chrome internal URL in a new window
@@ -100,6 +105,25 @@ const showChromeFlagsDialog = () => {
 
 function createMenu(): void {
   const template = [
+    // macOS app menu
+    ...(process.platform === 'darwin'
+      ? [
+          {
+            label: app.name,
+            submenu: [
+              { role: 'about' as const },
+              { type: 'separator' as const },
+              { role: 'services' as const },
+              { type: 'separator' as const },
+              { role: 'hide' as const },
+              { role: 'hideOthers' as const },
+              { role: 'unhide' as const },
+              { type: 'separator' as const },
+              { role: 'quit' as const },
+            ],
+          },
+        ]
+      : []),
     {
       label: 'File',
       submenu: [
@@ -117,13 +141,43 @@ function createMenu(): void {
             safeCloseScreenShareWindow('LEAVE_MEETING');
           },
         },
-        {
-          label: 'Quit',
-          accelerator: process.platform === 'darwin' ? 'Cmd+Q' : 'Ctrl+Q',
-          click: () => {
-            app.quit();
-          },
-        },
+        ...(process.platform !== 'darwin'
+          ? [
+              {
+                label: 'Quit',
+                accelerator: 'Ctrl+Q',
+                click: () => {
+                  app.quit();
+                },
+              },
+            ]
+          : []),
+      ],
+    },
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' as const },
+        { role: 'redo' as const },
+        { type: 'separator' as const },
+        { role: 'cut' as const },
+        { role: 'copy' as const },
+        { role: 'paste' as const },
+        { role: 'pasteAndMatchStyle' as const },
+        { role: 'delete' as const },
+        { role: 'selectAll' as const },
+        ...(process.platform === 'darwin'
+          ? [
+              { type: 'separator' as const },
+              {
+                label: 'Speech',
+                submenu: [
+                  { role: 'startSpeaking' as const },
+                  { role: 'stopSpeaking' as const },
+                ],
+              },
+            ]
+          : []),
       ],
     },
     {
@@ -190,6 +244,30 @@ function createMenu(): void {
     {
       label: 'Settings',
       submenu: [
+        {
+          label: 'Change URL...',
+          accelerator: 'CmdOrCtrl+U',
+          click: async () => {
+            await showUrlInputDialogNative();
+          },
+        },
+        { type: 'separator' as const },
+        {
+          label: 'Current URL Info',
+          click: () => {
+            const customUrl = getCustomUrl();
+            const usingCustom = isCustomUrlEnabled();
+            dialog.showMessageBox({
+              type: 'info',
+              title: 'URL Configuration',
+              message: 'Current URL Settings',
+              detail: usingCustom
+                ? `Using Custom URL:\n${customUrl}\n\nYou can change this in Settings > Change URL`
+                : `Using Default URL from .env.local:\n${getCurrentUrl()}\n\nYou can set a custom URL in Settings > Change URL`,
+            });
+          },
+        },
+        { type: 'separator' as const },
         {
           label: 'Chrome Flags',
           click: () => {
@@ -289,6 +367,8 @@ function createMenu(): void {
                 getEnv() +
                 '\nURL: ' +
                 getCurrentUrl() +
+                '\nCustom URL: ' +
+                (isCustomUrlEnabled() ? getCustomUrl() : 'Not set') +
                 '\nApp Version: ' +
                 getAppVersion() +
                 '\nAppData Path: ' +
