@@ -1,11 +1,4 @@
-import {
-  IpcMain,
-  app,
-  BrowserWindow,
-  session,
-  desktopCapturer,
-  systemPreferences,
-} from 'electron';
+import { IpcMain, app, BrowserWindow, desktopCapturer } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -27,7 +20,6 @@ import {
   setUpdateAvailable,
 } from '../modules/config';
 import { isChunkLoggingEnabled } from '../modules/user-config';
-import { reloadMainWindow } from '../modules/reloadUtils';
 import { getAutoUpdater } from '../modules/autoUpdater';
 import {
   createScreenShareWindow,
@@ -36,8 +28,15 @@ import {
   safeCloseScreenShareWindow,
 } from '../modules/screenShareWindow';
 import { askMediaAccess } from './permissionUtil';
-import { getMainWindow } from '../modules/windowManager';
+import { getMainWindow, getSharedSession } from '../modules/windowManager';
 import * as Sentry from '@sentry/electron/main';
+import {
+  clearActiveProfileStorage,
+  createProfile,
+  deleteProfile,
+  getAllProfiles,
+} from './profileUtils';
+import { relaunchWithArgs, getLaunchArgs } from './relaunchUtil';
 
 // Helper function to check if stream window is ready
 function isStreamWindowReady(): boolean {
@@ -562,115 +561,6 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
     }
   });
 
-  // Get recordings directory path
-  ipcMain.handle('get-recordings-path', async () => {
-    try {
-      const recordingsDir = path.join(app.getPath('userData'), 'recordings');
-      return {
-        success: true,
-        recordingsPath: recordingsDir,
-        userDataPath: app.getPath('userData'),
-      };
-    } catch (error) {
-      console.error('Failed to get recordings path:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
-    }
-  });
-
-  // List recordings for a specific meeting
-  ipcMain.handle('list-recordings', async (event, meetingId) => {
-    try {
-      const recordingsDir = path.join(
-        app.getPath('userData'),
-        'recordings',
-        meetingId
-      );
-
-      if (!fs.existsSync(recordingsDir)) {
-        return {
-          success: true,
-          recordings: [],
-          message: 'No recordings found for this meeting',
-        };
-      }
-
-      const files = fs.readdirSync(recordingsDir);
-      const recordings = files
-        .filter(file => file.endsWith('.webm') || file.endsWith('.mpeg'))
-        .map(file => {
-          const filePath = path.join(recordingsDir, file);
-          const stats = fs.statSync(filePath);
-          return {
-            fileName: file,
-            filePath: filePath,
-            size: stats.size,
-            created: stats.birthtime,
-            modified: stats.mtime,
-            type: file.endsWith('.webm') ? 'webm' : 'mpeg',
-          };
-        })
-        .sort((a, b) => a.fileName.localeCompare(b.fileName));
-
-      // Check for final recording files
-      const finalRecordings = recordings.filter(recording =>
-        recording.fileName.startsWith('final_recording_')
-      );
-
-      const intermediateRecordings = recordings.filter(
-        recording => !recording.fileName.startsWith('final_recording_')
-      );
-
-      return {
-        success: true,
-        recordings: intermediateRecordings,
-        finalRecordings: finalRecordings,
-        meetingId: meetingId,
-        totalFiles: intermediateRecordings.length,
-        totalFinalRecordings: finalRecordings.length,
-      };
-    } catch (error) {
-      console.error('Failed to list recordings:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
-    }
-  });
-
-  // Open recordings folder in file explorer
-  ipcMain.handle('open-recordings-folder', async (event, meetingId) => {
-    try {
-      const { shell } = require('electron');
-      const recordingsDir = path.join(
-        app.getPath('userData'),
-        'recordings',
-        meetingId
-      );
-
-      if (!fs.existsSync(recordingsDir)) {
-        return {
-          success: false,
-          error: 'Recordings folder does not exist',
-        };
-      }
-
-      await shell.openPath(recordingsDir);
-      return {
-        success: true,
-        message: 'Recordings folder opened in file explorer',
-      };
-    } catch (error) {
-      console.error('Failed to open recordings folder:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
-    }
-  });
-
   // Listen for logout events and clear storage
   ipcMain.handle('app-logout', async () => {
     try {
@@ -678,7 +568,6 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
 
       // Clear rolling merge processes
       rollingMergeManager.cleanup();
-      const allWindows = BrowserWindow.getAllWindows();
 
       // Create logout window for Gmail logout (preserves account for future sign-ins)
       const logoutWindow = new BrowserWindow({
@@ -689,7 +578,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
           webSecurity: false,
           sandbox: false,
           allowRunningInsecureContent: true,
-          session: session.fromPartition('persist:shared'),
+          session: getSharedSession(),
         },
         closable: false,
       });
@@ -712,44 +601,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
             }, 300);
           }
 
-          // // Get all browser windows to clear their data
-
-          // // Clear cookies and storage data for all sessions
-          // const sessions = [
-          //   session.defaultSession,
-          //   session.fromPartition('persist:shared'),
-          //   ...allWindows.map(win => win.webContents.session),
-          // ];
-
-          // // Clear cookies and storage data for each session
-          // for (const sessionInstance of sessions) {
-          //   if (sessionInstance) {
-          //     try {
-          //       // Clear all cookies and storage data
-          //       await sessionInstance.clearStorageData({
-          //         storages: [
-          //           // 'cookies',
-          //           // 'localstorage',
-          //           // 'websql',
-          //           // 'indexdb',
-          //           // 'shadercache',
-          //           // 'serviceworkers',
-          //           // 'cachestorage',
-          //         ],
-          //       });
-
-          //       // await sessionInstance.clearAuthCache();
-          //       // await sessionInstance.clearCache();
-          //       // await sessionInstance.clearHostResolverCache();
-          //     } catch (error) {
-          //       console.error(`Error clearing session:`, error);
-          //     }
-          //   }
-          // }
-
-          // // Reload main window to clear any remaining state
-          // const { reloadMainWindow } = await import('../modules/reloadUtils');
-          // reloadMainWindow(true);
+          await clearActiveProfileStorage();
         }, 2500);
       });
 
@@ -871,4 +723,66 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
       }
     }
   );
+
+  // Request profile selection config handler
+  ipcMain.handle('get-all-profiles', async event => {
+    try {
+      const config = await getAllProfiles();
+      return config || {};
+    } catch (error) {
+      Sentry.captureException(error);
+      return {};
+    }
+  });
+
+  ipcMain.handle('create-profile', async (event, id: string, name: string) => {
+    try {
+      const config = await createProfile({
+        id,
+        name,
+      });
+      relaunchWithArgs([
+        ...getLaunchArgs().filter(a => !a.startsWith('--profile=')),
+        '--profile=' + id,
+      ]);
+      return { success: true, config };
+    } catch (error) {
+      Sentry.captureException(error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  });
+
+  ipcMain.handle('set-active-profile', async (event, id: string) => {
+    try {
+      relaunchWithArgs([
+        ...getLaunchArgs().filter(a => !a.startsWith('--profile=')),
+        '--profile=' + id,
+      ]);
+      return { success: true, id };
+    } catch (error) {
+      Sentry.captureException(error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  });
+
+  ipcMain.handle('delete-profile', async (event, id: string) => {
+    try {
+      console.log('delete-profile', id);
+      await deleteProfile(id);
+
+      return { success: true, id };
+    } catch (error) {
+      Sentry.captureException(error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  });
 }
