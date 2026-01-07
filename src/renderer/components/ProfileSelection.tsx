@@ -79,7 +79,7 @@ const ProfileSelection: React.FC = () => {
                   (window as any).electronAPI.setActiveProfile(profile.id);
                 }}
               >
-                <div>
+                <div className="profile-item-container">
                   <p
                     style={{
                       backgroundColor: profile.color,
