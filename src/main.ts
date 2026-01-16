@@ -20,7 +20,6 @@ if (getSentryEndpoint()) {
     uploadToServer: true,
   });
 }
-
 if (getSentryDsn()) {
   Sentry.init({
     dsn: getSentryDsn(),
