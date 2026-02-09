@@ -127,6 +127,26 @@ function createMenu(): void {
       ],
     },
     {
+      label: 'Edit',
+      submenu: [
+        { label: 'Undo', accelerator: 'CmdOrCtrl+Z', role: 'undo' as const },
+        {
+          label: 'Redo',
+          accelerator: 'Shift+CmdOrCtrl+Z',
+          role: 'redo' as const,
+        },
+        { type: 'separator' as const },
+        { label: 'Cut', accelerator: 'CmdOrCtrl+X', role: 'cut' as const },
+        { label: 'Copy', accelerator: 'CmdOrCtrl+C', role: 'copy' as const },
+        { label: 'Paste', accelerator: 'CmdOrCtrl+V', role: 'paste' as const },
+        {
+          label: 'Select All',
+          accelerator: 'CmdOrCtrl+A',
+          role: 'selectAll' as const,
+        },
+      ],
+    },
+    {
       label: 'View',
       submenu: [
         ...(isDev()

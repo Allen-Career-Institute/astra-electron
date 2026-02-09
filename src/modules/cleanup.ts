@@ -113,7 +113,7 @@ function cleanupOldRecordings(): void {
     // fork() properly handles Node.js execution in both dev and packaged apps
     const cleanupProcess = fork(cleanupScriptPath, [], {
       detached: true,
-      stdio: 'ignore', // Prevents EPIPE errors when process is detached and unref'd
+      stdio: 'inherit', // Show logs from cleanup task for debugging
       // fork() automatically uses the correct Node.js executable
     });
 
@@ -163,28 +163,19 @@ function cleanupOldRecordings(): void {
 }
 
 /**
- * Set up periodic cleanup of old recordings (every 30 minute)
- * Each cleanup runs as a separate child process that automatically exits when done
+ * Set up cleanup of old recordings (runs only on startup)
+ * Cleanup runs as a separate child process that automatically exits when done
  */
 function setupPeriodicCleanup(): void {
-  // const cleanupInterval = 1 * 60 * 1000; // 1 minute
-  const cleanupInterval = 30 * 60 * 1000; // 30 minutes
-
   cleanupIntervalTimer && clearInterval(cleanupIntervalTimer);
 
-  // Schedule periodic cleanup
-  cleanupIntervalTimer = setInterval(() => {
-    try {
-      console.log('[Cleanup Scheduler] Running periodic recording cleanup...');
-      cleanupOldRecordings();
-    } catch (error) {
-      Sentry.captureException(error);
-    }
-  }, cleanupInterval);
-
-  console.log(
-    `[Cleanup Scheduler] Periodic recording cleanup scheduled (every ${cleanupInterval / 60000} minute(s))`
-  );
+  // DISABLED: Cleanup is currently disabled
+  console.log('[Cleanup Scheduler] Automatic cleanup is DISABLED');
+  // To re-enable, uncomment the code below:
+  // setTimeout(() => {
+  //   console.log('[Cleanup Scheduler] Running startup cleanup...');
+  //   cleanupOldRecordings();
+  // }, 5000);
 }
 
 export {
