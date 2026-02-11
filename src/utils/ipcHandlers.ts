@@ -970,11 +970,11 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
     }
   });
 
-  // Get list of recording sessions (folder names)
+  // Get list of recording sessions (folder names with creation dates)
   ipcMain.handle('get-recordings', async () => {
     try {
       const recordingsDir = path.join(app.getPath('userData'), 'recordings');
-
+      
       // Create folder if it doesn't exist
       if (!fs.existsSync(recordingsDir)) {
         fs.mkdirSync(recordingsDir, { recursive: true });
@@ -985,15 +985,24 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
           count: 0,
         };
       }
-
+      
       // Get all items in the recordings directory
       const items = fs.readdirSync(recordingsDir, { withFileTypes: true });
-
-      // Filter for directories only (recording sessions)
+      
+      // Filter for directories only and get creation dates
       const recordings = items
         .filter(item => item.isDirectory())
-        .map(item => item.name);
-
+        .map(item => {
+          const folderPath = path.join(recordingsDir, item.name);
+          const stats = fs.statSync(folderPath);
+          return {
+            id: item.name,
+            createdAt: stats.birthtime.getTime(),
+          };
+        })
+        // Sort by createdAt descending (newest first)
+        .sort((a, b) => b.createdAt - a.createdAt);
+      
       return {
         success: true,
         recordings,

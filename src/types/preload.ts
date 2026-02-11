@@ -169,7 +169,7 @@ export interface MainElectronAPI extends BaseElectronAPI {
   // Recordings APIs
   getRecordings: () => Promise<{
     success: boolean;
-    recordings: string[];
+    recordings: Array<{ id: string; createdAt: number }>;
     recordingsPath?: string;
     count?: number;
     error?: string;
