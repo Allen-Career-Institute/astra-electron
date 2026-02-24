@@ -386,7 +386,7 @@ export class RollingMergeManager {
 
   /**
    * Add chunk to the list for a meeting
-   * Maintains proper ordering for timestamp-based filenames
+   * Maintains proper ordering for chunk index and timestamp-based filenames
    */
   addChunk(meetingId: string, chunkFileName: string): void {
     if (!this.chunkLists.has(meetingId)) {
@@ -396,11 +396,33 @@ export class RollingMergeManager {
     const chunkList = this.chunkLists.get(meetingId)!;
     chunkList.push(chunkFileName);
 
-    // Sort chunks by timestamp to ensure proper order for merging
-    // Format: ${timestamp}.webm
+    // Sort chunks by chunk index first, then timestamp to ensure proper order for merging
+    // Format: ${chunkIndex}_${timestamp}.webm
     chunkList.sort((a, b) => {
-      const timestampA = parseInt(a.split('.')[0]);
-      const timestampB = parseInt(b.split('.')[0]);
+      // Extract chunk index and timestamp from filename
+      // Format: chunkIndex_timestamp.webm
+      const partsA = a.split('.')[0].split('_');
+      const partsB = b.split('.')[0].split('_');
+      
+      const chunkIndexA = parseInt(partsA[0]);
+      const chunkIndexB = parseInt(partsB[0]);
+      
+      // Handle edge cases: if chunk index is NaN (e.g., merged_output.webm, old format files)
+      // Put them at the end
+      if (isNaN(chunkIndexA) && isNaN(chunkIndexB)) {
+        return a.localeCompare(b); // Alphabetical fallback
+      }
+      if (isNaN(chunkIndexA)) return 1; // Put non-numeric at end
+      if (isNaN(chunkIndexB)) return -1; // Put non-numeric at end
+      
+      // First sort by chunk index
+      if (chunkIndexA !== chunkIndexB) {
+        return chunkIndexA - chunkIndexB;
+      }
+      
+      // If chunk indices are equal, sort by timestamp (fallback)
+      const timestampA = parseInt(partsA[1] || '0');
+      const timestampB = parseInt(partsB[1] || '0');
       return timestampA - timestampB;
     });
   }

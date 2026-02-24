@@ -175,10 +175,16 @@ export interface MainElectronAPI extends BaseElectronAPI {
     error?: string;
   }>;
 
+  deleteRecordingFile: (meetingId: string) => Promise<{
+    success: boolean;
+    error?: string;
+  }>;
+
   getRecordingFiles: (folderId: string) => Promise<{
     success: boolean;
     files: Array<{ name: string; path: string; size: number }>;
     folderPath?: string;
+    uploaded?: boolean;
     error?: string;
   }>;
 
@@ -187,6 +193,16 @@ export interface MainElectronAPI extends BaseElectronAPI {
     presignedUrl: string
   ) => Promise<{
     success: boolean;
+    error?: string;
+    etag?: string;
+  }>;
+
+  markRecordingAsUploadedToLMM: (
+    meetingId: string,
+    contentId: string
+  ) => Promise<{
+    success: boolean;
+    message?: string;
     error?: string;
   }>;
 

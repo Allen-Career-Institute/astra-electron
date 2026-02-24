@@ -98,6 +98,37 @@ function getRecordingsBasePath(): string {
   return path.join(app.getPath('userData'), 'recordings');
 }
 
+// Helper function to get uploaded meeting IDs from uploaded_lmm.txt
+// Returns a Set of entries in format "meetingId:contentId"
+function getUploadedMeetingIds(): Set<string> {
+  const recordingsDir = getRecordingsBasePath();
+  const uploadedLmmFilePath = path.join(recordingsDir, 'uploaded_lmm.txt');
+  const uploadedMeetingIds = new Set<string>();
+
+  if (fs.existsSync(uploadedLmmFilePath)) {
+    try {
+      const content = fs.readFileSync(uploadedLmmFilePath, 'utf-8');
+      content
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .forEach(entry => {
+          uploadedMeetingIds.add(entry);
+        });
+    } catch (error) {
+      console.error('Error reading uploaded_lmm.txt:', error);
+    }
+  }
+
+  return uploadedMeetingIds;
+}
+
+// Helper function to check if a meetingId is uploaded (checks if any entry starts with "meetingId:")
+function isMeetingIdUploaded(meetingId: string): boolean {
+  const uploadedEntries = getUploadedMeetingIds();
+  return Array.from(uploadedEntries).some(entry => entry.startsWith(`${meetingId}:`));
+}
+
 // Get the deletion log file path
 function getDeletionLogPath(): string {
   const recordingsPath = getRecordingsBasePath();
@@ -491,9 +522,10 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
         fs.mkdirSync(recordingsDir, { recursive: true });
       }
 
-      // Store chunks as webm files using timestamp for unique naming
+      // Store chunks as webm files using chunk index and timestamp for unique naming
+      // Format: chunkIndex_timestamp.webm - includes ordering for tracking
       // This prevents conflicts when page is reloaded and chunkIndex resets
-      const chunkFileName = `${timestamp}.webm`;
+      const chunkFileName = `${chunkIndex}_${timestamp}.webm`;
       const chunkFilePath = path.join(recordingsDir, chunkFileName);
 
       // Convert ArrayBuffer to Buffer before writing to file system
@@ -718,9 +750,10 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
               fs.mkdirSync(recordingsDir, { recursive: true });
             }
 
-            // Store chunks as webm files using timestamp for unique naming
+            // Store chunks as webm files using chunk index and timestamp for unique naming
+            // Format: chunkIndex_timestamp.webm - includes ordering for tracking
             // This prevents conflicts when page is reloaded and chunkIndex resets
-            const chunkFileName = `${timestamp}.webm`;
+            const chunkFileName = `${chunkIndex}_${timestamp}.webm`;
             const chunkFilePath = path.join(recordingsDir, chunkFileName);
 
             // Write chunk data to file
@@ -1036,6 +1069,10 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
         };
       }
 
+      // Check if this meeting ID is in the uploaded_lmm.txt file
+      // Format in file is "meetingId:contentId", so we check if any entry starts with "meetingId:"
+      const isUploaded = isMeetingIdUploaded(folderId);
+
       const items = fs.readdirSync(recordingsDir, { withFileTypes: true });
 
       const files = items
@@ -1054,6 +1091,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
         success: true,
         files,
         folderPath: recordingsDir,
+        uploaded: isUploaded,
       };
     } catch (error) {
       console.error('Error getting recording files:', error);
@@ -1061,6 +1099,70 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
         files: [],
+      };
+    }
+  });
+
+
+  // Mark a recording as uploaded to LMM
+  ipcMain.handle('mark-recording-uploaded-lmm', async (event, meetingId: string, contentId: string) => {
+    try {
+      if (!meetingId) {
+        return {
+          success: false,
+          error: 'Meeting ID is required',
+        };
+      }
+
+      if (!contentId) {
+        return {
+          success: false,
+          error: 'Content ID is required',
+        };
+      }
+
+      // Store uploaded_lmm.txt in the recordings directory (not in meeting folder)
+      const recordingsDir = path.join(app.getPath('userData'), 'recordings');
+      const uploadedLmmFilePath = path.join(recordingsDir, 'uploaded_lmm.txt');
+
+      // Create recordings directory if it doesn't exist
+      if (!fs.existsSync(recordingsDir)) {
+        fs.mkdirSync(recordingsDir, { recursive: true });
+      }
+
+      // Read existing entries from file (format: "meetingId:contentId")
+      const uploadedEntries = getUploadedMeetingIds();
+      const newEntry = `${meetingId}:${contentId}`;
+
+      // Add the new entry if not already present
+      if (!uploadedEntries.has(newEntry)) {
+        uploadedEntries.add(newEntry);
+
+        // Write all entries to file (one per line, sorted)
+        const content = Array.from(uploadedEntries)
+          .sort()
+          .join('\n') + '\n';
+
+        fs.writeFileSync(uploadedLmmFilePath, content, 'utf-8');
+
+        console.log(
+          `[Upload Tracking] Marked recording ${meetingId} as uploaded to LMM`
+        );
+      } else {
+        console.log(
+          `[Upload Tracking] Recording ${meetingId} already marked as uploaded to LMM`
+        );
+      }
+
+      return {
+        success: true,
+        message: 'Recording marked uploaded to LMM',
+      };
+    } catch (error) {
+      console.error('Error marking recording as uploaded to LMM:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   });
@@ -1110,11 +1212,17 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
           };
         }
 
+        // Extract ETag from S3 response headers
+        // S3 returns ETag with quotes, so we remove them
+        const etag = response.headers.get('ETag') || response.headers.get('etag');
+        const cleanEtag = etag ? etag.replace(/"/g, '') : undefined;
+
         console.log(
-          `[Upload] Successfully uploaded ${filePath} to presigned URL`
+          `[Upload] Successfully uploaded ${filePath} to presigned URL${cleanEtag ? ` (ETag: ${cleanEtag})` : ''}`
         );
         return {
           success: true,
+          etag: cleanEtag,
         };
       } catch (error) {
         console.error('Error uploading file:', error);
@@ -1197,6 +1305,28 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
       };
     } catch (error) {
       console.error('Failed to list recordings:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  });
+
+  ipcMain.handle('delete-recording-file', async (event, meetingId: string) => {
+    try {
+      const recordingsDir = path.join(
+        app.getPath('userData'),
+        'recordings',
+        meetingId
+      );
+      if (!fs.existsSync(recordingsDir)) {
+        return { success: false, error: 'File not found' };
+      }
+      fs.rmSync(recordingsDir, { recursive: true, force: true });
+      console.log(`[Storage] Deleted recording file: ${meetingId}`);
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting recording file:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -1363,6 +1493,8 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
       };
     }
   });
+
+
 
   // App information handlers
   ipcMain.handle('get-app-version', () => {

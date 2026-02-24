@@ -199,6 +199,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }
   },
 
+  deleteRecordingFile: async (meetingId: string): Promise<any> => {
+    try {
+      return await ipcRenderer.invoke('delete-recording-file', meetingId);
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
   // Get list of files inside a recording folder
   getRecordingFiles: async (folderId: string): Promise<any> => {
     try {
@@ -208,6 +219,24 @@ contextBridge.exposeInMainWorld('electronAPI', {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
         files: [],
+      };
+    }
+  },
+
+  markRecordingAsUploadedToLMM: async (
+    meetingId: string,
+    contentId: string
+  ): Promise<any> => {
+    try {
+      return await ipcRenderer.invoke(
+        'mark-recording-uploaded-lmm',
+        meetingId,
+        contentId
+      );
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   },
