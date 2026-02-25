@@ -680,7 +680,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
       rollingMergeManager.cleanup();
       const allWindows = BrowserWindow.getAllWindows();
 
-      // Create logout window for Gmail logout (preserves account for future sign-ins)
+      // Create logout window for JumpCloud logout
       const logoutWindow = new BrowserWindow({
         width: 1280,
         height: 720,
@@ -694,7 +694,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
         closable: false,
       });
 
-      logoutWindow.loadURL('https://accounts.google.com/Logout');
+      logoutWindow.loadURL('https://console.jumpcloud.com/userconsole/logout?autoGo=false');
 
       logoutWindow.focus();
       logoutWindow.show();
