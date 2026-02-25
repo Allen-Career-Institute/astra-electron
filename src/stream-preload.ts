@@ -172,7 +172,8 @@ try {
       meetingId: string,
       chunkData: any,
       chunkIndex: number,
-      isLastChunk: boolean = false
+      isLastChunk: boolean = false,
+      doRecording: boolean = true
     ): Promise<any> => {
       try {
         return await ipcRenderer.invoke('sendMessage', {
@@ -183,6 +184,7 @@ try {
             chunkIndex,
             timestamp: Date.now(),
             isLastChunk,
+            doRecording,
           },
         });
       } catch (error) {

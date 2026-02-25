@@ -162,19 +162,19 @@ app.on('ready', async () => {
     // Set up automatic process naming for Electron processes
     setupAutomaticProcessNaming();
 
-    // Clean up old recording folders on app start
-    try {
-      cleanupOldRecordings();
-    } catch (cleanupError) {
-      Sentry.captureException(cleanupError);
-    }
+    // DISABLED: Cleanup is currently disabled
+    // To re-enable, uncomment the code below:
+    // try {
+    //   cleanupOldRecordings();
+    // } catch (cleanupError) {
+    //   Sentry.captureException(cleanupError);
+    // }
 
-    // Set up periodic cleanup of old recordings
-    try {
-      setupPeriodicCleanup();
-    } catch (periodicCleanupError) {
-      Sentry.captureException(periodicCleanupError);
-    }
+    // try {
+    //   setupPeriodicCleanup();
+    // } catch (periodicCleanupError) {
+    //   Sentry.captureException(periodicCleanupError);
+    // }
 
     // Show error dialog if environment variables failed to load
     if (getLoadEnvError()) {

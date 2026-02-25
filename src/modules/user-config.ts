@@ -23,7 +23,8 @@ export const USER_CONFIG = {
     // This is relative to the user data directory
     recordingsPath: 'recordings',
 
-    // Chunk file naming pattern (timestamp-based to prevent conflicts on page reload)
+    // Chunk file naming pattern (timestamp-based for uniqueness and ordering)
+    // Format: {timestamp}.webm - timestamp ensures uniqueness and proper ordering
     chunkFileNamePattern: '{timestamp}.webm',
   },
 

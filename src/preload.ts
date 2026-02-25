@@ -183,6 +183,190 @@ contextBridge.exposeInMainWorld('electronAPI', {
   ): void => {
     ipcRenderer.on('electron-tracks-published-success', callback);
   },
+
+  // ========== STORAGE MANAGEMENT APIs ==========
+
+  // Get list of recording sessions (folder names)
+  getRecordings: async (): Promise<any> => {
+    try {
+      return await ipcRenderer.invoke('get-recordings');
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        recordings: [],
+      };
+    }
+  },
+
+  deleteRecordingFile: async (meetingId: string): Promise<any> => {
+    try {
+      return await ipcRenderer.invoke('delete-recording-file', meetingId);
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // Get list of files inside a recording folder
+  getRecordingFiles: async (folderId: string): Promise<any> => {
+    try {
+      return await ipcRenderer.invoke('get-recording-files', folderId);
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        files: [],
+      };
+    }
+  },
+
+  markRecordingAsUploadedToLMM: async (
+    meetingId: string,
+    contentId: string
+  ): Promise<any> => {
+    try {
+      return await ipcRenderer.invoke(
+        'mark-recording-uploaded-lmm',
+        meetingId,
+        contentId
+      );
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // Upload a file to a presigned S3 URL
+  uploadFileToPresignedUrl: async (
+    filePath: string,
+    presignedUrl: string
+  ): Promise<any> => {
+    try {
+      return await ipcRenderer.invoke(
+        'upload-file-to-presigned-url',
+        filePath,
+        presignedUrl
+      );
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // Check recordings storage usage
+  checkRecordingsStorage: async (): Promise<any> => {
+    try {
+      return await ipcRenderer.invoke('check-recordings-storage');
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // Cleanup recordings by size limit (delete oldest when over limit)
+  cleanupRecordingsBySize: async (maxSizeGB: number = 5): Promise<any> => {
+    try {
+      return await ipcRenderer.invoke('cleanup-recordings-by-size', maxSizeGB);
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // Cleanup recordings by age (delete recordings older than X days)
+  cleanupRecordingsByAge: async (maxAgeDays: number = 2): Promise<any> => {
+    try {
+      return await ipcRenderer.invoke('cleanup-recordings-by-age', maxAgeDays);
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // Delete a specific recording
+  deleteRecording: async (meetingId: string): Promise<any> => {
+    try {
+      return await ipcRenderer.invoke('delete-recording', meetingId);
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // Delete all recordings
+  deleteAllRecordings: async (): Promise<any> => {
+    try {
+      return await ipcRenderer.invoke('delete-all-recordings');
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // Get recordings folder structure for UI display
+  getRecordingsFolderStructure: async (): Promise<any> => {
+    try {
+      return await ipcRenderer.invoke('get-recordings-folder-structure');
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // Open a path in system file explorer
+  openPathInExplorer: async (targetPath: string): Promise<any> => {
+    try {
+      return await ipcRenderer.invoke('open-path-in-explorer', targetPath);
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // Get deletion log (history of deleted recordings)
+  getDeletionLog: async (): Promise<any> => {
+    try {
+      return await ipcRenderer.invoke('get-deletion-log');
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+
+  // Clear deletion log
+  clearDeletionLog: async (): Promise<any> => {
+    try {
+      return await ipcRenderer.invoke('clear-deletion-log');
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
 } as MainElectronAPI);
 
 // Extend the global Window interface
