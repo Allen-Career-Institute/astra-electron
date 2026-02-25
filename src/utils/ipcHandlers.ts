@@ -507,7 +507,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
   // Zero-copy media chunk handler using postMessage
   ipcMain.on('media-chunk-data', async (event, message) => {
     try {
-      const { meetingId, chunkData, chunkIndex, timestamp, isLastChunk } =
+      const { meetingId, chunkData, chunkIndex, timestamp, isLastChunk, isScreenShare } =
         message.payload;
 
       // Save chunk to file system as webm
@@ -522,10 +522,12 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
         fs.mkdirSync(recordingsDir, { recursive: true });
       }
 
-      // Store chunks as webm files using chunk index and timestamp for unique naming
-      // Format: chunkIndex_timestamp.webm - includes ordering for tracking
-      // This prevents conflicts when page is reloaded and chunkIndex resets
-      const chunkFileName = `${chunkIndex}_${timestamp}.webm`;
+      // Store chunks as webm files using timestamp for unique naming
+      // Format: timestamp.webm or screenshare_timestamp.webm
+      // Timestamp ensures uniqueness and proper ordering
+      const chunkFileName = isScreenShare 
+        ? `screenshare_${timestamp}.webm`
+        : `${timestamp}.webm`;
       const chunkFilePath = path.join(recordingsDir, chunkFileName);
 
       // Convert ArrayBuffer to Buffer before writing to file system
@@ -534,10 +536,12 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
       fs.writeFileSync(chunkFilePath, buffer);
 
       // Add chunk to rolling merge manager (for tracking purposes)
-      rollingMergeManager.addChunk(meetingId, chunkFileName);
+      // Use separate tracking key for screen share chunks
+      const trackingKey = isScreenShare ? `${meetingId}_screenshare` : meetingId;
+      rollingMergeManager.addChunk(trackingKey, chunkFileName);
 
-      // Get current chunk list
-      const chunkList = rollingMergeManager.getChunkList(meetingId);
+      // Get current chunk list (use separate key for screen share)
+      const chunkList = rollingMergeManager.getChunkList(trackingKey);
 
       // Check if rolling merge is disabled
       if (!getRollingMergeDisabled()) {
@@ -729,6 +733,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
               timestamp,
               isLastChunk,
               doRecording,
+              isScreenShare,
             } = message.payload;
 
             if (!doRecording) {
@@ -750,20 +755,24 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
               fs.mkdirSync(recordingsDir, { recursive: true });
             }
 
-            // Store chunks as webm files using chunk index and timestamp for unique naming
-            // Format: chunkIndex_timestamp.webm - includes ordering for tracking
-            // This prevents conflicts when page is reloaded and chunkIndex resets
-            const chunkFileName = `${chunkIndex}_${timestamp}.webm`;
+            // Store chunks as webm files using timestamp for unique naming
+            // Format: timestamp.webm or screenshare_timestamp.webm
+            // Timestamp ensures uniqueness and proper ordering
+            const chunkFileName = isScreenShare 
+              ? `screenshare_${timestamp}.webm`
+              : `${timestamp}.webm`;
             const chunkFilePath = path.join(recordingsDir, chunkFileName);
 
             // Write chunk data to file
             fs.writeFileSync(chunkFilePath, chunkData);
 
             // Add chunk to rolling merge manager (for tracking purposes)
-            rollingMergeManager.addChunk(meetingId, chunkFileName);
+            // Use separate tracking key for screen share chunks
+            const trackingKey = isScreenShare ? `${meetingId}_screenshare` : meetingId;
+            rollingMergeManager.addChunk(trackingKey, chunkFileName);
 
-            // Get current chunk list
-            const chunkList = rollingMergeManager.getChunkList(meetingId);
+            // Get current chunk list (use separate key for screen share)
+            const chunkList = rollingMergeManager.getChunkList(trackingKey);
 
             // Check if rolling merge is disabled
             if (!getRollingMergeDisabled()) {

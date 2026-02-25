@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ScreenSource } from '../../types/electron';
 import { ScreenShareElectronAPI } from '../../types/preload';
 import { ScreenShareWindowConfig } from '../../modules/screenShareWindow';
 import RtcSurfaceView from './RtcSurfaceView';
-import { agoraScreenShareService } from '../../modules/agoraScreenShareService';
+import { agoraScreenShareService, ScreenSource } from '../../modules/agoraScreenShareService';
 
 // Define the necessary types locally since we can't import from agora-electron-sdk in renderer
 const VideoSourceType = {
@@ -13,6 +12,11 @@ const VideoSourceType = {
 const RenderModeType = {
   RenderModeHidden: 1,
   RenderModeFit: 2,
+} as const;
+
+const ScreenCaptureSourceType = {
+  ScreencapturesourcetypeWindow: 1,
+  ScreencapturesourcetypeScreen: 2,
 } as const;
 interface ScreenShareWindowProps {
   config: ScreenShareWindowConfig;
@@ -34,6 +38,9 @@ interface ScreenShareWindowState {
       | 'error';
   };
   rtcStats: any | null;
+  isRecording: boolean;
+  mediaRecorder: MediaRecorder | null;
+  chunkIndex: number;
 }
 
 declare global {
@@ -56,6 +63,9 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
       status: 'inprogress',
     },
     rtcStats: null,
+    isRecording: false,
+    mediaRecorder: null,
+    chunkIndex: 0,
   });
 
   const updateState = useCallback(
@@ -158,6 +168,188 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
     }
   };
 
+  const startScreenShareRecording = useCallback(async (retryCount: number = 0) => {
+    try {
+      if (!config?.meetingId) {
+        console.warn('Cannot start recording: meetingId not available');
+        return;
+      }
+
+      // Max retries to prevent infinite loop
+      const MAX_RETRIES = 10;
+      if (retryCount >= MAX_RETRIES) {
+        console.error('Failed to start recording: Max retries reached. Source may not be available.');
+        updateState({
+          error: 'Failed to start recording: Source not available after multiple attempts',
+          isRecording: false,
+        });
+        return;
+      }
+
+      // Get the Agora source from local state to use its name/title for matching
+      // Agora and Electron use different ID formats, so we match by name/title instead
+      let agoraSource: ScreenSource | undefined;
+      if (state.selectedSourceId && state.sources.length > 0) {
+        agoraSource = state.sources.find(s => s.id === state.selectedSourceId);
+      }
+
+      if (!agoraSource) {
+        console.warn(`Agora source not found in local state. Waiting... (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+        if (retryCount < MAX_RETRIES - 1) {
+          setTimeout(() => {
+            startScreenShareRecording(retryCount + 1);
+          }, 1000);
+        }
+        return;
+      }
+
+      // Get all available desktop sources (both windows and screens)
+      const allDesktopSources = await (window as any).screenShareElectronAPI?.getDesktopSources?.({
+        types: ['window', 'screen'],
+        thumbnailSize: { width: 0, height: 0 },
+      });
+
+      if (!allDesktopSources || allDesktopSources.length === 0) {
+        console.warn('No desktop sources available for recording');
+        if (retryCount < MAX_RETRIES - 1) {
+          setTimeout(() => {
+            startScreenShareRecording(retryCount + 1);
+          }, 1000);
+        }
+        return;
+      }
+
+      // Match Electron desktop source by name or title (Agora and Electron use different ID formats)
+      // Try matching by name first, then by title
+      let recordingSource = allDesktopSources.find((s: any) => 
+        s.name === agoraSource!.name || s.name === agoraSource!.title
+      );
+
+      if (!recordingSource && agoraSource.title) {
+        // Try partial match on title (Electron might have slightly different formatting)
+        recordingSource = allDesktopSources.find((s: any) => 
+          s.name.includes(agoraSource!.title) || agoraSource!.title.includes(s.name)
+        );
+      }
+
+      if (!recordingSource) {
+        console.warn('Could not find matching desktop source for recording.');
+        console.warn('Agora source:', { name: agoraSource.name, title: agoraSource.title });
+        console.warn('Available desktop sources:', allDesktopSources.map((s: any) => ({ id: s.id, name: s.name })).slice(0, 5));
+        if (retryCount < MAX_RETRIES - 1) {
+          setTimeout(() => {
+            startScreenShareRecording(retryCount + 1);
+          }, 1000);
+        }
+        return;
+      }
+
+      // Determine source type from Electron desktop source ID format
+      // Electron IDs are like "window:24930:0" or "screen:1:0"
+      let finalSourceType: number;
+      if (recordingSource.id.startsWith('window:')) {
+        finalSourceType = ScreenCaptureSourceType.ScreencapturesourcetypeWindow;
+      } else if (recordingSource.id.startsWith('screen:')) {
+        finalSourceType = ScreenCaptureSourceType.ScreencapturesourcetypeScreen;
+      } else {
+        // Fallback: use Agora source type if available, otherwise default to window
+        const agoraType = agoraSource.type as number;
+        finalSourceType = agoraType && agoraType !== 0 
+          ? agoraType 
+          : ScreenCaptureSourceType.ScreencapturesourcetypeWindow;
+      }
+
+      // Get MediaStream directly from the same source Agora is using
+      const stream = await (navigator.mediaDevices as any).getUserMedia({
+        audio: false,
+        video: {
+          mandatory: {
+            chromeMediaSource: finalSourceType === ScreenCaptureSourceType.ScreencapturesourcetypeWindow
+              ? 'desktop'
+              : 'screen',
+            chromeMediaSourceId: recordingSource.id,
+          },
+        },
+      } as any);
+
+      // Create MediaRecorder directly from the stream - no canvas needed!
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'video/webm;codecs=vp8',
+        videoBitsPerSecond: 2500000, // 2.5 Mbps
+      });
+
+      let chunkIndex = 0;
+
+      mediaRecorder.ondataavailable = async (event) => {
+        if (event.data && event.data.size > 0) {
+          const arrayBuffer = await event.data.arrayBuffer();
+          
+          // Send chunk through IPC
+          await (window as any).screenShareElectronAPI?.sendMediaChunkV2?.(
+            config.meetingId,
+            arrayBuffer,
+            chunkIndex++,
+            false, // isLastChunk
+            true // doRecording
+          );
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        // Send last chunk indicator
+        await (window as any).screenShareElectronAPI?.sendMediaChunkV2?.(
+          config.meetingId,
+          new ArrayBuffer(0),
+          chunkIndex,
+          true, // isLastChunk
+          true // doRecording
+        );
+
+        // Stop all tracks
+        stream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
+
+        updateState({
+          isRecording: false,
+          mediaRecorder: null,
+          chunkIndex: 0,
+        });
+      };
+
+      mediaRecorder.onerror = (event) => {
+        console.error('MediaRecorder error:', event);
+        stream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
+        updateState({
+          error: 'Recording error occurred',
+          isRecording: false,
+        });
+      };
+
+      // Start recording - collect data every 10 seconds
+      mediaRecorder.start(10000); // Collect data every 10 seconds (each chunk contains 10s of data)
+
+      updateState({
+        isRecording: true,
+        mediaRecorder,
+        chunkIndex: 0,
+      });
+
+      console.log('Screen share recording started using direct source stream');
+    } catch (err) {
+      console.error('Error starting screen share recording:', err);
+      updateState({
+        error: 'Failed to start recording: ' + (err as Error).message,
+        isRecording: false,
+      });
+    }
+  }, [config, updateState, state.selectedSourceId, state.sources]);
+
+  const stopScreenShareRecording = useCallback(() => {
+    if (state.mediaRecorder && state.isRecording) {
+      state.mediaRecorder.stop();
+      console.log('Screen share recording stopped');
+    }
+  }, [state.mediaRecorder, state.isRecording]);
+
   const publishAgoraScreenShare = async () => {
     try {
       updateState({ status: 'Publishing screen share...', sources: [] });
@@ -167,6 +359,15 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
         status: 'Screen share published successfully!',
       });
       (window as any)?.screenShareElectronAPI?.shareScreenPublished?.();
+      
+      // Start recording when screen share is published
+      if (config?.meetingId) {
+        // Wait a bit for the video to start rendering
+        setTimeout(() => {
+          startScreenShareRecording();
+        }, 1000);
+      }
+      
       setTimeout(() => {
         updateState({
           status: '',
@@ -217,15 +418,25 @@ const ScreenShareWindow: React.FC<ScreenShareWindowProps> = (
   };
 
   const handleCancel = useCallback(() => {
+    // Stop recording if active
+    stopScreenShareRecording();
     agoraScreenShareService.cleanup();
     (window as any).screenShareElectronAPI.closeScreenShareWindow();
-  }, []);
+  }, [stopScreenShareRecording]);
 
   useEffect(() => {
     (window as any).screenShareElectronAPI.onCleanupResources(() => {
+      stopScreenShareRecording();
       agoraScreenShareService.cleanup();
     });
-  }, []);
+  }, [stopScreenShareRecording]);
+
+  // Cleanup recording on unmount
+  useEffect(() => {
+    return () => {
+      stopScreenShareRecording();
+    };
+  }, [stopScreenShareRecording]);
 
   const handleSourceSelect = useCallback(
     async (sourceId: string) => {
