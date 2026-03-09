@@ -1,39 +1,31 @@
 #!/bin/bash
 
-# Allen UI Console Electron App - Yarn 4 Setup Script
+# Allen UI Console Electron App - Bun Setup Script
 
-echo "🚀 Setting up Allen UI Console Electron App with Yarn 4..."
+echo "🚀 Setting up Allen UI Console Electron App with Bun..."
 
-# Check if Yarn is installed
-if ! command -v yarn &> /dev/null; then
-    echo "❌ Yarn is not installed. Please install Yarn 4 first:"
-    echo "   npm install -g yarn"
+# Check if Bun is installed
+if ! command -v bun &> /dev/null; then
+    echo "❌ Bun is not installed. Please install Bun first:"
+    echo "   curl -fsSL https://bun.sh/install | bash"
     exit 1
 fi
 
-# Check Yarn version
-YARN_VERSION=$(yarn --version)
-echo "📦 Yarn version: $YARN_VERSION"
-
-# Enable Yarn Berry (Yarn 4)
-echo "🔄 Setting up Yarn Berry..."
-yarn set version berry
-
-# Configure Yarn for node_modules
-echo "⚙️  Configuring Yarn for node_modules..."
-yarn config set nodeLinker node-modules
+# Check Bun version
+BUN_VERSION=$(bun --version)
+echo "📦 Bun version: $BUN_VERSION"
 
 # Install dependencies
 echo "📥 Installing dependencies..."
-yarn install
+bun install
 
 # Setup Husky
 echo "🐕 Setting up Husky..."
-yarn dlx husky install
+bunx husky install
 
 # Setup commitlint
 echo "📝 Setting up commitlint..."
-yarn dlx husky add .husky/commit-msg 'yarn dlx commitlint --edit $1'
+bunx husky add .husky/commit-msg 'bunx commitlint --edit $1'
 
 # Create necessary directories
 echo "📁 Creating necessary directories..."
@@ -79,23 +71,23 @@ fi
 
 # Run type checking
 echo "🔍 Running type checking..."
-yarn typecheck
+bun run typecheck
 
 # Run linting
 echo "🔍 Running linting..."
-yarn lint
+bun run lint
 
 # Format code
 echo "🎨 Formatting code..."
-yarn format
+bun run format
 
 echo "✅ Setup complete!"
 echo ""
 echo "🎯 Next steps:"
 echo "   1. Add your app icons to assets/ directory"
 echo "   2. Configure your .env file with actual values"
-echo "   3. Run 'yarn dev' to start development"
-echo "   4. Run 'yarn build' to build for production"
+echo "   3. Run 'bun run dev' to start development"
+echo "   4. Run 'bun run build' to build for production"
 echo ""
 echo "📚 Documentation: README.md"
 echo "📋 Requirements: REQUIREMENTS.md"
