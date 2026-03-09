@@ -7,7 +7,6 @@ on:
 
 env:
   NODE_VERSION: '18'
-  YARN_VERSION: '4.9.2'
   NODE_ENV: stage
   ENV: stage
   STAGE_URL: ${{ secrets.STAGE_CONSOLE_URL }}
@@ -74,21 +73,17 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: '18'
-          cache: 'yarn'
+          bun-version: latest
 
       - name: Install dependencies
-        run: yarn install --immutable
+        run: bun install --frozen-lockfile
         timeout-minutes: 10
 
       - name: Test environment variables
-        run: yarn test:env
+        run: bun run test:env
         timeout-minutes: 2
         env:
           NODE_ENV: ${{ env.NODE_ENV }}
@@ -100,15 +95,15 @@ jobs:
           ASTRA_ELECTRON_SENTRY_DSN: ${{ env.ASTRA_ELECTRON_SENTRY_DSN }}
 
       - name: Build Windows NSIS
-        run: yarn build:win-nsis
+        run: bun run build:win-nsis
         timeout-minutes: 10
 
       # - name: Build Windows AppX
-      #   run: yarn build:win-appx
+      #   run: bun run build:win-appx
       #   timeout-minutes: 20
 
       # - name: Package MSIX
-      #   run: yarn package:msix
+      #   run: bun run package:msix
       #   timeout-minutes: 10
 
       - name: Cleanup build artifacts

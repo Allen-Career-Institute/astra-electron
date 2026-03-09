@@ -96,25 +96,25 @@ set_dev_env() {
 test_dev_build() {
     print_info "Testing development build..."
     
-    # Check if yarn is available
-    if ! command -v yarn &> /dev/null; then
-        print_error "yarn is not installed or not in PATH"
+    # Check if bun is available
+    if ! command -v bun &> /dev/null; then
+        print_error "bun is not installed or not in PATH"
         exit 1
     fi
     
     # Install dependencies if needed
     if [ ! -d "node_modules" ]; then
         print_info "Installing dependencies..."
-        yarn install
+        bun install
     fi
     
     # Test TypeScript build
     print_info "Testing TypeScript build..."
-    yarn build:ts
+    bun run build:ts
     
     # Test renderer build
     print_info "Testing renderer build..."
-    yarn renderer:build
+    bun run renderer:build
     
     print_success "Development build test completed"
 }
@@ -127,11 +127,11 @@ show_commands() {
     echo ""
     echo "Available development commands:"
     echo ""
-    echo "  yarn dev              - Start development server"
-    echo "  yarn dev:build        - Build for development (no code signing)"
-    echo "  yarn dev:package      - Package for development"
-    echo "  yarn dev:make         - Make installers for development"
-    echo "  yarn dev:publish      - Publish development build (optional)"
+    echo "  bun run dev              - Start development server"
+    echo "  bun run dev:build        - Build for development (no code signing)"
+    echo "  bun run dev:package      - Package for development"
+    echo "  bun run dev:make         - Make installers for development"
+    echo "  bun run dev:publish      - Publish development build (optional)"
     echo ""
     echo "Certificate options:"
     echo "  ./scripts/generate-dev-cert.sh  - Generate local certificates"
