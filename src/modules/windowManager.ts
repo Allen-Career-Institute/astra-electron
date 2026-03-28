@@ -9,20 +9,22 @@ import {
   addKeyboardListenerUtil,
   registerZoomShortcut,
 } from '../utils/keyboardListenerUtil';
+import { getActiveProfile } from '../utils/profileUtils';
 
 let mainWindow: BrowserWindow | null = null;
-let mainWindowHasLoaded: boolean = false;
 let sharedSession: Electron.Session | null = null;
 let mainWindowPid: number | null = null;
+let profileSelectionWindow: BrowserWindow | null = null;
 
 // Lazy initialization of shared session
 function getSharedSession(): Electron.Session {
   if (!sharedSession) {
     // Create a shared session for all windows to ensure localStorage/cookies persistence
-    sharedSession = session.fromPartition('persist:shared');
+    const sessionValue = 'persist:shared';
+    sharedSession = session.fromPartition(sessionValue);
 
     // Debug: Log session information
-    console.log('Shared session created with partition: persist:shared');
+    console.log('Shared session created with partition:', sessionValue);
     console.log('Shared session storage path:', sharedSession.getStoragePath());
 
     // Configure permission handler
@@ -59,10 +61,52 @@ function injectTokensToWindow(window: BrowserWindow): void {
 }
 
 function createMainWindow(): BrowserWindow {
-  // Use app.getAppPath() for packaged app, process.cwd() for development
   const appPath = app.isPackaged ? app.getAppPath() : process.cwd();
-  const preloadPath = path.join(appPath, 'dist', 'preload.js');
+  const activeProfile = getActiveProfile();
+  if (!activeProfile) {
+    const preloadPath = path.join(
+      appPath,
+      'dist',
+      'profile-selection-preload.js'
+    );
+    if (profileSelectionWindow && !profileSelectionWindow.isDestroyed()) {
+      profileSelectionWindow.destroy();
+      profileSelectionWindow = null;
+    }
+    // Create a new profile selection window
+    profileSelectionWindow = new BrowserWindow({
+      title: 'Astra - Profile Selection',
+      width: 1200,
+      height: 800,
+      show: true,
+      fullscreen: process.platform === 'darwin' ? true : false,
+      webPreferences: {
+        session: session.defaultSession,
+        preload: preloadPath,
+      },
+      resizable: true,
+      minimizable: true,
+      maximizable: true,
+      closable: true,
+      alwaysOnTop: true, // Keep on top of main window
+      frame: true,
+      transparent: false,
+      hasShadow: true,
+      thickFrame: true,
+      titleBarStyle: 'default',
+    });
 
+    profileSelectionWindow.loadFile(
+      path.join(appPath, 'dist', 'renderer', 'profile-selection.html')
+    );
+    profileSelectionWindow.maximize();
+    if (isDev()) {
+      profileSelectionWindow.webContents.openDevTools();
+    }
+    return profileSelectionWindow;
+  }
+  // Use app.getAppPath() for packaged app, process.cwd() for development
+  const preloadPath = path.join(appPath, 'dist', 'preload.js');
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -101,9 +145,14 @@ function createMainWindow(): BrowserWindow {
     // mainWindow.webContents.openDevTools();
   }
 
+  // Cleanup profile selection window if it exists
+  if (profileSelectionWindow && !profileSelectionWindow.isDestroyed()) {
+    profileSelectionWindow.destroy();
+    profileSelectionWindow = null;
+  }
+
   // Ensure window is properly set after content loads
   mainWindow.webContents.on('did-finish-load', () => {
-    mainWindowHasLoaded = true;
     if (mainWindow && !mainWindow.isDestroyed()) {
       // Register with new process naming system
       registerMainUI(mainWindow);
@@ -123,9 +172,6 @@ function createMainWindow(): BrowserWindow {
     }
   });
 
-  mainWindow.webContents.on('did-start-loading', () => {
-    mainWindowHasLoaded = false;
-  });
   mainWindow.on('close', () => {
     safeCloseStreamWindow();
     safeClosewhiteboardWindow();
@@ -146,14 +192,6 @@ function getMainWindow(): BrowserWindow | null {
   return mainWindow;
 }
 
-function isMainWindowLoaded(): boolean {
-  return mainWindowHasLoaded;
-}
-
-function setMainWindowLoaded(loaded: boolean): void {
-  mainWindowHasLoaded = loaded;
-}
-
 function getMainWindowPid(): number | null {
   return mainWindowPid;
 }
@@ -162,8 +200,6 @@ function getMainWindowPid(): number | null {
 export {
   createMainWindow,
   getMainWindow,
-  isMainWindowLoaded,
-  setMainWindowLoaded,
   injectTokensToWindow,
   getSharedSession,
   getMainWindowPid,

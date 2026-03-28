@@ -4471,6 +4471,7 @@ __metadata:
     electron-builder: "npm:^24.9.1"
     electron-icon-builder: "npm:^2.0.1"
     electron-process-manager: "npm:^1.2.0"
+    electron-settings: "npm:^4.0.4"
     electron-store: "npm:^10.1.0"
     electron-updater: "npm:6.6.2"
     electron-windows-msix: "npm:^1.2.5"
@@ -6922,6 +6923,19 @@ __metadata:
     lazy-val: "npm:^1.0.5"
     mime: "npm:^2.5.2"
   checksum: 10c0/d31e14f836c7cb4e56f897fcebedbe4c13c32974688d5c3a77681df882a24229188de4c0d46e9ae4981df6f308889118671a6ef5279105f8e6b920c34e1fcc2c
+  languageName: node
+  linkType: hard
+
+"electron-settings@npm:^4.0.4":
+  version: 4.0.4
+  resolution: "electron-settings@npm:4.0.4"
+  dependencies:
+    lodash: "npm:^4.17.21"
+    mkdirp: "npm:^1.0.4"
+    write-file-atomic: "npm:^3.0.3"
+  peerDependencies:
+    electron: ">= 2"
+  checksum: 10c0/e66d47e04fa4d644ac85de810f8d0b88666954b6333bace9fb0f6484fbc200849e946d3a57cc294738797e6275c2602be7e48ddfcf0449a513781a06cfcabd22
   languageName: node
   linkType: hard
 
@@ -9865,7 +9879,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"is-typedarray@npm:~1.0.0":
+"is-typedarray@npm:^1.0.0, is-typedarray@npm:~1.0.0":
   version: 1.0.0
   resolution: "is-typedarray@npm:1.0.0"
   checksum: 10c0/4c096275ba041a17a13cca33ac21c16bc4fd2d7d7eb94525e7cd2c2f2c1a3ab956e37622290642501ff4310601e413b675cf399ad6db49855527d2163b3eeeec
@@ -15261,6 +15275,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"typedarray-to-buffer@npm:^3.1.5":
+  version: 3.1.5
+  resolution: "typedarray-to-buffer@npm:3.1.5"
+  dependencies:
+    is-typedarray: "npm:^1.0.0"
+  checksum: 10c0/4ac5b7a93d604edabf3ac58d3a2f7e07487e9f6e98195a080e81dbffdc4127817f470f219d794a843b87052cedef102b53ac9b539855380b8c2172054b7d5027
+  languageName: node
+  linkType: hard
+
 "typedarray@npm:^0.0.6":
   version: 0.0.6
   resolution: "typedarray@npm:0.0.6"
@@ -16110,6 +16133,18 @@ __metadata:
   version: 1.0.2
   resolution: "wrappy@npm:1.0.2"
   checksum: 10c0/56fece1a4018c6a6c8e28fbc88c87e0fbf4ea8fd64fc6c63b18f4acc4bd13e0ad2515189786dd2c30d3eec9663d70f4ecf699330002f8ccb547e4a18231fc9f0
+  languageName: node
+  linkType: hard
+
+"write-file-atomic@npm:^3.0.3":
+  version: 3.0.3
+  resolution: "write-file-atomic@npm:3.0.3"
+  dependencies:
+    imurmurhash: "npm:^0.1.4"
+    is-typedarray: "npm:^1.0.0"
+    signal-exit: "npm:^3.0.2"
+    typedarray-to-buffer: "npm:^3.1.5"
+  checksum: 10c0/7fb67affd811c7a1221bed0c905c26e28f0041e138fb19ccf02db57a0ef93ea69220959af3906b920f9b0411d1914474cdd90b93a96e5cd9e8368d9777caac0e
   languageName: node
   linkType: hard
 
