@@ -63,6 +63,18 @@ async function waitForStreamWindowReady(
   return false;
 }
 
+function forwardNetworkQualityToMain(
+  getMainWindowFn: () => BrowserWindow | null,
+  stats: { uplinkNetworkQuality: number; downlinkNetworkQuality: number }
+) {
+  const mainWindow = getMainWindowFn();
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('electron-network-quality', stats);
+    return { success: true };
+  }
+  return { success: false, error: 'Main window not available' };
+}
+
 // Main IPC Handlers
 export function setupIpcHandlers(ipcMain: IpcMain): void {
   // Zero-copy media chunk handler using postMessage
@@ -250,6 +262,9 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
             return { type: 'ERROR', error: 'Stream window not available' };
           }
           return { type: 'SUCCESS', payload: 'Video toggle sent' };
+
+        case 'NETWORK_QUALITY':
+          return forwardNetworkQualityToMain(getMainWindow, message.payload);
 
         case 'LEAVE_MEETING':
           safeCloseStreamWindow('LEAVE_MEETING');
@@ -833,6 +848,19 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
       return { success: true, appPath };
     } catch (error) {
       console.error('Error getting app path:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  });
+
+  // Agora network-quality from stream window → main teacher UI
+  ipcMain.handle('send-network-quality', async (_event, stats) => {
+    try {
+      return forwardNetworkQualityToMain(getMainWindow, stats);
+    } catch (error) {
+      console.error('Error forwarding network quality:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
