@@ -160,8 +160,7 @@ app.on('ready', async () => {
     createMenu();
     process.title = 'Astra-Main';
     // Set up automatic process naming for Electron processes
-    setupAutomaticProcessNaming();
-
+    setupAutomaticProcessNaming()
     // Clean up old recording folders on app start
     try {
       cleanupOldRecordings();
