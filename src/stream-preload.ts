@@ -227,6 +227,19 @@ try {
         };
       }
     },
+    sendNetworkQuality: async (stats: {
+      uplinkNetworkQuality: number;
+      downlinkNetworkQuality: number;
+    }): Promise<{ success: boolean; error?: string }> => {
+      try {
+        return await ipcRenderer.invoke('send-network-quality', stats);
+      } catch (error) {
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
+    },
     // Remove listeners
     removeAllListeners: (channel: string): void => {
       ipcRenderer.removeAllListeners(channel);

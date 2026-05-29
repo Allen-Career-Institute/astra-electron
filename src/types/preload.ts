@@ -1,9 +1,17 @@
 import { ScreenShareWindowConfig } from '@/modules/screenShareWindow';
 
 // Shared types for preload scripts
+export interface ElectronNetworkQualityStats {
+  uplinkNetworkQuality: number;
+  downlinkNetworkQuality: number;
+}
+
 export interface BaseElectronAPI {
   isElectron: boolean;
   requestStreamConfig: () => Promise<any>;
+  sendNetworkQuality?: (
+    stats: ElectronNetworkQualityStats
+  ) => Promise<{ success: boolean; error?: string }>;
   onStreamControl: (callback: (event: any, ...args: any[]) => void) => void;
   onCleanupResources: (callback: (event: any, ...args: any[]) => void) => void;
   sendMediaChunk: (
@@ -40,6 +48,9 @@ export interface MainElectronAPI extends BaseElectronAPI {
   ) => void;
   onElectronTracksPublishedSuccess: (
     callback: (event: any, ...args: any[]) => void
+  ) => void;
+  onElectronNetworkQuality?: (
+    callback: (event: any, stats: ElectronNetworkQualityStats) => void
   ) => void;
 }
 

@@ -183,6 +183,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   ): void => {
     ipcRenderer.on('electron-tracks-published-success', callback);
   },
+  onElectronNetworkQuality: (
+    callback: (event: any, stats: { uplinkNetworkQuality: number; downlinkNetworkQuality: number }) => void
+  ): void => {
+    ipcRenderer.on('electron-network-quality', callback);
+  },
 } as MainElectronAPI);
 
 // Extend the global Window interface
