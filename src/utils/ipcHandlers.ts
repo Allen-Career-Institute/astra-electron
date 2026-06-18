@@ -177,6 +177,7 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
             hosts: message.payload.hosts,
             url: message.payload.url,
             configuration: message.payload.configuration,
+            is_dual_stream_enabled: message.payload?.is_dual_stream_enabled,
           };
 
           createStreamWindow(agoraConfig);
@@ -709,7 +710,9 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
         closable: false,
       });
 
-      logoutWindow.loadURL('https://console.jumpcloud.com/userconsole/logout?autoGo=false');
+      logoutWindow.loadURL(
+        'https://console.jumpcloud.com/userconsole/logout?autoGo=false'
+      );
 
       logoutWindow.focus();
       logoutWindow.show();
