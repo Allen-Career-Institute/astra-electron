@@ -6,6 +6,9 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 env:
   NODE_VERSION: '18'
   YARN_VERSION: '4.9.2'
