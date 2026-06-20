@@ -33,14 +33,14 @@ print_error() {
 check_dependencies() {
     print_status "Checking dependencies..."
     
-    if ! command -v yarn &> /dev/null; then
-        print_error "yarn is not installed. Please install yarn first."
+    if ! command -v bun &> /dev/null; then
+        print_error "bun is not installed. Please install bun first."
         exit 1
     fi
     
     if ! command -v electron-icon-builder &> /dev/null; then
         print_warning "electron-icon-builder not found globally. Installing locally..."
-        yarn add -D electron-icon-builder
+        bun add -D electron-icon-builder
     fi
     
     print_success "Dependencies check completed"
@@ -55,7 +55,7 @@ generate_icons() {
         exit 1
     fi
     
-    yarn icons:generate
+    bun run icons:generate
     
     print_success "Icons generated successfully"
 }
@@ -91,7 +91,7 @@ verify_icons() {
         for icon in "${missing_icons[@]}"; do
             echo "  - $icon"
         done
-        print_status "Run 'yarn icons:generate' to generate missing icons"
+        print_status "Run 'bun run icons:generate' to generate missing icons"
     fi
 }
 

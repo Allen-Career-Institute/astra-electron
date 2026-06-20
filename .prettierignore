@@ -73,6 +73,7 @@ Thumbs.db
 # Package files
 package-lock.json
 yarn.lock
+bun.lock
 
 # Configuration files that should not be formatted
 *.config.js

@@ -33,16 +33,16 @@ This project has been migrated from NSIS installer builds to APPX package builds
 
 ```bash
 # Build all platforms
-yarn build:all
+bun run build:all
 
 # Build only Windows Appx
-yarn build:win-appx
+bun run build:win-appx
 
 # Build only Windows NSIS
-yarn build:win-nsis
+bun run build:win-nsis
 
 # Package MSIX only (requires AppX build first)
-yarn package:msix
+bun run package:msix
 ```
 
 ### Migration Notes:
@@ -93,7 +93,7 @@ yarn package:msix
 ### **Development Requirements**
 
 - **Node.js**: 16.x or later
-- **Yarn**: 4.x or later
+- **Bun**: 1.x or later
 - **Git**: 2.x or later
 
 ## 🛠️ **Installation**
@@ -122,7 +122,7 @@ yarn package:msix
 2. **Install dependencies**:
 
    ```bash
-   yarn install
+   bun install
    ```
 
 3. **Set up development environment**:
@@ -141,7 +141,7 @@ yarn package:msix
 4. **Start development**:
 
    ```bash
-   yarn dev:full
+   bun run dev:full
    ```
 
 ## 🔧 **Configuration**
@@ -246,12 +246,12 @@ The project uses automatic version incrementing with Semantic Versioning:
 
 ```bash
 # Show current version
-yarn version:current
+bun run version:current
 
 # Bump version
-yarn version:bump patch    # 1.0.0 → 1.0.1
-yarn version:bump minor    # 1.0.0 → 1.1.0
-yarn version:bump major    # 1.0.0 → 2.0.0
+bun run version:bump patch    # 1.0.0 → 1.0.1
+bun run version:bump minor    # 1.0.0 → 1.1.0
+bun run version:bump major    # 1.0.0 → 2.0.0
 ```
 
 For detailed setup instructions, see [GITHUB_ACTIONS_SETUP.md](GITHUB_ACTIONS_SETUP.md). For version
@@ -333,82 +333,82 @@ module.exports = {
 
 ```bash
 # 🚀 Development Commands
-yarn dev             # Build TypeScript and start Electron app (one-time)
-yarn dev:watch       # Continuous development with auto-restart on file changes
-yarn dev:full        # Full-stack development (renderer + main process)
+bun run dev             # Build TypeScript and start Electron app (one-time)
+bun run dev:watch       # Continuous development with auto-restart on file changes
+bun run dev:full        # Full-stack development (renderer + main process)
 
 # 🏗️ Building Commands
-yarn build:ts        # Compile TypeScript to JavaScript
-yarn build           # Build TypeScript and create distributables
-yarn dist:all        # Build for all platforms (macOS, Windows, Linux)
-yarn dist:win-only   # Build for Windows only
-yarn dist:mac-only   # Build for macOS only
-yarn dist:linux-only # Build for Linux only
-yarn dist:win        # Build Windows package (requires previous build steps)
-yarn dist:mac        # Build macOS package (requires previous build steps)
-yarn dist:linux      # Build Linux package (requires previous build steps)
+bun run build:ts        # Compile TypeScript to JavaScript
+bun run build           # Build TypeScript and create distributables
+bun run dist:all        # Build for all platforms (macOS, Windows, Linux)
+bun run dist:win-only   # Build for Windows only
+bun run dist:mac-only   # Build for macOS only
+bun run dist:linux-only # Build for Linux only
+bun run dist:win        # Build Windows package (requires previous build steps)
+bun run dist:mac        # Build macOS package (requires previous build steps)
+bun run dist:linux      # Build Linux package (requires previous build steps)
 
 # 🧹 Cleanup Commands
-yarn clean           # Remove all build artifacts and dependencies
-yarn clean:dist      # Remove only compiled JavaScript files
-yarn rebuild         # Clean and rebuild TypeScript
+bun run clean           # Remove all build artifacts and dependencies
+bun run clean:dist      # Remove only compiled JavaScript files
+bun run rebuild         # Clean and rebuild TypeScript
 
 # 🎨 Renderer Development
-yarn renderer:dev    # Watch and rebuild renderer process (React)
-yarn renderer:build  # Build renderer for production
-yarn renderer:start  # Start webpack dev server for renderer
+bun run renderer:dev    # Watch and rebuild renderer process (React)
+bun run renderer:build  # Build renderer for production
+bun run renderer:start  # Start webpack dev server for renderer
 
 # 🔍 Code Quality
-yarn lint            # Run Oxlint for code linting
-yarn lint:fix        # Fix linting issues automatically
-yarn format          # Format code with Prettier
-yarn format:check    # Check code formatting without changes
-yarn typecheck       # Run TypeScript type checking (no compilation)
+bun run lint            # Run Oxlint for code linting
+bun run lint:fix        # Fix linting issues automatically
+bun run format          # Format code with Prettier
+bun run format:check    # Check code formatting without changes
+bun run typecheck       # Run TypeScript type checking (no compilation)
 
 # 📦 Publishing
-yarn publish         # Publish to GitHub Releases
+bun run publish         # Publish to GitHub Releases
 ```
 
 ### **When to Use Each Command**
 
 #### **🚀 Development Workflow**
 
-- **`yarn dev`** - Use when you want to test your changes once. It compiles TypeScript and starts
+- **`bun run dev`** - Use when you want to test your changes once. It compiles TypeScript and starts
   the app.
-- **`yarn dev:watch`** - **Recommended for active development**. Automatically restarts the app when
+- **`bun run dev:watch`** - **Recommended for active development**. Automatically restarts the app when
   you save TypeScript files.
-- **`yarn dev:full`** - Use when developing both the main process (Electron) and renderer process
+- **`bun run dev:full`** - Use when developing both the main process (Electron) and renderer process
   (React) simultaneously.
 
 #### **🏗️ Building for Production**
 
-- **`yarn build:ts`** - Use to compile TypeScript without starting the app (useful for CI/CD or
+- **`bun run build:ts`** - Use to compile TypeScript without starting the app (useful for CI/CD or
   checking compilation).
-- **`yarn build`** - Use to create distributable packages for testing or distribution.
-- **`yarn make`** - Use to create platform-specific installers (DMG, EXE, etc.).
-- **`yarn package`** - Use to package the app for distribution without creating installers.
+- **`bun run build`** - Use to create distributable packages for testing or distribution.
+- **`bun run make`** - Use to create platform-specific installers (DMG, EXE, etc.).
+- **`bun run package`** - Use to package the app for distribution without creating installers.
 
 #### **🧹 Maintenance and Troubleshooting**
 
-- **`yarn clean:dist`** - Use when TypeScript compilation seems stuck or you want a fresh build.
-- **`yarn rebuild`** - Use when you encounter build issues or want to ensure a completely clean
+- **`bun run clean:dist`** - Use when TypeScript compilation seems stuck or you want a fresh build.
+- **`bun run rebuild`** - Use when you encounter build issues or want to ensure a completely clean
   build.
-- **`yarn clean`** - Use when you want to remove everything and start fresh (dependencies + build
+- **`bun run clean`** - Use when you want to remove everything and start fresh (dependencies + build
   artifacts).
 
 #### **🎨 Frontend Development**
 
-- **`yarn renderer:dev`** - Use when working on React components and want hot reloading.
-- **`yarn renderer:build`** - Use to build the React app for production.
-- **`yarn renderer:start`** - Use to test the React app in a browser without Electron.
+- **`bun run renderer:dev`** - Use when working on React components and want hot reloading.
+- **`bun run renderer:build`** - Use to build the React app for production.
+- **`bun run renderer:start`** - Use to test the React app in a browser without Electron.
 
 #### **🔍 Code Quality Checks**
 
-- **`yarn typecheck`** - Use before committing to ensure TypeScript types are correct.
-- **`yarn lint`** - Use to check for code quality issues.
-- **`yarn lint:fix`** - Use to automatically fix linting issues.
-- **`yarn format:check`** - Use in CI/CD to ensure code formatting is consistent.
-- **`yarn format`** - Use to automatically format your code.
+- **`bun run typecheck`** - Use before committing to ensure TypeScript types are correct.
+- **`bun run lint`** - Use to check for code quality issues.
+- **`bun run lint:fix`** - Use to automatically fix linting issues.
+- **`bun run format:check`** - Use in CI/CD to ensure code formatting is consistent.
+- **`bun run format`** - Use to automatically format your code.
 
 ### **Project Structure**
 

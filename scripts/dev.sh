@@ -20,12 +20,12 @@ trap cleanup SIGINT SIGTERM
 # Check if React build exists, if not build it
 if [ ! -f "dist/renderer/index.html" ]; then
     echo "📦 Building React application..."
-    yarn renderer:build
+    bun run renderer:build
 fi
 
 # Start React development watcher in background
 echo "⚛️  Starting React development watcher..."
-yarn renderer:dev &
+bun run renderer:dev &
 REACT_PID=$!
 
 # Wait a moment for React build to start
@@ -33,7 +33,7 @@ sleep 3
 
 # Start Electron with nodemon
 echo "🔌 Starting Electron with nodemon..."
-yarn dev:watch &
+bun run dev:watch &
 ELECTRON_PID=$!
 
 echo "✅ Development environment started!"

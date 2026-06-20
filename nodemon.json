@@ -2,7 +2,7 @@
   "watch": ["src/**/*.ts", "src/**/*.js", ".env.local"],
   "ext": "js",
   "ignore": ["node_modules/**/node_modules", "dist/**", "out/**"],
-  "exec": "yarn start",
+  "exec": "bun run start",
   "env": {
     "NODE_ENV": "development"
   },
