@@ -109,20 +109,25 @@ function createStreamWindow(config: StreamWindowConfig): BrowserWindow {
 
     let x: number, y: number;
 
+    const margin = 20; // Margin from edges
+
     if (mainWindow && !mainWindow.isDestroyed()) {
-      // Position in bottom right of main window
+      // Center horizontally, position at the top of the main window
       const mainBounds = mainWindow.getBounds();
-      const margin = 20; // Margin from edges
-      x = config.x || mainBounds.x + mainBounds.width - windowWidth - margin;
-      y = config.y || mainBounds.y + mainBounds.height - windowHeight - margin;
+      x =
+        config.x ||
+        Math.round(mainBounds.x + (mainBounds.width - windowWidth) / 2);
+      y = config.y || mainBounds.y + margin;
     } else {
-      // Fallback to screen bottom right if main window not available
+      // Center horizontally, position at the top of the primary display work area
       const primaryDisplay = screen.getPrimaryDisplay();
-      const { width: screenWidth, height: screenHeight } =
-        primaryDisplay.workAreaSize;
-      const margin = 20; // Margin from edges
-      x = config.x || screenWidth - windowWidth - margin;
-      y = config.y || screenHeight - windowHeight - margin;
+      const {
+        x: displayX,
+        y: displayY,
+        width: screenWidth,
+      } = primaryDisplay.workArea;
+      x = config.x || Math.round(displayX + (screenWidth - windowWidth) / 2);
+      y = config.y || displayY + margin;
     }
 
     // Create the stream window
