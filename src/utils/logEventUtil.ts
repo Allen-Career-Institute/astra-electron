@@ -6,6 +6,9 @@ const sendLogEvent = (eventName: string, eventData: any) => {
     console.log('Sending log event via IPC:', eventName);
     ipcRenderer
       .invoke('send-log-event', eventName, eventData)
+      .then((result: any) => {
+        console.log('send-log-event IPC result:', eventName, result);
+      })
       .catch((error: any) => {
         console.error('Error invoking send-log-event:', error);
       });
