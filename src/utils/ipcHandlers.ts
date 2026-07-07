@@ -877,12 +877,16 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
     async (event, eventName: string, eventData: any) => {
       try {
         const mainWindow = getMainWindow();
-        console.log('Received log event from renderer:', eventName);
+        console.log('Received log event from renderer:', eventName, eventData);
         if (mainWindow && !mainWindow.isDestroyed()) {
           mainWindow.webContents.send(
             'electron-log-event',
             eventName,
             eventData
+          );
+          console.log(
+            'Forwarded log event to main window as electron-log-event:',
+            eventName
           );
           return { success: true };
         } else {

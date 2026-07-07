@@ -14,10 +14,20 @@ import createAgoraRtcEngine, {
   LogLevel,
   VideoFallbackStrategy,
   AreaCode,
+  RtcStats,
+  LocalVideoStats,
+  QualityType,
 } from 'agora-electron-sdk';
 import { ScreenShareWindowConfig } from './screenShareWindow';
 import { getThumbImageBufferToBase64 } from '../utils/agoraThumbnailUtil';
 import { sendLogEvent } from '../utils/logEventUtil';
+
+const STATS_LOG_INTERVAL_MS = 5000;
+const CLASSROOM_LIVE_STREAMING_TRACK_STATS =
+  'classroom_live_streaming_track_stats';
+
+const toSerializableStats = (stats: object): Record<string, unknown> =>
+  ({ ...stats }) as Record<string, unknown>;
 
 // Helper to safely get log file path
 const getLogFilePath = async (): Promise<string> => {
@@ -95,6 +105,12 @@ class AgoraScreenShareService implements IRtcEngineEventHandler {
 
   private agoraEngine: IRtcEngineEx | null = null;
   private statsInterval: NodeJS.Timeout | null = null;
+  private latestRtcStats: Record<string, unknown> | null = null;
+  private latestLocalVideoStats: Record<string, unknown> | null = null;
+  private latestNetworkQuality: {
+    uplinkNetworkQuality: number;
+    downlinkNetworkQuality: number;
+  } | null = null;
 
   constructor() {}
 
@@ -128,6 +144,38 @@ class AgoraScreenShareService implements IRtcEngineEventHandler {
     console.warn('Agora warning:', warn, msg);
   }
 
+  onRtcStats(_connection: RtcConnection, stats: RtcStats): void {
+    this.latestRtcStats = toSerializableStats(stats);
+    if (this.state.isPublishing) {
+      this.state.rtcStats = this.buildDisplayRtcStats();
+    }
+  }
+
+  onLocalVideoStats(
+    _connection: RtcConnection,
+    stats: LocalVideoStats
+  ): void {
+    this.latestLocalVideoStats = toSerializableStats(stats);
+    if (this.state.isPublishing) {
+      this.state.rtcStats = this.buildDisplayRtcStats();
+    }
+  }
+
+  onNetworkQuality(
+    _connection: RtcConnection,
+    remoteUid: number,
+    txQuality: QualityType,
+    rxQuality: QualityType
+  ): void {
+    if (remoteUid !== 0) {
+      return;
+    }
+    this.latestNetworkQuality = {
+      uplinkNetworkQuality: txQuality,
+      downlinkNetworkQuality: rxQuality,
+    };
+  }
+
   private async initializeAgoraEngine(
     config: ScreenShareWindowConfig
   ): Promise<void> {
@@ -158,6 +206,8 @@ class AgoraScreenShareService implements IRtcEngineEventHandler {
       if (ret !== 0) {
         throw new Error(`Failed to initialize Agora engine: ${ret}`);
       }
+
+      this.agoraEngine.registerEventHandler(this);
       this.state.isInitialized = true;
     } catch (error) {
       console.error('Error initializing Agora engine:', error);
@@ -607,8 +657,8 @@ class AgoraScreenShareService implements IRtcEngineEventHandler {
     }
 
     this.statsInterval = setInterval(() => {
-      this.collectRTCStats();
-    }, 1000); // Collect stats every second
+      this.flushStatsToParmanu();
+    }, STATS_LOG_INTERVAL_MS);
   }
 
   private stopStatsMonitoring(): void {
@@ -616,25 +666,77 @@ class AgoraScreenShareService implements IRtcEngineEventHandler {
       clearInterval(this.statsInterval);
       this.statsInterval = null;
     }
+    this.resetBufferedStats();
   }
 
-  private async collectRTCStats(): Promise<void> {
+  private resetBufferedStats(): void {
+    this.latestRtcStats = null;
+    this.latestLocalVideoStats = null;
+    this.latestNetworkQuality = null;
+    this.state.rtcStats = null;
+  }
+
+  private buildDisplayRtcStats(): RTCStats {
+    const video = this.latestLocalVideoStats;
+    const rtc = this.latestRtcStats;
+    const memoryUsage = process.memoryUsage();
+
+    return {
+      timestamp: Date.now(),
+      audioLevel: 0,
+      videoBitrate: Number(video?.sentBitrate ?? rtc?.txVideoKBitRate ?? 0),
+      audioBitrate: Number(rtc?.txAudioKBitRate ?? 0),
+      videoResolution: {
+        width: Number(
+          video?.encodedFrameWidth ?? video?.captureFrameWidth ?? 0
+        ),
+        height: Number(
+          video?.encodedFrameHeight ?? video?.captureFrameHeight ?? 0
+        ),
+      },
+      frameRate: Number(
+        video?.sentFrameRate ?? video?.captureFrameRate ?? 0
+      ),
+      packetLossRate: Number(video?.txPacketLossRate ?? 0),
+      rtt: Number(rtc?.lastmileDelay ?? rtc?.gatewayRtt ?? 0),
+      jitter: 0,
+      cpuUsage: Number(rtc?.cpuAppUsage ?? 0),
+      memoryUsage: Number(
+        rtc?.memoryAppUsageInKbytes
+          ? Number(rtc.memoryAppUsageInKbytes) * 1024
+          : memoryUsage.heapUsed
+      ),
+    };
+  }
+
+  private flushStatsToParmanu(): void {
     try {
-      if (!this.agoraEngine || !this.state.isPublishing) {
+      if (!this.agoraEngine || !this.state.isPublishing || !this.state.config) {
         return;
       }
 
-      // Get system stats
-      const cpuUsage = process.cpuUsage();
-      const memoryUsage = process.memoryUsage();
+      this.state.rtcStats = this.buildDisplayRtcStats();
 
-      // Update RTC stats
-      if (this.state.rtcStats) {
-        this.state.rtcStats.cpuUsage = cpuUsage.user + cpuUsage.system;
-        this.state.rtcStats.memoryUsage = memoryUsage.heapUsed;
-      }
+      const payload = {
+        user_id: this.state.config.user_id,
+        class_id: this.state.config.meetingId,
+        persona_type: 'TEACHER',
+        class_type: '',
+        rtcStats: this.latestRtcStats,
+        videoStats: this.latestLocalVideoStats,
+        webRTCStats: null,
+        track_type: 'screen_share',
+        networkQuality: this.latestNetworkQuality,
+      };
+
+      console.log(
+        `[Parmanu] Flushing ${CLASSROOM_LIVE_STREAMING_TRACK_STATS}:`,
+        payload
+      );
+
+      sendLogEvent(CLASSROOM_LIVE_STREAMING_TRACK_STATS, payload);
     } catch (error) {
-      console.error('Error collecting RTC stats:', error);
+      console.error('Error flushing screen share stats to Parmanu:', error);
     }
   }
 
