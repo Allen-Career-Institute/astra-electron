@@ -116,7 +116,7 @@
     "electron-process-manager": "^1.2.0",
     "electron-store": "^10.1.0",
     "electron-updater": "6.6.2",
-    "systeminformation": "^5.27.11",
+    "systeminformation": "^5.31.7",
     "uuid": "^11.1.0"
   },
   "lint-staged": {
