@@ -183,8 +183,39 @@ contextBridge.exposeInMainWorld('electronAPI', {
   ): void => {
     ipcRenderer.on('electron-tracks-published-success', callback);
   },
+  // Ping report files - the web app fetches the presigned URLs itself
+  getPingReportZip: async (meetingId: string): Promise<any> => {
+    try {
+      return await ipcRenderer.invoke('get-ping-report-zip', meetingId);
+    } catch (error) {
+      return {
+        success: false,
+        sourceDir: null,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
+  uploadPingReportZip: async (upload: {
+    zipName: string;
+    zipPath: string;
+    presignedUrl: string;
+    uploadId: string;
+  }): Promise<any> => {
+    try {
+      return await ipcRenderer.invoke('upload-ping-report-zip', upload);
+    } catch (error) {
+      return {
+        ...upload,
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  },
   onElectronNetworkQuality: (
-    callback: (event: any, stats: { uplinkNetworkQuality: number; downlinkNetworkQuality: number }) => void
+    callback: (
+      event: any,
+      stats: { uplinkNetworkQuality: number; downlinkNetworkQuality: number }
+    ) => void
   ): void => {
     ipcRenderer.on('electron-network-quality', callback);
   },
