@@ -35,6 +35,10 @@ import {
   getScreenShareWindowConfig,
   safeCloseScreenShareWindow,
 } from '../modules/screenShareWindow';
+import {
+  prepareMeetingReportZip,
+  uploadReportZip,
+} from '../modules/meetingFileUploader';
 import { askMediaAccess } from './permissionUtil';
 import { getMainWindow } from '../modules/windowManager';
 import * as Sentry from '@sentry/electron/main';
@@ -277,6 +281,9 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
           if (meetingId) {
             // Stop rolling merge process and cleanup
             rollingMergeManager.cleanupMeeting(meetingId);
+
+            // Ping reports are uploaded by the web app *before* it sends
+            // LEAVE_MEETING, so there is nothing to trigger here.
 
             if (isUpdateAvailable()) {
               setTimeout(() => {
@@ -902,4 +909,48 @@ export function setupIpcHandlers(ipcMain: IpcMain): void {
       }
     }
   );
+
+  // Upload the zip and report the ETag back. Unlike the old fire-and-forget
+  // path this resolves with the result, so the web app can await it and only
+  // then complete the upload with LMM.
+  ipcMain.handle(
+    'upload-ping-report-zip',
+    async (
+      event,
+      upload: {
+        zipName: string;
+        zipPath: string;
+        presignedUrl: string;
+        uploadId: string;
+      }
+    ) => {
+      try {
+        return await uploadReportZip(upload);
+      } catch (error) {
+        console.error('Error uploading ping report zip:', error);
+        Sentry.captureException(error);
+        return {
+          ...upload,
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
+    }
+  );
+
+  // Zip today's ping reports and describe the archive.
+  // Lets the web app re-request it without waiting for a leave.
+  ipcMain.handle('get-ping-report-zip', async (event, meetingId: string) => {
+    try {
+      return await prepareMeetingReportZip(meetingId);
+    } catch (error) {
+      console.error('Error preparing ping report zip:', error);
+      Sentry.captureException(error);
+      return {
+        success: false,
+        sourceDir: null,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  });
 }

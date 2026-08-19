@@ -6,6 +6,27 @@ export interface ElectronNetworkQualityStats {
   downlinkNetworkQuality: number;
 }
 
+export interface PreparedPingReportZip {
+  meetingId?: string;
+  success: boolean;
+  sourceDir: string | null;
+  zipName?: string;
+  zipPath?: string;
+  size?: number;
+  fileCount?: number;
+  error?: string;
+}
+
+export interface PingReportUploadResult {
+  meetingId: string;
+  zipName: string;
+  zipPath: string;
+  uploadId: string;
+  success: boolean;
+  etag?: string;
+  error?: string;
+}
+
 export interface BaseElectronAPI {
   isElectron: boolean;
   requestStreamConfig: () => Promise<any>;
@@ -52,6 +73,13 @@ export interface MainElectronAPI extends BaseElectronAPI {
   onElectronNetworkQuality?: (
     callback: (event: any, stats: ElectronNetworkQualityStats) => void
   ) => void;
+  getPingReportZip: (meetingId: string) => Promise<PreparedPingReportZip>;
+  uploadPingReportZip: (upload: {
+    zipName: string;
+    zipPath: string;
+    presignedUrl: string;
+    uploadId: string;
+  }) => Promise<PingReportUploadResult>;
 }
 
 export interface StreamElectronAPI extends BaseElectronAPI {}
