@@ -36,6 +36,7 @@ import {
   safeCloseScreenShareWindow,
 } from '../modules/screenShareWindow';
 import { askMediaAccess } from './permissionUtil';
+import { ElectronNetworkQualityStats } from '../types/preload';
 import { getMainWindow } from '../modules/windowManager';
 import * as Sentry from '@sentry/electron/main';
 
@@ -63,9 +64,14 @@ async function waitForStreamWindowReady(
   return false;
 }
 
+/**
+ * Forwards publish-side telemetry from the stream window to the main window untouched — the payload
+ * is `ElectronNetworkQualityStats`, whose fields come from two independent producers, so extending
+ * it never needs a change here.
+ */
 function forwardNetworkQualityToMain(
   getMainWindowFn: () => BrowserWindow | null,
-  stats: { uplinkNetworkQuality: number; downlinkNetworkQuality: number }
+  stats: ElectronNetworkQualityStats
 ) {
   const mainWindow = getMainWindowFn();
   if (mainWindow && !mainWindow.isDestroyed()) {
