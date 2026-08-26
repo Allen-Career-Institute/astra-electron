@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, clipboard, nativeImage } from 'electron';
-import { MainElectronAPI } from './types/preload';
+import { ElectronNetworkQualityStats, MainElectronAPI } from './types/preload';
 import { getAppVersion } from './modules/config';
 
 // Set process name for OS task manager visibility
@@ -184,7 +184,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('electron-tracks-published-success', callback);
   },
   onElectronNetworkQuality: (
-    callback: (event: any, stats: { uplinkNetworkQuality: number; downlinkNetworkQuality: number }) => void
+    // Fields are optional and merged by the renderer: the uplink/downlink indicators and the
+    // publish-side `streamQuality` sample arrive on this channel from separate producers.
+    callback: (event: any, stats: ElectronNetworkQualityStats) => void
   ): void => {
     ipcRenderer.on('electron-network-quality', callback);
   },

@@ -1,9 +1,35 @@
 import { ScreenShareWindowConfig } from '@/modules/screenShareWindow';
 
 // Shared types for preload scripts
+/** Raw Agora local-video stats, scored into the teacher header's quality pill by the main window. */
+export interface ElectronSenderVideoStats {
+  totalDuration?: number;
+  totalFreezeTime?: number;
+  sendBitrate?: number;
+  sendFrameRate?: number;
+  /** Not scored — carried for the teacher-side developer readout. */
+  sendRttMs?: number;
+}
+
+/** Publish-side telemetry from the teacher stream window, which owns the only publishing client. */
+export interface ElectronStreamQualityStats {
+  senderStats?: ElectronSenderVideoStats | null;
+  /** Whether the *stream window* is publishing video — the main window's own camera is idle. */
+  isVideoEnabled?: boolean;
+  /** The publishing client's Agora connection state. */
+  connectionState?: string | null;
+}
+
+/**
+ * Payload of the `NETWORK_QUALITY` message / `electron-network-quality` event. Two producers in the
+ * stream window share it — the Agora quality callback (uplink/downlink indicators) and the quality
+ * sampler (`streamQuality`) — so every field is optional and the renderer merges rather than
+ * replaces. The main process forwards this untouched, so extending it needs no handler change.
+ */
 export interface ElectronNetworkQualityStats {
-  uplinkNetworkQuality: number;
-  downlinkNetworkQuality: number;
+  uplinkNetworkQuality?: number;
+  downlinkNetworkQuality?: number;
+  streamQuality?: ElectronStreamQualityStats;
 }
 
 export interface BaseElectronAPI {

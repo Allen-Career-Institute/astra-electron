@@ -1,6 +1,6 @@
 // Stream window preload script
 import { contextBridge, ipcRenderer } from 'electron';
-import { StreamElectronAPI } from './types/preload';
+import { ElectronNetworkQualityStats, StreamElectronAPI } from './types/preload';
 
 // Set process name for OS task manager visibility
 try {
@@ -227,10 +227,11 @@ try {
         };
       }
     },
-    sendNetworkQuality: async (stats: {
-      uplinkNetworkQuality: number;
-      downlinkNetworkQuality: number;
-    }): Promise<{ success: boolean; error?: string }> => {
+    // Carries either the Agora uplink/downlink indicators or a publish-side `streamQuality`
+    // sample; the main process forwards the payload untouched.
+    sendNetworkQuality: async (
+      stats: ElectronNetworkQualityStats
+    ): Promise<{ success: boolean; error?: string }> => {
       try {
         return await ipcRenderer.invoke('send-network-quality', stats);
       } catch (error) {
