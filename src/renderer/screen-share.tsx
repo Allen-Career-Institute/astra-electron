@@ -14,7 +14,7 @@ interface ScreenShareConfig {
 
 declare global {
   interface Window {
-    screenShareElectronAPI: ScreenShareElectronAPI;
+    screenShareElectronAPI: ScreenShareElectronAPI; 
   }
 }
 
