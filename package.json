@@ -75,7 +75,7 @@
     "copy-webpack-plugin": "^13.0.0",
     "crypto-browserify": "^3.12.1",
     "css-loader": "^6.8.1",
-    "electron": "23.3.13",
+    "electron": "39.8.10",
     "electron-builder": "^24.9.1",
     "electron-icon-builder": "^2.0.1",
     "electron-windows-msix": "^1.2.5",
