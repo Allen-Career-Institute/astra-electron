@@ -12,7 +12,13 @@ const requiredEnvVars = [
   'ASTRA_ELECTRON_SENTRY_ENDPOINT',
 ];
 
-const optionalEnvVars = ['STAGE_URL', 'PROD_URL', 'CUSTOM_URL', 'DEV_URL'];
+const optionalEnvVars = [
+  'STAGE_URL',
+  'PROD_URL',
+  'CUSTOM_URL',
+  'DEV_URL',
+  'PR_URL_TEMPLATE',
+];
 
 console.log('🔍 Validating environment variables...\n');
 

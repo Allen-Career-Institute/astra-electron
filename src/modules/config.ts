@@ -8,11 +8,15 @@ let URLS = {
 let ASTRA_ELECTRON_SENTRY_DSN: string = '';
 let ASTRA_ELECTRON_SENTRY_ENDPOINT: string = '';
 let CURRENT_URL: string = '';
+// Runtime override set from the app UI (Settings → Change App URL). When set it
+// takes precedence over every URL coming from .env.local.
+let URL_OVERRIDE: string | null = null;
 let APP_VERSION: string = '';
 let UPDATE_AVAILABLE: boolean = false;
 
 // Rolling merge configuration
 import { isRollingMergeDisabled as getUserRollingMergeDisabled } from './user-config';
+import { URL_OVERRIDE_BUILD_ENABLED } from './buildFlags';
 
 let DISABLE_ROLLING_MERGE: boolean = getUserRollingMergeDisabled(); // Default from user config
 
@@ -52,7 +56,30 @@ const getUrls = () => {
   return URLS;
 };
 
+// Two gates guard the runtime URL override: a compile-time flag baked into
+// dist/main.js by webpack (so production releases cannot be re-enabled by
+// editing the shipped .env.local) and the environment the app is pointed at.
+const isUrlOverrideEnabled = (): boolean => {
+  return URL_OVERRIDE_BUILD_ENABLED && ENV !== 'production';
+};
+
+const getUrlOverride = () => {
+  return URL_OVERRIDE;
+};
+
+const setUrlOverride = (url: string | null) => {
+  URL_OVERRIDE = url;
+};
+
+// URL the app should point at: the runtime override wins, otherwise the URL
+// configured for the current environment.
 const getUrlByEnv = () => {
+  return (isUrlOverrideEnabled() && URL_OVERRIDE) || URLS[ENV];
+};
+
+// URL configured in .env.local for the current environment, ignoring any
+// runtime override.
+const getEnvUrl = () => {
   return URLS[ENV];
 };
 
@@ -100,6 +127,10 @@ export {
   getCurrentUrl,
   setUrlByEnv,
   getUrlByEnv,
+  getEnvUrl,
+  getUrlOverride,
+  setUrlOverride,
+  isUrlOverrideEnabled,
   setSentryDsn,
   setSentryEndpoint,
   getSentryDsn,

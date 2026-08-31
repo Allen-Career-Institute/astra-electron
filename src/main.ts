@@ -61,6 +61,8 @@ import {
   setupPeriodicCleanup,
 } from './modules/cleanup';
 import { createMainWindow } from './modules/windowManager';
+import { setupUrlConfigHandlers } from './modules/urlConfigWindow';
+import { URL_OVERRIDE_BUILD_ENABLED } from './modules/buildFlags';
 import { setupAutomaticProcessNaming } from './modules/processMonitor';
 
 // https://peter.sh/experiments/chromium-command-line-switches/
@@ -151,6 +153,9 @@ import 'agora-electron-sdk/js/Private/ipc/main.js';
 import { askMediaAccess } from './utils/permissionUtil';
 
 setupIpcHandlers(ipcMain);
+if (URL_OVERRIDE_BUILD_ENABLED) {
+  setupUrlConfigHandlers();
+}
 
 // App event handlers
 app.on('ready', async () => {
