@@ -8,7 +8,7 @@ import { isDev } from '../modules/config';
 
 interface ScreenShareConfig {
   mode: 'NORMAL' | 'STREAMLITE';
-  isWhiteboardActive: boolean;
+  isWhiteboardActive: boolean; 
   meetingId: string;
 }
 
