@@ -3,6 +3,14 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const webpack = require('webpack');
 
+// The runtime URL override (Settings -> Change App URL) is a QA affordance: it is
+// compiled out of production builds entirely. Set ENABLE_URL_OVERRIDE=true/false
+// to force it on or off for a one-off build.
+const urlOverrideEnabled =
+  process.env.ENABLE_URL_OVERRIDE !== undefined
+    ? process.env.ENABLE_URL_OVERRIDE === 'true'
+    : process.env.ENV !== 'production';
+
 const commonjsConfig = {
   plugins: [],
   optimization: {
@@ -125,6 +133,9 @@ module.exports = [
     },
     plugins: [
       ...commonjsConfig.plugins,
+      new webpack.DefinePlugin({
+        __URL_OVERRIDE_ENABLED__: JSON.stringify(urlOverrideEnabled),
+      }),
       new webpack.BannerPlugin({
         banner: '#!/usr/bin/env node',
         raw: true,
@@ -406,6 +417,13 @@ module.exports = [
           minifyURLs: true,
         } : false,
         chunks: ['screen-share'],
+      }),
+      new HtmlWebpackPlugin({
+        template: './src/renderer/url-config.html',
+        filename: 'url-config.html',
+        inject: false,
+        chunks: [],
+        minify: false,
       })
     ],
     optimization: {

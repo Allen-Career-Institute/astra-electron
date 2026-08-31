@@ -102,6 +102,7 @@ APPLE_TEAM_ID=
 STAGE_URL=https://console.allen-stage.in
 PROD_URL=https://astra.allen.in
 CUSTOM_URL=http://localhost:3000
+PR_URL_TEMPLATE=https://allen-ic-stage-ui-live-web-pr-{pr}-allen-frontend-team.vercel.app
 
 # Sentry Configuration (optional)
 ASTRA_ELECTRON_SENTRY_DSN=
