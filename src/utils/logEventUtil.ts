@@ -14,4 +14,4 @@ const sendLogEvent = (eventName: string, eventData: any) => {
   }
 };
 
-export { sendLogEvent };
+export { sendLogEvent }; 
