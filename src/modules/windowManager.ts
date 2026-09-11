@@ -28,8 +28,12 @@ function getSharedSession(): Electron.Session {
     // Configure permission handler
     sharedSession.setPermissionRequestHandler(
       (webContents, permission, callback) => {
-        if (permission === 'media' || permission === 'display-capture') {
-          callback(true); // Allow screen capture
+        if (
+          permission === 'media' ||
+          permission === 'display-capture' ||
+          permission === 'clipboard-sanitized-write'
+        ) {
+          callback(true); // Allow screen capture + text clipboard writes (e.g. "Copy meeting ID")
         } else {
           callback(false);
         }
