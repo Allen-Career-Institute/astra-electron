@@ -1,5 +1,15 @@
 import { Menu, dialog, app, BrowserWindow, shell } from 'electron';
-import { getAppVersion, getCurrentUrl, getEnv, isDev } from './config';
+import {
+  getAppVersion,
+  getCurrentUrl,
+  getEnv,
+  getEnvUrl,
+  getUrlOverride,
+  isDev,
+  isUrlOverrideEnabled,
+} from './config';
+import { openUrlConfigWindow, resetUrlOverride } from './urlConfigWindow';
+import { URL_OVERRIDE_BUILD_ENABLED } from './buildFlags';
 import { getMainWindow } from './windowManager';
 import { reloadMainWindow } from './reloadUtils';
 import { safeClosewhiteboardWindow } from './whiteboard-window';
@@ -190,6 +200,29 @@ function createMenu(): void {
     {
       label: 'Settings',
       submenu: [
+        // QA affordance: absent from production builds.
+        ...(URL_OVERRIDE_BUILD_ENABLED && isUrlOverrideEnabled()
+          ? [
+              {
+                label: 'Change App URL…',
+                accelerator: 'CmdOrCtrl+Shift+U',
+                click: () => {
+                  openUrlConfigWindow();
+                },
+              },
+              ...(getUrlOverride()
+                ? [
+                    {
+                      label: `Reset App URL to ${getEnv()} default`,
+                      click: () => {
+                        resetUrlOverride();
+                      },
+                    },
+                  ]
+                : []),
+              { type: 'separator' as const },
+            ]
+          : []),
         {
           label: 'Chrome Flags',
           click: () => {
@@ -289,6 +322,12 @@ function createMenu(): void {
                 getEnv() +
                 '\nURL: ' +
                 getCurrentUrl() +
+                (URL_OVERRIDE_BUILD_ENABLED && isUrlOverrideEnabled()
+                  ? '\nURL Override: ' +
+                    (getUrlOverride() || 'none') +
+                    '\nEnv URL: ' +
+                    getEnvUrl()
+                  : '') +
                 '\nApp Version: ' +
                 getAppVersion() +
                 '\nAppData Path: ' +

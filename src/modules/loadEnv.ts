@@ -11,7 +11,12 @@ import {
   setSentryDsn,
   setSentryEndpoint,
   setUrlByEnv,
+  setUrlOverride,
+  getUrlOverride,
+  isUrlOverrideEnabled,
 } from './config';
+import { getStoredUrlOverride } from './urlOverride';
+import { URL_OVERRIDE_BUILD_ENABLED } from './buildFlags';
 
 // Load environment variables using hybrid approach
 let envLoadError: Error | null = null;
@@ -88,6 +93,23 @@ const loadEnv = () => {
         : new Error('Unknown error loading runtime environment variables');
     console.error('Failed to load runtime environment variables:', error);
   }
+
+  // A URL picked from the app UI wins over anything in .env.local, so the same
+  // build can be pointed at any deployment without rebuilding. Non-production
+  // builds only — see isUrlOverrideEnabled().
+  if (!URL_OVERRIDE_BUILD_ENABLED || !isUrlOverrideEnabled()) {
+    return;
+  }
+
+  try {
+    const storedOverride = getStoredUrlOverride();
+    if (storedOverride) {
+      setUrlOverride(storedOverride);
+      console.log('🔗 URL override active:', storedOverride);
+    }
+  } catch (error) {
+    console.warn('⚠️  Failed to load stored URL override:', error);
+  }
 };
 
 const logEnv = () => {
@@ -98,6 +120,7 @@ const logEnv = () => {
       ASTRA_ELECTRON_SENTRY_DSN: getSentryDsn(),
       ASTRA_ELECTRON_SENTRY_ENDPOINT: getSentryEndpoint(),
       URL: getUrlByEnv(),
+      URL_OVERRIDE: getUrlOverride() || 'none',
       ...getUrls(),
 
       // Add any other environment variables you want to log

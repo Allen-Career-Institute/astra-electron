@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>App URL</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #ffffff;
+        --fg: #14161a;
+        --muted: #6b7280;
+        --border: #d8dce3;
+        --field-bg: #ffffff;
+        --accent: #2563eb;
+        --accent-fg: #ffffff;
+        --chip-bg: #f2f4f7;
+        --danger: #b42318;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1c1f24;
+          --fg: #f2f4f7;
+          --muted: #9aa2ae;
+          --border: #363b44;
+          --field-bg: #14161a;
+          --accent: #3b82f6;
+          --accent-fg: #ffffff;
+          --chip-bg: #262a31;
+          --danger: #f97066;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 20px;
+        background: var(--bg);
+        color: var(--fg);
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 13px;
+      }
+
+      h1 {
+        margin: 0 0 4px;
+        font-size: 15px;
+      }
+
+      p.hint {
+        margin: 0 0 16px;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+      }
+
+      input[type='text'] {
+        width: 100%;
+        padding: 9px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--field-bg);
+        color: var(--fg);
+        font-size: 13px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+
+      input[type='text']:focus {
+        outline: 2px solid var(--accent);
+        outline-offset: -1px;
+      }
+
+      .meta {
+        margin-top: 14px;
+        padding: 10px 12px;
+        background: var(--chip-bg);
+        border-radius: 6px;
+        line-height: 1.6;
+      }
+
+      .meta div {
+        display: flex;
+        gap: 8px;
+      }
+
+      .meta span.key {
+        color: var(--muted);
+        min-width: 108px;
+      }
+
+      .meta span.val {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        word-break: break-all;
+      }
+
+      .row {
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+      }
+
+      .row .pr {
+        flex: 0 0 120px;
+      }
+
+      .row .full {
+        flex: 1;
+      }
+
+      .divider {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 14px 0;
+        color: var(--muted);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+
+      .divider::before,
+      .divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+
+      .preview {
+        margin-top: 8px;
+        color: var(--muted);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        word-break: break-all;
+        min-height: 16px;
+      }
+
+      .recents {
+        margin-top: 14px;
+      }
+
+      .recents .list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 6px;
+      }
+
+      button.recent {
+        border: 1px solid var(--border);
+        background: var(--chip-bg);
+        color: var(--fg);
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 12px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        cursor: pointer;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      button.recent:hover {
+        border-color: var(--accent);
+      }
+
+      .error {
+        margin-top: 10px;
+        color: var(--danger);
+        min-height: 16px;
+      }
+
+      .actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 16px;
+      }
+
+      .actions .spacer {
+        flex: 1;
+      }
+
+      button.action {
+        padding: 7px 14px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--chip-bg);
+        color: var(--fg);
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      button.action.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--accent-fg);
+        font-weight: 600;
+      }
+
+      button.action:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Change App URL</h1>
+    <p class="hint">
+      Point this build at any deployment — a Vercel preview for a PR, stage, or
+      localhost. The choice is saved on this machine and survives restarts, so
+      you don't need a separate build per PR.
+    </p>
+
+    <div class="row">
+      <div class="pr">
+        <label for="pr">PR number</label>
+        <input
+          id="pr"
+          type="text"
+          inputmode="numeric"
+          spellcheck="false"
+          autocomplete="off"
+          placeholder="1131"
+        />
+      </div>
+      <div class="full preview" id="pr-preview"></div>
+    </div>
+
+    <div class="divider">or paste a full URL</div>
+
+    <label for="url">URL</label>
+    <input
+      id="url"
+      type="text"
+      spellcheck="false"
+      autocomplete="off"
+      placeholder="https://astra-git-my-branch.vercel.app"
+    />
+
+    <div class="error" id="error"></div>
+
+    <div class="recents" id="recents-wrap" hidden>
+      <label>Recently used</label>
+      <div class="list" id="recents"></div>
+    </div>
+
+    <div class="meta">
+      <div>
+        <span class="key">Currently loaded</span
+        ><span class="val" id="current">—</span>
+      </div>
+      <div>
+        <span class="key">Environment</span><span class="val" id="env">—</span>
+      </div>
+      <div>
+        <span class="key">.env.local URL</span
+        ><span class="val" id="env-url">—</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="action" id="reset" type="button">
+        Reset to .env.local
+      </button>
+      <span class="spacer"></span>
+      <button class="action" id="cancel" type="button">Cancel</button>
+      <button class="action primary" id="save" type="button">
+        Save &amp; Reload
+      </button>
+    </div>
+
+    <script>
+      const { ipcRenderer } = require('electron');
+
+      const urlInput = document.getElementById('url');
+      const prInput = document.getElementById('pr');
+      const prPreview = document.getElementById('pr-preview');
+      const errorEl = document.getElementById('error');
+      const recentsWrap = document.getElementById('recents-wrap');
+      const recentsEl = document.getElementById('recents');
+      const resetBtn = document.getElementById('reset');
+
+      let prUrlTemplate = '';
+
+      const buildPrUrl = prNumber =>
+        prUrlTemplate.replace('{pr}', String(prNumber).trim());
+
+      // Typing a PR number fills the URL field, so there is only ever one
+      // value to submit.
+      const syncFromPrNumber = () => {
+        const prNumber = prInput.value.trim();
+        if (!prNumber) {
+          prPreview.textContent = '';
+          return;
+        }
+        if (!/^\d+$/.test(prNumber)) {
+          prPreview.textContent = 'Numbers only';
+          return;
+        }
+        const built = buildPrUrl(prNumber);
+        prPreview.textContent = built;
+        urlInput.value = built;
+        showError('');
+      };
+
+      const showError = message => {
+        errorEl.textContent = message || '';
+      };
+
+      const renderRecents = recents => {
+        recentsEl.innerHTML = '';
+        if (!recents || recents.length === 0) {
+          recentsWrap.hidden = true;
+          return;
+        }
+        recentsWrap.hidden = false;
+        recents.forEach(url => {
+          const button = document.createElement('button');
+          button.className = 'recent';
+          button.type = 'button';
+          button.textContent = url;
+          button.title = url;
+          button.addEventListener('click', () => {
+            urlInput.value = url;
+            const prNumber = url.match(
+              new RegExp(
+                '^' +
+                  prUrlTemplate
+                    .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                    .replace('\\{pr\\}', '(\\d+)') +
+                  '/?$',
+                'i'
+              )
+            );
+            prInput.value = prNumber ? prNumber[1] : '';
+            prPreview.textContent = prNumber ? url : '';
+            showError('');
+          });
+          recentsEl.appendChild(button);
+        });
+      };
+
+      const loadState = async () => {
+        const state = await ipcRenderer.invoke('url-override:get-state');
+        prUrlTemplate = state.prUrlTemplate || '';
+        prInput.value = state.prNumber || '';
+        prPreview.textContent = state.prNumber ? state.override : '';
+        urlInput.value = state.override || '';
+        document.getElementById('current').textContent =
+          state.currentUrl || '—';
+        document.getElementById('env').textContent = state.env || '—';
+        document.getElementById('env-url').textContent = state.envUrl || '—';
+        resetBtn.disabled = !state.override;
+        renderRecents(state.recents);
+        prInput.focus();
+        prInput.select();
+      };
+
+      const save = async () => {
+        showError('');
+        const result = await ipcRenderer.invoke(
+          'url-override:save',
+          urlInput.value
+        );
+        if (!result.success) {
+          showError(result.error || 'Could not apply that URL');
+        }
+      };
+
+      const reset = async () => {
+        showError('');
+        const result = await ipcRenderer.invoke('url-override:reset');
+        if (!result.success) {
+          showError(result.error || 'Could not reset the URL');
+        }
+      };
+
+      prInput.addEventListener('input', syncFromPrNumber);
+      urlInput.addEventListener('input', () => {
+        // A hand-edited URL wins; clear the PR shortcut so they can't disagree.
+        if (urlInput.value.trim() !== prPreview.textContent) {
+          prInput.value = '';
+          prPreview.textContent = '';
+        }
+      });
+
+      document.getElementById('save').addEventListener('click', save);
+      resetBtn.addEventListener('click', reset);
+      document.getElementById('cancel').addEventListener('click', () => {
+        ipcRenderer.invoke('url-override:close');
+      });
+
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Enter') {
+          save();
+        } else if (event.key === 'Escape') {
+          ipcRenderer.invoke('url-override:close');
+        }
+      });
+
+      loadState();
+    </script>
+  </body>
+</html>

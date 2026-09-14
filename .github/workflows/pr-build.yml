@@ -13,6 +13,9 @@ env:
   STAGE_URL: ${{ secrets.STAGE_CONSOLE_URL }}
   PROD_URL: ${{ secrets.PROD_CONSOLE_URL }}
   CUSTOM_URL: ${{ secrets.CUSTOM_CONSOLE_URL }}
+  PR_URL_TEMPLATE: 'https://allen-ic-stage-ui-live-web-pr-{pr}-allen-frontend-team.vercel.app'
+  # Keeps the in-app "Change App URL" override available to QA
+  ENABLE_URL_OVERRIDE: 'true'
   ASTRA_ELECTRON_SENTRY_DSN: ${{ secrets.ASTRA_ELECTRON_SENTRY_DSN }}
   ASTRA_ELECTRON_SENTRY_ENDPOINT: ${{ secrets.ASTRA_ELECTRON_SENTRY_ENDPOINT }}
 
@@ -62,6 +65,7 @@ jobs:
           echo "STAGE_URL=${{ env.STAGE_URL }}" >> .env.local
           echo "PROD_URL=${{ env.PROD_URL }}" >> .env.local
           echo "CUSTOM_URL=${{ env.CUSTOM_URL }}" >> .env.local
+          echo "PR_URL_TEMPLATE=${{ env.PR_URL_TEMPLATE }}" >> .env.local
           echo "DEV_URL=${{ env.DEV_URL }}" >> .env.local
           echo "APP_VERSION=$APP_VERSION" >> .env.local
           echo "ASTRA_ELECTRON_SENTRY_DSN=${{ env.ASTRA_ELECTRON_SENTRY_DSN }}" >> .env.local
@@ -97,6 +101,7 @@ jobs:
           PROD_URL: ${{ env.PROD_URL }}
           CUSTOM_URL: ${{ env.CUSTOM_URL }}
           DEV_URL: ${{ env.DEV_URL }}
+          PR_URL_TEMPLATE: ${{ env.PR_URL_TEMPLATE }}
           ASTRA_ELECTRON_SENTRY_DSN: ${{ env.ASTRA_ELECTRON_SENTRY_DSN }}
 
       - name: Build Windows NSIS
